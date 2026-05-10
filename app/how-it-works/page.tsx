@@ -161,7 +161,7 @@ export default function HowItWorksPage() {
           <div className="text-xs text-neutral-600 mb-3 uppercase tracking-wider">Built by</div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-semibold text-lg">{BUILDER.name}</div>
+              <a href={BUILDER.website} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:text-neutral-300 transition-colors">{BUILDER.name}</a>
               <div className="text-sm text-neutral-500 mt-0.5">
                 Developer Advocate · building tools that make APIs click
               </div>

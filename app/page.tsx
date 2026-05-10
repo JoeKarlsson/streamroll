@@ -39,7 +39,7 @@ const DURATIONS: { value: Duration; label: string; credits: number; est: string 
 ];
 
 const INSPO: { name: string; style: Style; tagline: string; desc: string }[] = [
-  { name: "Joeflix",   style: "cinematic",  tagline: "Where stories come alive",  desc: "Classic personal streaming" },
+  { name: "Joeflix",   style: "cinematic",  tagline: "Where stories come alive",  desc: "Example · your name here" },
   { name: "NightOwl",  style: "horror",     tagline: "Streaming after dark",       desc: "Late-night horror hub" },
   { name: "SkyBox",    style: "futuristic", tagline: "Beyond the horizon",         desc: "Sci-fi & space content" },
   { name: "VibeTube",  style: "retro",      tagline: "Totally tubular",            desc: "80s & 90s nostalgia" },
@@ -51,6 +51,12 @@ const INSPO: { name: string; style: Style; tagline: string; desc: string }[] = [
 
 type LogoMode = "ai" | "upload";
 
+const PLATFORMS = [
+  { name: "Plex",     slug: "plex",     color: "#EBAF00", howTo: "Settings → Extras → Cinema Trailers → enable pre-roll, then drop the .mp4 into your Extras folder." },
+  { name: "Jellyfin", slug: "jellyfin", color: "#00A4DC", howTo: "Dashboard → Admin → Pre-Roll Video → upload the .mp4 file." },
+  { name: "Emby",     slug: "emby",     color: "#52B54B", howTo: "Server Settings → Pre-Roll Videos → add the .mp4 file." },
+];
+
 export default function Home() {
   const [name, setName]         = useState("Joeflix");
   const [tagline, setTagline]   = useState("Where stories come alive");
@@ -61,6 +67,7 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError]       = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
   const [logoMode, setLogoMode] = useState<LogoMode>("ai");
   const [uploadedUri, setUploadedUri] = useState<string | null>(null);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
@@ -150,9 +157,18 @@ export default function Home() {
 
   return (
     <main
-      className="min-h-screen text-white flex flex-col items-center px-4 py-12"
-      style={{ background: "radial-gradient(ellipse 90% 50% at 50% -5%, rgba(99,102,241,0.13) 0%, transparent 65%), #0a0a0a" }}
+      className="relative min-h-screen text-white flex flex-col items-center px-4 py-12 overflow-hidden"
+      style={{ background: "radial-gradient(ellipse 55% 40% at 50% -2%, rgba(255,248,200,0.07) 0%, transparent 65%), #080808" }}
     >
+      {/* Film grain overlay */}
+      <div
+        className="pointer-events-none fixed inset-0 z-50 opacity-[0.032]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat",
+        }}
+      />
+
       {/* Nav */}
       <div className="w-full max-w-2xl flex justify-between items-center mb-12 text-sm text-neutral-500">
         <span className="font-bold text-white tracking-tight text-lg">StreamRoll</span>
@@ -167,18 +183,36 @@ export default function Home() {
 
       {/* Hero */}
       <div className="mb-12 text-center">
+        <div className="inline-flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-neutral-600 mb-4 font-medium">
+          <span className="w-8 h-px bg-neutral-800 inline-block" />
+          Now Showing
+          <span className="w-8 h-px bg-neutral-800 inline-block" />
+        </div>
+
         <h1
           className="text-6xl font-bold tracking-tight mb-3"
           style={{ backgroundImage: "linear-gradient(to bottom, #fff 40%, #6b7280)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
         >
           StreamRoll
         </h1>
-        <p className="text-neutral-400 text-lg">
-          AI-generated streaming intros for Plex, Jellyfin &amp; beyond
+        <p className="text-neutral-400 text-lg mb-5">
+          AI-generated streaming intros, ready in 30 seconds
         </p>
 
+        {/* Platform badges */}
+        <div className="flex items-center justify-center gap-5 mb-5">
+          <span className="text-xs text-neutral-600">Works with</span>
+          {PLATFORMS.map((p) => (
+            <div key={p.name} className="flex items-center gap-1.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/logos/${p.slug}.svg`} alt={p.name} width={16} height={16} />
+              <span className="text-xs font-medium" style={{ color: p.color }}>{p.name}</span>
+            </div>
+          ))}
+        </div>
+
         {keyLoaded && (
-          <div className="mt-4">
+          <div>
             {apiKey ? (
               <Link href="/setup" className="inline-flex items-center gap-1.5 text-xs text-green-400 border border-green-900 bg-green-950/40 px-3 py-1 rounded-full hover:border-green-700 transition-colors">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
@@ -414,10 +448,10 @@ export default function Home() {
       {(isGenerating || step === "done") && (
         <div className="mt-10 w-full max-w-2xl">
           <div className="flex items-center gap-4 mb-6">
-            <StepIndicator label="Generate logo" status={step === "image" ? "active" : "done"} color={accentColor} />
+            <StepIndicator label="Scene 1 · Design poster" status={step === "image" ? "active" : "done"} color={accentColor} />
             <div className="flex-1 h-px bg-neutral-800" />
             <StepIndicator
-              label="Animate intro"
+              label="Scene 2 · Roll camera"
               status={step === "video" ? "active" : step === "done" ? "done" : "pending"}
               color={accentColor}
             />
@@ -464,6 +498,36 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            {/* Install guide */}
+            {videoUrl && (
+              <div className="rounded-xl border border-neutral-800 overflow-hidden">
+                <button
+                  onClick={() => setShowInstall((v) => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-neutral-900 text-sm text-neutral-400 hover:text-white transition-colors"
+                >
+                  <span>How to add this to your media server</span>
+                  <span className="text-neutral-600">{showInstall ? "▾" : "▸"}</span>
+                </button>
+                {showInstall && (
+                  <div className="divide-y divide-neutral-800">
+                    {PLATFORMS.map((p) => (
+                      <div key={p.name} className="px-4 py-3 flex gap-3 items-start bg-neutral-950">
+                        <div
+                          className="flex items-center gap-1.5 shrink-0 mt-0.5 px-2 py-0.5 rounded"
+                          style={{ backgroundColor: p.color + "18" }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={`/logos/${p.slug}.svg`} alt={p.name} width={12} height={12} />
+                          <span className="text-xs font-bold" style={{ color: p.color }}>{p.name}</span>
+                        </div>
+                        <p className="text-xs text-neutral-400 leading-relaxed">{p.howTo}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -476,25 +540,30 @@ export default function Home() {
       )}
 
       {/* Footer */}
-      <div className="mt-16 w-full max-w-2xl border-t border-neutral-900 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-600">
-        <div className="flex items-center gap-1.5">
-          <span>Built by</span>
-          <a href={BUILDER.twitter} target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors font-medium">{BUILDER.name}</a>
-          <span>·</span>
-          <a href={BUILDER.github} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">GitHub</a>
-          <span>·</span>
-          <a href={BUILDER.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">LinkedIn</a>
-        </div>
-        <div className="flex items-center gap-3">
+      <div className="mt-16 w-full max-w-2xl border-t border-neutral-900 pt-8 flex flex-col items-center gap-4 text-xs text-neutral-600">
+        <div className="flex items-center gap-4">
           <Link href="/how-it-works" className="hover:text-neutral-400 transition-colors">How it&apos;s built</Link>
-          <span>·</span>
           <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Runway docs</a>
-          <span>·</span>
-          <a href={LINKS.runwayGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">SDK on GitHub</a>
-          <span>·</span>
           <a href={LINKS.runwayCommunity} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Discord</a>
-          <span>·</span>
+          <a href={LINKS.runwayGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">SDK on GitHub</a>
           <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Get API key</a>
+        </div>
+        <div className="flex items-center gap-4 text-neutral-700">
+          <div className="flex items-center gap-1.5">
+            <span>Built by</span>
+            <a href={BUILDER.website} target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-white transition-colors">{BUILDER.name}</a>
+            <span>·</span>
+            <a href={BUILDER.github} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-500 transition-colors">GitHub</a>
+            <span>·</span>
+            <a href={BUILDER.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-500 transition-colors">LinkedIn</a>
+          </div>
+          <span className="text-neutral-800">|</span>
+          <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-neutral-600 hover:text-white transition-colors">
+            <span>Powered by</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logos/runway.svg" alt="Runway" width={13} height={13} style={{ filter: "invert(0.5)" }} />
+            <span className="font-semibold text-neutral-500 hover:text-white">Runway</span>
+          </a>
         </div>
       </div>
     </main>
