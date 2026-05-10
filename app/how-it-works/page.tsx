@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { LINKS, BUILDER } from "@/lib/links";
 
@@ -114,6 +117,19 @@ export default function HowItWorksPage() {
           <CodeBlock code={VIDEO_CODE} lang="typescript" />
         </section>
 
+        {/* Audio tip */}
+        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-5 mb-10">
+          <div className="font-semibold mb-1 text-sm">The video is silent — add music</div>
+          <p className="text-sm text-neutral-400 leading-relaxed mb-3">
+            Runway generates video only. For a full cinematic intro, generate royalty-free music with{" "}
+            <a href="https://www.udio.com" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-2 hover:text-neutral-300">Udio</a>
+            {" "}or{" "}
+            <a href="https://suno.com" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-2 hover:text-neutral-300">Suno</a>
+            , then merge with ffmpeg:
+          </p>
+          <CodeBlock code={`ffmpeg -i intro.mp4 -i music.mp3 -shortest -c:v copy -map 0:v -map 1:a output.mp4`} lang="bash" />
+        </div>
+
         {/* That's it callout */}
         <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-5 mb-10">
           <div className="font-semibold mb-1">That&apos;s it.</div>
@@ -124,6 +140,59 @@ export default function HowItWorksPage() {
             e-commerce clips, social content, anything where you need to turn a static image into motion.
           </p>
         </div>
+
+        {/* Add to media server */}
+        <section className="mb-10">
+          <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-1">
+            4 · Add to your media server
+          </h2>
+          <p className="text-sm text-neutral-500 mb-3">
+            Download the .mp4 and drop it into Plex, Jellyfin, or Emby. Each platform has a pre-roll setting — here&apos;s where to find it.
+          </p>
+          <div className="text-xs text-neutral-600 bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 mb-5">
+            <span className="text-neutral-400 font-medium">Pro tip:</span> Generate 3–5 variants with different styles and point your server at the whole folder. Plex, Jellyfin, and Emby all support random rotation — you get a different intro every session.
+          </div>
+          <div className="space-y-3">
+            {[
+              {
+                name: "Plex", slug: "plex", color: "#EBAF00",
+                steps: "Settings → Extras → Cinema Trailers → enable \"Cinema Trailers\" pre-roll, then place the .mp4 in your designated Extras folder.",
+                docs: "https://support.plex.tv/articles/202934883-cinema-trailers-extras/",
+                docsLabel: "Cinema Trailers & Extras →",
+              },
+              {
+                name: "Jellyfin", slug: "jellyfin", color: "#00A4DC",
+                steps: "Dashboard → Administration → Pre-Roll Video → browse and upload your .mp4. It will play before every movie.",
+                docs: "https://jellyfin.org/docs/general/server/plugins/",
+                docsLabel: "Jellyfin Plugins docs →",
+              },
+              {
+                name: "Emby", slug: "emby", color: "#52B54B",
+                steps: "Server Settings → Cinema Mode → Pre-Roll Videos → add the .mp4 file path. Toggle Cinema Mode on for playback sessions.",
+                docs: "https://emby.media/community/index.php?/topic/86649-pre-roll-videos/",
+                docsLabel: "Pre-roll community thread →",
+              },
+            ].map((p) => (
+              <div key={p.name} className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/logos/${p.slug}.svg`} alt={p.name} width={16} height={16} />
+                  <span className="text-sm font-semibold" style={{ color: p.color }}>{p.name}</span>
+                </div>
+                <p className="text-sm text-neutral-400 leading-relaxed mb-2">{p.steps}</p>
+                <a
+                  href={p.docs}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs transition-colors hover:opacity-100 opacity-70"
+                  style={{ color: p.color }}
+                >
+                  {p.docsLabel}
+                </a>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* CTA */}
         <section className="mb-12 space-y-3">
@@ -200,10 +269,19 @@ export default function HowItWorksPage() {
 }
 
 function CodeBlock({ code, lang }: { code: string; lang: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   return (
     <div className="rounded-lg border border-neutral-800 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2 bg-neutral-900 border-b border-neutral-800">
         <span className="text-xs text-neutral-500">{lang}</span>
+        <button onClick={copy} className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors">
+          {copied ? "Copied!" : "Copy"}
+        </button>
       </div>
       <pre className="p-4 text-xs text-neutral-300 font-mono leading-relaxed overflow-x-auto bg-neutral-950 whitespace-pre">
         <code>{code}</code>

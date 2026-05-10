@@ -15,6 +15,8 @@ export type Style =
   | "nature";
 
 export type Duration = 2 | 5 | 10;
+export type VideoModel = "gen4_turbo" | "gen4.5";
+export type Treatment = "full-bleed" | "theatrical" | "minimal";
 
 const styleDescriptions: Record<Style, string> = {
   cinematic:
@@ -54,11 +56,27 @@ const styleMotion: Record<Style, string> = {
     "logo grows organically like a vine, soft morning light washes across it, gentle leaf particles",
 };
 
+const treatmentImage: Record<Treatment, string> = {
+  "full-bleed": "logo fills the entire frame edge to edge, bold full-bleed composition, dominant typography",
+  "theatrical": "cinematic widescreen with black letterbox bars, movie poster composition, 2.39:1 aspect feel",
+  "minimal":    "minimalist design, small refined logo centered on vast dark negative space, sparse and elegant",
+};
+
+const treatmentMotion: Record<Treatment, string> = {
+  "full-bleed": "logo dramatically fills the entire frame with bold presence",
+  "theatrical": "cinematic widescreen reveal, black bars frame the sequence, movie-trailer energy",
+  "minimal":    "subtle restrained reveal, logo surfaces quietly from deep darkness",
+};
+
 export interface GenerationParams {
   name: string;
   style: Style;
   tagline?: string;
   duration: Duration;
+  videoModel?: VideoModel;
+  treatment?: Treatment;
+  primaryColor?: string;
+  customNotes?: string;
 }
 
 export interface PromptPreview {
@@ -67,14 +85,16 @@ export interface PromptPreview {
 }
 
 export function buildPrompts(params: GenerationParams): PromptPreview {
-  const { name, style, tagline } = params;
+  const { name, style, tagline, treatment = "full-bleed", primaryColor, customNotes } = params;
   const upper = name.toUpperCase();
   const taglinePart = tagline?.trim()
     ? `, subtitle text "${tagline.trim().toUpperCase()}" below`
     : "";
+  const colorPart = primaryColor ? `, key accent color: ${primaryColor}` : "";
+  const notesPart = customNotes?.trim() ? `, ${customNotes.trim()}` : "";
 
-  const imagePrompt = `Streaming service logo for "${upper}"${taglinePart}, bold dramatic typography, ${styleDescriptions[style]}, professional logo design, no people, centered composition`;
-  const videoPrompt = `The ${upper} streaming service logo animates: ${styleMotion[style]}. Dramatic, high-quality intro video.`;
+  const imagePrompt = `Streaming service logo for "${upper}"${taglinePart}, ${treatmentImage[treatment]}, bold dramatic typography, ${styleDescriptions[style]}, professional logo design, no people${colorPart}${notesPart}`;
+  const videoPrompt = `The ${upper} streaming service logo animates: ${styleMotion[style]}. ${treatmentMotion[treatment]}. Dramatic, high-quality intro video.${notesPart}`;
 
   return { imagePrompt, videoPrompt };
 }
@@ -82,7 +102,6 @@ export function buildPrompts(params: GenerationParams): PromptPreview {
 export async function generateLogoImage(params: GenerationParams, apiKey: string): Promise<string> {
   const { imagePrompt } = buildPrompts(params);
 
-  // Use 1920:1080 for a sharp 1080p logo image
   const task = await getClient(apiKey).textToImage
     .create({
       model: "gen4_image",
@@ -101,11 +120,11 @@ export async function generateIntroVideo(
   apiKey: string
 ): Promise<string> {
   const { videoPrompt } = buildPrompts(params);
+  const model = params.videoModel ?? "gen4_turbo";
 
-  // gen4_turbo max widescreen is 1280:720, still great on TV via Plex
   const task = await getClient(apiKey).imageToVideo
     .create({
-      model: "gen4_turbo",
+      model,
       promptImage: imageUrl,
       promptText: videoPrompt,
       ratio: "1280:720",

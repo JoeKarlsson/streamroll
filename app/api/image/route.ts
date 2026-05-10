@@ -23,6 +23,9 @@ export async function POST(req: NextRequest) {
     style: body.style ?? "cinematic",
     tagline: body.tagline,
     duration: body.duration ?? 5,
+    treatment: body.treatment,
+    primaryColor: body.primaryColor,
+    customNotes: body.customNotes,
   };
 
   try {

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { buildPrompts, type Style, type Duration } from "@/lib/runway";
+import { buildPrompts, type Style, type Duration, type VideoModel, type Treatment } from "@/lib/runway";
 import { useApiKey } from "@/hooks/useApiKey";
-import { LINKS, BUILDER, tweetShareUrl } from "@/lib/links";
+import { LINKS, BUILDER, tweetShareUrl, redditShareUrl } from "@/lib/links";
 
 type GenStep = "idle" | "image" | "video" | "done" | "error";
 
@@ -49,12 +49,48 @@ const INSPO: { name: string; style: Style; tagline: string; desc: string }[] = [
   { name: "WhiteRoom", style: "minimal",    tagline: "Less is more",               desc: "Arthouse & indie film" },
 ];
 
+const SEASONAL: { name: string; style: Style; tagline: string; desc: string }[] = [
+  { name: "SpookFlix",   style: "horror",     tagline: "Horror has a home",           desc: "🎃 Halloween" },
+  { name: "WinterFlix",  style: "cinematic",  tagline: "The magic of the season",     desc: "🎄 Christmas" },
+  { name: "SunsetCut",   style: "epic",       tagline: "Blockbuster season",          desc: "☀️ Summer" },
+  { name: "NightStream", style: "futuristic", tagline: "The future starts at midnight", desc: "🎆 New Year" },
+];
+
 type LogoMode = "ai" | "upload";
 
+const COLOR_SWATCHES = [
+  { label: "Gold",    value: "#F59E0B" },
+  { label: "Crimson", value: "#EF4444" },
+  { label: "Blue",    value: "#3B82F6" },
+  { label: "Purple",  value: "#8B5CF6" },
+  { label: "Cyan",    value: "#06B6D4" },
+  { label: "Green",   value: "#22C55E" },
+  { label: "Pink",    value: "#EC4899" },
+  { label: "White",   value: "#F9FAFB" },
+];
+
+const TREATMENTS: { id: Treatment; label: string; desc: string }[] = [
+  { id: "full-bleed",  label: "Full Bleed",  desc: "Logo fills the frame" },
+  { id: "theatrical",  label: "Theatrical",  desc: "Black letterbox bars" },
+  { id: "minimal",     label: "Minimal",     desc: "Small logo, vast space" },
+];
+
 const PLATFORMS = [
-  { name: "Plex",     slug: "plex",     color: "#EBAF00", howTo: "Settings → Extras → Cinema Trailers → enable pre-roll, then drop the .mp4 into your Extras folder." },
-  { name: "Jellyfin", slug: "jellyfin", color: "#00A4DC", howTo: "Dashboard → Admin → Pre-Roll Video → upload the .mp4 file." },
-  { name: "Emby",     slug: "emby",     color: "#52B54B", howTo: "Server Settings → Pre-Roll Videos → add the .mp4 file." },
+  {
+    name: "Plex", slug: "plex", color: "#EBAF00",
+    howTo: "Settings → Extras → Cinema Trailers → enable pre-roll, then drop the .mp4 into your Extras folder.",
+    docs: "https://support.plex.tv/articles/202934883-cinema-trailers-extras/",
+  },
+  {
+    name: "Jellyfin", slug: "jellyfin", color: "#00A4DC",
+    howTo: "Dashboard → Admin → Pre-Roll Video → upload the .mp4 file.",
+    docs: "https://jellyfin.org/docs/general/server/plugins/",
+  },
+  {
+    name: "Emby", slug: "emby", color: "#52B54B",
+    howTo: "Server Settings → Pre-Roll Videos → add the .mp4 file.",
+    docs: "https://emby.media/community/index.php?/topic/86649-pre-roll-videos/",
+  },
 ];
 
 export default function Home() {
@@ -66,18 +102,30 @@ export default function Home() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError]       = useState<string | null>(null);
-  const [showPrompt, setShowPrompt] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(true);
   const [showInstall, setShowInstall] = useState(false);
   const [logoMode, setLogoMode] = useState<LogoMode>("ai");
+  const [videoModel, setVideoModel] = useState<VideoModel>("gen4_turbo");
+  const [treatment, setTreatment] = useState<Treatment>("full-bleed");
+  const [primaryColor, setPrimaryColor] = useState<string | null>(null);
+  const [customNotes, setCustomNotes] = useState("");
   const [uploadedUri, setUploadedUri] = useState<string | null>(null);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [timings, setTimings] = useState<{ image: number; video: number } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const genStartRef = useRef(0);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   const { key: apiKey, loaded: keyLoaded } = useApiKey();
-  const preview = buildPrompts({ name, style, tagline, duration });
+  const preview = buildPrompts({ name, style, tagline, duration, treatment, primaryColor: primaryColor ?? undefined, customNotes: customNotes || undefined });
   const isGenerating = step === "image" || step === "video";
   const selectedDuration = DURATIONS.find((d) => d.value === duration)!;
   const accentColor = STYLE_COLOR[style];
+  const crPerSec = videoModel === "gen4.5" ? 12 : 5;
 
   function applyInspo(i: (typeof INSPO)[number]) {
     setName(i.name);
@@ -94,6 +142,42 @@ export default function Home() {
     setImageUrl(null);
     setVideoUrl(null);
     setError(null);
+    setTimings(null);
+    setElapsedMs(0);
+  }
+
+  function copyScript() {
+    const script = `import RunwayML from "@runwayml/sdk";
+
+const runway = new RunwayML({ apiKey: process.env.RUNWAYML_API_SECRET });
+
+// Step 1: Generate logo image
+const imageTask = await runway.textToImage
+  .create({
+    model: "gen4_image",
+    promptText: \`${preview.imagePrompt}\`,
+    ratio: "1920:1080",
+  })
+  .waitForTaskOutput();
+
+const logoUrl = imageTask.output[0];
+
+// Step 2: Animate into a ${duration}s intro
+const videoTask = await runway.imageToVideo
+  .create({
+    model: "${videoModel}",
+    promptImage: logoUrl,
+    promptText: \`${preview.videoPrompt}\`,
+    ratio: "1280:720",
+    duration: ${duration},
+  })
+  .waitForTaskOutput();
+
+console.log(videoTask.output[0]);
+`;
+    navigator.clipboard.writeText(script);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   }
 
   async function handleFileUpload(file: File) {
@@ -121,37 +205,53 @@ export default function Home() {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (apiKey) headers["x-runway-key"] = apiKey;
 
-    const body = { name: name.trim(), style, tagline: tagline.trim(), duration };
+    const body = {
+      name: name.trim(), style, tagline: tagline.trim(), duration,
+      videoModel, treatment,
+      primaryColor: primaryColor ?? undefined,
+      customNotes: customNotes.trim() || undefined,
+    };
     setImageUrl(null);
     setVideoUrl(null);
     setError(null);
+    setTimings(null);
+    setElapsedMs(0);
+    genStartRef.current = Date.now();
+    timerRef.current = setInterval(() => setElapsedMs(Date.now() - genStartRef.current), 100);
 
     try {
       let logoImageUrl: string;
+      let imageTime = 0;
 
       if (logoMode === "upload" && uploadedUri) {
-        // Skip image generation: use uploaded logo directly
         logoImageUrl = uploadedUri;
         setImageUrl(uploadedUri);
         setStep("video");
       } else {
         setStep("image");
+        const imageStart = Date.now();
         const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(body) });
         const imageData = await imageRes.json();
         if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
+        imageTime = Date.now() - imageStart;
         logoImageUrl = imageData.imageUrl;
         setImageUrl(logoImageUrl);
         setStep("video");
       }
 
+      const videoStart = Date.now();
       const videoRes = await fetch("/api/video", { method: "POST", headers, body: JSON.stringify({ ...body, imageUrl: logoImageUrl }) });
       const videoData = await videoRes.json();
       if (!videoRes.ok) throw new Error(videoData.error ?? "Video generation failed");
+      const videoTime = Date.now() - videoStart;
       setVideoUrl(videoData.videoUrl);
+      setTimings({ image: imageTime, video: videoTime });
       setStep("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setStep("error");
+    } finally {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     }
   }
 
@@ -196,11 +296,11 @@ export default function Home() {
           StreamRoll
         </h1>
         <p className="text-neutral-400 text-lg mb-5">
-          AI-generated streaming intros, ready in 30 seconds
+          AI-generated pre-roll intros for your media server, ready in 30 seconds
         </p>
 
         {/* Platform badges */}
-        <div className="flex items-center justify-center gap-5 mb-5">
+        <div className="flex items-center justify-center gap-5 mb-3">
           <span className="text-xs text-neutral-600">Works with</span>
           {PLATFORMS.map((p) => (
             <div key={p.name} className="flex items-center gap-1.5">
@@ -209,6 +309,18 @@ export default function Home() {
               <span className="text-xs font-medium" style={{ color: p.color }}>{p.name}</span>
             </div>
           ))}
+        </div>
+
+        {/* Community resources */}
+        <div className="flex items-center justify-center gap-2 text-xs text-neutral-700 mb-5">
+          <span>Community:</span>
+          <a href={LINKS.prerollSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">r/plexprerolls</a>
+          <span>·</span>
+          <a href={LINKS.plexSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">r/PleX</a>
+          <span>·</span>
+          <a href={LINKS.jellyfinSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">r/jellyfin</a>
+          <span>·</span>
+          <a href={LINKS.plexForums} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Plex Forums</a>
         </div>
 
         {keyLoaded && (
@@ -262,6 +374,31 @@ export default function Home() {
                 </button>
               );
             })}
+          </div>
+
+          <div className="mt-3">
+            <div className="text-xs text-neutral-700 mb-2 tracking-wide">Seasonal</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {SEASONAL.map((i) => {
+                const isActive = name === i.name && style === i.style;
+                const color = STYLE_COLOR[i.style];
+                return (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="text-left p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    style={isActive
+                      ? { borderColor: color + "60", backgroundColor: color + "12" }
+                      : { borderColor: "#262626" }
+                    }
+                  >
+                    <div className="font-medium text-sm" style={isActive ? { color } : undefined}>{i.name}</div>
+                    <div className="text-xs text-neutral-600 mt-0.5">{i.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -401,7 +538,95 @@ export default function Home() {
                 <span className="text-base font-bold" style={duration === d.value ? { color: accentColor } : { color: "#e5e7eb" }}>
                   {d.label}
                 </span>
-                <span className="text-neutral-500">{d.credits} credits · {d.est}</span>
+                <span className="text-neutral-500">{d.value * crPerSec + 8} cr · {d.est}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Card treatment */}
+        <section>
+          <label className="block text-sm font-medium text-neutral-300 mb-3">Card treatment</label>
+          <div className="flex gap-3">
+            {TREATMENTS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTreatment(t.id)}
+                disabled={isGenerating}
+                className="flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-xs transition-all disabled:opacity-50"
+                style={treatment === t.id
+                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                  : { borderColor: "#262626" }
+                }
+              >
+                <span className="font-medium mb-0.5" style={treatment === t.id ? { color: accentColor } : { color: "#e5e7eb" }}>{t.label}</span>
+                <span style={{ color: "#525252" }}>{t.desc}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Primary color */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-medium text-neutral-300">Primary color <span className="text-neutral-600 font-normal">(optional)</span></label>
+            {primaryColor && (
+              <button onClick={() => setPrimaryColor(null)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Clear</button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {COLOR_SWATCHES.map((c) => (
+              <button
+                key={c.value}
+                onClick={() => setPrimaryColor(primaryColor === c.value ? null : c.value)}
+                disabled={isGenerating}
+                title={c.label}
+                className="w-7 h-7 rounded-full transition-all disabled:opacity-50 shrink-0"
+                style={{
+                  backgroundColor: c.value,
+                  boxShadow: primaryColor === c.value ? `0 0 0 2px #0a0a0a, 0 0 0 4px ${c.value}` : "none",
+                }}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Custom notes */}
+        <section>
+          <label className="block text-sm font-medium text-neutral-300 mb-2">
+            Custom details <span className="text-neutral-600 font-normal">(optional)</span>
+          </label>
+          <input
+            type="text"
+            value={customNotes}
+            onChange={(e) => setCustomNotes(e.target.value)}
+            placeholder='e.g. "wolf mascot", "slow burn reveal", "HBO Max aesthetic"'
+            maxLength={120}
+            disabled={isGenerating}
+            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors text-sm"
+          />
+        </section>
+
+        {/* Model quality */}
+        <section>
+          <label className="block text-sm font-medium text-neutral-300 mb-3">Video quality</label>
+          <div className="flex gap-3">
+            {([
+              { id: "gen4_turbo" as VideoModel, label: "Fast",    sub: "Gen4 Turbo · 5 cr/s · ~30s" },
+              { id: "gen4.5"     as VideoModel, label: "Quality", sub: "Gen4.5 · 12 cr/s · ~60s" },
+            ]).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setVideoModel(m.id)}
+                disabled={isGenerating}
+                className="flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-xs transition-all disabled:opacity-50"
+                style={videoModel === m.id
+                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                  : { borderColor: "#262626" }
+                }
+              >
+                <span className="font-semibold mb-0.5" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
+                <span style={{ color: "#525252" }}>{m.sub}</span>
               </button>
             ))}
           </div>
@@ -409,18 +634,30 @@ export default function Home() {
 
         {/* Prompt preview */}
         <section>
-          <button
-            onClick={() => setShowPrompt((v) => !v)}
-            className="flex items-center gap-2 text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
-          >
-            <span>{showPrompt ? "▾" : "▸"}</span>
-            <span>Prompt preview</span>
-            <span className="text-neutral-700">(see what gets sent to the API)</span>
-          </button>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => setShowPrompt((v) => !v)}
+              className="flex items-center gap-2 text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+            >
+              <span>{showPrompt ? "▾" : "▸"}</span>
+              <span className="font-medium text-neutral-300">Prompt preview</span>
+              <span className="text-neutral-700">· see what gets sent to the API</span>
+            </button>
+            <button
+              onClick={copyScript}
+              className="text-xs border px-3 py-1 rounded transition-colors"
+              style={copied
+                ? { borderColor: accentColor + "60", color: accentColor }
+                : { borderColor: "#2a2a2a", color: "#737373" }
+              }
+            >
+              {copied ? "Copied!" : "{ } Copy as script"}
+            </button>
+          </div>
           {showPrompt && (
-            <div className="mt-3 space-y-3">
+            <div className="space-y-3">
               <PromptBlock label="Step 1 · Gen4 Image · 1920x1080" text={preview.imagePrompt} />
-              <PromptBlock label="Step 2 · Gen4 Turbo · 1280x720" text={preview.videoPrompt} />
+              <PromptBlock label={`Step 2 · ${videoModel} · 1280x720`} text={preview.videoPrompt} />
             </div>
           )}
         </section>
@@ -440,7 +677,7 @@ export default function Home() {
                 }
           }
         >
-          {isGenerating ? `Generating... (${selectedDuration.est})` : "Generate Intro"}
+          {isGenerating ? `Generating... ${(elapsedMs / 1000).toFixed(1)}s` : "Generate Intro"}
         </button>
       </div>
 
@@ -458,26 +695,74 @@ export default function Home() {
           </div>
 
           <div className="space-y-4">
+            {/* Image skeleton */}
+            {step === "image" && !imageUrl && logoMode === "ai" && (
+              <div className="rounded-xl overflow-hidden border border-neutral-800">
+                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800">
+                  <div className="h-3 w-44 rounded bg-neutral-800 animate-pulse" />
+                </div>
+                <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }} />
+              </div>
+            )}
+
             {imageUrl && (
               <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 40px ${accentColor}18` }}>
-                <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800">
-                  Step 1 · Logo · 1920x1080
+                <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
+                  <span>Scene 1 · Logo · 1920x1080</span>
+                  {timings && <span className="tabular-nums">{(timings.image / 1000).toFixed(1)}s</span>}
                 </div>
                 <Image src={imageUrl} alt="Generated logo" width={1920} height={1080} className="w-full" unoptimized />
               </div>
             )}
 
-            {videoUrl && (
-              <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 60px ${accentColor}25` }}>
-                <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800">
-                  Step 2 · Intro video · {duration}s · 1280x720
+            {/* Video skeleton */}
+            {step === "video" && !videoUrl && (
+              <div className="rounded-xl overflow-hidden border border-neutral-800">
+                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800">
+                  <div className="h-3 w-56 rounded bg-neutral-800 animate-pulse" />
                 </div>
-                <video src={videoUrl} autoPlay loop muted playsInline className="w-full" />
+                <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }} />
+              </div>
+            )}
+
+            {videoUrl && (
+              <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 80px ${accentColor}30` }}>
+                <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
+                  <span>Scene 2 · Intro video · {duration}s · 1280x720</span>
+                  {timings && <span className="tabular-nums">{(timings.video / 1000).toFixed(1)}s</span>}
+                </div>
+                {/* TV screen */}
+                <div className="relative bg-black">
+                  <video src={videoUrl} autoPlay loop muted playsInline className="w-full block" />
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
+                </div>
+                {/* Timing strip */}
+                {timings && (
+                  <div className="px-3 py-1.5 bg-neutral-950 border-b border-neutral-800 flex gap-4 text-xs text-neutral-600 tabular-nums">
+                    <span>Scene 1: {(timings.image / 1000).toFixed(1)}s</span>
+                    <span>Scene 2: {(timings.video / 1000).toFixed(1)}s</span>
+                    <span className="text-neutral-500 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
+                  </div>
+                )}
                 <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2">
                   <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors shrink-0">
                     Generate another
                   </button>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={copyScript}
+                      className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"
+                    >
+                      {copied ? "Copied!" : "{ } Copy as script"}
+                    </button>
+                    <a
+                      href={redditShareUrl(name.trim())}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"
+                    >
+                      Post to r/plexprerolls
+                    </a>
                     <a
                       href={tweetShareUrl(name.trim())}
                       target="_blank"
@@ -521,7 +806,18 @@ export default function Home() {
                           <img src={`/logos/${p.slug}.svg`} alt={p.name} width={12} height={12} />
                           <span className="text-xs font-bold" style={{ color: p.color }}>{p.name}</span>
                         </div>
-                        <p className="text-xs text-neutral-400 leading-relaxed">{p.howTo}</p>
+                        <div className="flex-1">
+                          <p className="text-xs text-neutral-400 leading-relaxed">{p.howTo}</p>
+                          <a
+                            href={p.docs}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs mt-1 inline-block transition-colors hover:text-neutral-300"
+                            style={{ color: p.color + "cc" }}
+                          >
+                            Official docs →
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -543,9 +839,9 @@ export default function Home() {
       <div className="mt-16 w-full max-w-2xl border-t border-neutral-900 pt-8 flex flex-col items-center gap-4 text-xs text-neutral-600">
         <div className="flex items-center gap-4">
           <Link href="/how-it-works" className="hover:text-neutral-400 transition-colors">How it&apos;s built</Link>
+          <a href={LINKS.repoGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Fork on GitHub</a>
           <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Runway docs</a>
           <a href={LINKS.runwayCommunity} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Discord</a>
-          <a href={LINKS.runwayGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">SDK on GitHub</a>
           <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Get API key</a>
         </div>
         <div className="flex items-center gap-4 text-neutral-700">
@@ -558,11 +854,8 @@ export default function Home() {
             <a href={BUILDER.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-500 transition-colors">LinkedIn</a>
           </div>
           <span className="text-neutral-800">|</span>
-          <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-neutral-600 hover:text-white transition-colors">
-            <span>Powered by</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logos/runway.svg" alt="Runway" width={13} height={13} style={{ filter: "invert(0.5)" }} />
-            <span className="font-semibold text-neutral-500 hover:text-white">Runway</span>
+          <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">
+            Powered by Runway
           </a>
         </div>
       </div>
@@ -595,9 +888,20 @@ function StepIndicator({ label, status, color }: { label: string; status: "pendi
 }
 
 function PromptBlock({ label, text }: { label: string; text: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   return (
     <div className="rounded-lg border border-neutral-800 overflow-hidden">
-      <div className="px-3 py-1.5 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800">{label}</div>
+      <div className="flex items-center justify-between px-3 py-1.5 bg-neutral-900 border-b border-neutral-800">
+        <span className="text-xs text-neutral-500">{label}</span>
+        <button onClick={copy} className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors">
+          {copied ? "Copied!" : "Copy"}
+        </button>
+      </div>
       <div className="px-3 py-2.5 text-xs text-neutral-400 font-mono leading-relaxed bg-neutral-950">{text}</div>
     </div>
   );
