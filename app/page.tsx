@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { buildPrompts, type Style, type Duration, type VideoModel, type Treatment } from "@/lib/runway";
+import { buildPrompts, imageRatio, type Style, type Duration, type ImageModel, type VideoModel, type Treatment } from "@/lib/runway";
 import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS, BUILDER, tweetShareUrl, redditShareUrl } from "@/lib/links";
 
-type GenStep = "idle" | "image" | "video" | "done" | "error";
+type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
+
+const SESSION_KEY = "streamroll_gen_state";
 
 // Per-style accent colors used for selected state
 const STYLE_COLOR: Record<Style, string> = {
@@ -22,17 +25,30 @@ const STYLE_COLOR: Record<Style, string> = {
   prestige:   "#E50914",
 };
 
-const STYLES: { id: Style; label: string; emoji: string; desc: string }[] = [
-  { id: "prestige",   label: "Prestige",   emoji: "🔴", desc: "Bold red on black" },
-  { id: "cinematic",  label: "Cinematic",  emoji: "🎬", desc: "Navy & gold, film grain" },
-  { id: "retro",      label: "Retro",      emoji: "📺", desc: "80s neon synthwave" },
-  { id: "futuristic", label: "Futuristic", emoji: "🚀", desc: "Holographic chrome" },
-  { id: "minimal",    label: "Minimal",    emoji: "✦",  desc: "Clean & elegant" },
-  { id: "horror",     label: "Horror",     emoji: "🩸", desc: "Gothic, fog & shadow" },
-  { id: "anime",      label: "Anime",      emoji: "🌸", desc: "Vivid, cherry blossoms" },
-  { id: "epic",       label: "Epic",       emoji: "⚔️", desc: "Golden hour, dust" },
-  { id: "nature",     label: "Nature",     emoji: "🌿", desc: "Earthy documentary" },
+const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string }[] = [
+  { id: "prestige",   label: "Prestige",   emoji: "🔴", desc: "Bold red on black",       tip: "Auto: Gen4.5 · Minimal · 4s" },
+  { id: "cinematic",  label: "Cinematic",  emoji: "🎬", desc: "Navy & gold, film grain",  tip: "Auto: Gen4.5 · Full Bleed · 5s" },
+  { id: "retro",      label: "Retro",      emoji: "📺", desc: "80s neon synthwave",       tip: "Auto: Gen4 Turbo · Full Bleed · 5s" },
+  { id: "futuristic", label: "Futuristic", emoji: "🚀", desc: "Holographic chrome",       tip: "Auto: Gen4.5 · Full Bleed · 5s" },
+  { id: "minimal",    label: "Minimal",    emoji: "✦",  desc: "Clean & elegant",          tip: "Auto: Gen4 Turbo · Minimal · 4s" },
+  { id: "horror",     label: "Horror",     emoji: "🩸", desc: "Gothic, fog & shadow",     tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
+  { id: "anime",      label: "Anime",      emoji: "🌸", desc: "Vivid, cherry blossoms",   tip: "Auto: Gen4.5 · Full Bleed · 4s" },
+  { id: "epic",       label: "Epic",       emoji: "⚔️", desc: "Golden hour, dust",        tip: "Auto: Gen4.5 · Theatrical · 5s" },
+  { id: "nature",     label: "Nature",     emoji: "🌿", desc: "Earthy documentary",       tip: "Auto: Gen4 Turbo · Minimal · 4s" },
 ];
+
+const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageModel; treatment: Treatment; duration: Duration }> = {
+  // gen4_image = creative/artistic;  gemini_image3_pro = precise instruction-following
+  prestige:   { videoModel: "gen4.5",      imageModel: "gemini_image3_pro", treatment: "minimal",     duration: 4 },
+  cinematic:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  retro:      { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  futuristic: { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  minimal:    { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "minimal",     duration: 4 },
+  horror:     { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
+  anime:      { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 4 },
+  epic:       { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
+  nature:     { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
+};
 
 const DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 2,  label: "2s",  est: "~20 sec" },
@@ -40,7 +56,9 @@ const DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 10, label: "10s", est: "~60 sec" },
 ];
 
-const INSPO: { name: string; style: Style; tagline: string; desc: string }[] = [
+type Preset = { name: string; style: Style; tagline: string; desc: string; emoji?: string; customNotes?: string };
+
+const INSPO: Preset[] = [
   { name: "Joeflix",   style: "prestige",   tagline: "Where stories come alive",  desc: "Example · your name here" },
   { name: "NightOwl",  style: "horror",     tagline: "Streaming after dark",       desc: "Late-night horror hub" },
   { name: "SkyBox",    style: "futuristic", tagline: "Beyond the horizon",         desc: "Sci-fi & space content" },
@@ -51,14 +69,26 @@ const INSPO: { name: string; style: Style; tagline: string; desc: string }[] = [
   { name: "WhiteRoom", style: "minimal",    tagline: "Less is more",               desc: "Arthouse & indie film" },
 ];
 
-const SEASONAL: { name: string; style: Style; tagline: string; desc: string }[] = [
-  { name: "SpookFlix",   style: "horror",     tagline: "Horror has a home",           desc: "🎃 Halloween" },
-  { name: "WinterFlix",  style: "cinematic",  tagline: "The magic of the season",     desc: "🎄 Christmas" },
-  { name: "SunsetCut",   style: "epic",       tagline: "Blockbuster season",          desc: "☀️ Summer" },
-  { name: "NightStream", style: "futuristic", tagline: "The future starts at midnight", desc: "🎆 New Year" },
+const SEASONAL: Preset[] = [
+  { name: "AutumnFlix",  emoji: "🍂", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
+  { name: "WinterFlix",  emoji: "❄️", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
+  { name: "SpringFlix",  emoji: "🌸", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
+  { name: "SummerFlix",  emoji: "☀️", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
+];
+
+const HOLIDAYS: Preset[] = [
+  { name: "SpookFlix",    emoji: "🎃", style: "horror",     tagline: "Horror has a home",             desc: "Halloween",       customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
+  { name: "ChristmasFlix",emoji: "🎄", style: "cinematic",  tagline: "The magic of Christmas",        desc: "Christmas",       customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
+  { name: "NightStream",  emoji: "🎆", style: "futuristic", tagline: "The future starts tonight",     desc: "New Year's Eve",  customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
+  { name: "LoveBox",      emoji: "💝", style: "retro",      tagline: "For the love of streaming",     desc: "Valentine's Day", customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
+  { name: "LuckyStream",  emoji: "🍀", style: "nature",     tagline: "Stream your luck tonight",      desc: "St. Patrick's Day",customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
+  { name: "FreedomFlix",  emoji: "🗽", style: "epic",       tagline: "Independence from bad content", desc: "Fourth of July",  customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
+  { name: "HarvestFlix",  emoji: "🦃", style: "cinematic",  tagline: "Gather and stream together",    desc: "Thanksgiving",    customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
+  { name: "LuminaryFlix", emoji: "🕎", style: "minimal",    tagline: "Eight nights of great picks",   desc: "Hanukkah",        customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
 
 type LogoMode = "ai" | "upload";
+type GenMode = "image-only" | "full";
 
 const COLOR_SWATCHES = [
   { label: "Gold",    value: "#F59E0B" },
@@ -81,6 +111,14 @@ const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 4, label: "4s", est: "~45 sec" },
   { value: 6, label: "6s", est: "~60 sec" },
   { value: 8, label: "8s", est: "~75 sec" },
+];
+
+const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; desc: string }[] = [
+  { id: "gen4_image",        label: "Gen4 Image",         group: "Runway",  desc: "Creative, artistic style" },
+  { id: "gen4_image_turbo",  label: "Gen4 Turbo",         group: "Runway",  desc: "Faster, great quality" },
+  { id: "gpt_image_2",       label: "GPT Image 2",        group: "OpenAI",  desc: "Precise instruction-following" },
+  { id: "gemini_image3_pro", label: "Gemini Image 3 Pro", group: "Google",  desc: "Vivid, instruction-aware" },
+  { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  desc: "Fast, Google quality" },
 ];
 
 const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crInfo: string; desc: string }[] = [
@@ -111,10 +149,11 @@ const PLATFORMS = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [name, setName]         = useState("Joeflix");
   const [tagline, setTagline]   = useState("Where stories come alive");
   const [style, setStyle]       = useState<Style>("cinematic");
-  const [duration, setDuration] = useState<Duration>(5);
+  const [duration, setDuration] = useState<Duration>(STYLE_DEFAULTS["cinematic"].duration);
   const [step, setStep]         = useState<GenStep>("idle");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -122,8 +161,9 @@ export default function Home() {
   const [showPrompt, setShowPrompt] = useState(true);
   const [showInstall, setShowInstall] = useState(false);
   const [logoMode, setLogoMode] = useState<LogoMode>("ai");
-  const [videoModel, setVideoModel] = useState<VideoModel>("gen4_turbo");
-  const [treatment, setTreatment] = useState<Treatment>("full-bleed");
+  const [imageModel, setImageModel] = useState<ImageModel>("gen4_image");
+  const [videoModel, setVideoModel] = useState<VideoModel>(STYLE_DEFAULTS["cinematic"].videoModel);
+  const [treatment, setTreatment] = useState<Treatment>(STYLE_DEFAULTS["cinematic"].treatment);
   const [primaryColor, setPrimaryColor] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState("");
   const [uploadedUri, setUploadedUri] = useState<string | null>(null);
@@ -134,38 +174,113 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [audio, setAudio] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [genMode, setGenMode] = useState<GenMode>("full");
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [sessionRestored, setSessionRestored] = useState(false);
+  const [pollStatus, setPollStatus] = useState<string | null>(null);
+  const [pollProgress, setPollProgress] = useState<number | null>(null);
+  const [imagePromptOverride, setImagePromptOverride] = useState<string | null>(null);
+  const [videoPromptOverride, setVideoPromptOverride] = useState<string | null>(null);
+  const [cancelTaskId, setCancelTaskId] = useState("");
+  const [cancelMsg, setCancelMsg] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const genStartRef = useRef(0);
+  const imageTimeRef = useRef(0);
+  const activeTaskIdRef = useRef<string | null>(null);
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
+  // Restore completed generation from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_KEY);
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (p.step === "done" || p.step === "error" || p.step === "review") {
+          if (p.name)    setName(p.name);
+          if (p.style)   setStyle(p.style);
+          if (p.tagline !== undefined) setTagline(p.tagline);
+          if (p.imageUrl) setImageUrl(p.imageUrl);
+          if (p.videoUrl) setVideoUrl(p.videoUrl);
+          if (p.timings)  setTimings(p.timings);
+          if (p.error)    setError(p.error);
+          setStep(p.step);
+        }
+      }
+    } catch {}
+    setSessionRestored(true);
+  }, []);
+
+  // Persist completed/error state to sessionStorage so navigation doesn't wipe results
+  useEffect(() => {
+    if (!sessionRestored) return;
+    if (step === "done" || step === "error" || step === "review") {
+      try {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(
+          { step, imageUrl, videoUrl, timings, error, name, style, tagline }
+        ));
+      } catch {}
+    } else if (step === "idle") {
+      try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+    }
+  }, [step, imageUrl, videoUrl, timings, error, name, style, tagline, sessionRestored]);
+
+  // Warn before browser-level unload (refresh/close) while a generation is running
+  useEffect(() => {
+    if (step !== "image" && step !== "video") return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [step]);
+
   const { key: apiKey, loaded: keyLoaded } = useApiKey();
-  const preview = buildPrompts({ name, style, tagline, duration, treatment, primaryColor: primaryColor ?? undefined, customNotes: customNotes || undefined });
+  const preview = buildPrompts({ name, style, tagline, duration, treatment, videoModel, primaryColor: primaryColor ?? undefined, customNotes: customNotes || undefined });
   const isGenerating = step === "image" || step === "video";
   const selectedDuration = DURATIONS.find((d) => d.value === duration)!;
   const accentColor = STYLE_COLOR[style];
   const crPerSec = videoModel === "gen4.5" ? 12 : videoModel === "veo3" || videoModel === "veo3.1" ? 25 : videoModel === "veo3.1_fast" ? 15 : 5;
   const isVeoModel = videoModel === "veo3" || videoModel === "veo3.1" || videoModel === "veo3.1_fast";
-  const hasNoDuration = videoModel === "gen4.5";
   const activeDurations = isVeoModel ? VEO_DURATIONS : DURATIONS;
 
-  function applyInspo(i: (typeof INSPO)[number]) {
+  function applyInspo(i: Preset) {
     setName(i.name);
     setTagline(i.tagline);
     setStyle(i.style);
+    const d = STYLE_DEFAULTS[i.style];
+    setVideoModel(d.videoModel);
+    setImageModel(d.imageModel);
+    setTreatment(d.treatment);
+    setDuration(d.duration);
+    setCustomNotes(i.customNotes ?? "");
     setStep("idle");
     setImageUrl(null);
     setVideoUrl(null);
     setError(null);
   }
 
+  function cancelActiveTask() {
+    const taskId = activeTaskIdRef.current;
+    if (!taskId) return;
+    activeTaskIdRef.current = null;
+    const headers: Record<string, string> = {};
+    if (apiKey) headers["x-runway-key"] = apiKey;
+    // Fire-and-forget — don't block the UI on this
+    fetch(`/api/video/cancel?id=${encodeURIComponent(taskId)}`, { method: "DELETE", headers }).catch(() => {});
+  }
+
   function reset() {
+    cancelActiveTask();
+    setPollStatus(null);
+    setPollProgress(null);
+    setCancelMsg(null);
+    setCancelTaskId("");
     setStep("idle");
     setImageUrl(null);
     setVideoUrl(null);
     setError(null);
     setTimings(null);
     setElapsedMs(0);
+    try { sessionStorage.removeItem(SESSION_KEY); } catch {}
   }
 
   function handleModelChange(m: VideoModel) {
@@ -176,7 +291,7 @@ export default function Home() {
   }
 
   function copyScript() {
-    const durationLine = hasNoDuration ? "" : `    duration: ${duration},\n`;
+    const durationLine = `    duration: ${duration},\n`;
     const audioLine = isVeoModel && audio ? `    audio: true,\n` : "";
     const script = `import RunwayML from "@runwayml/sdk";
 
@@ -185,15 +300,15 @@ const runway = new RunwayML({ apiKey: process.env.RUNWAYML_API_SECRET });
 // Step 1: Generate logo image
 const imageTask = await runway.textToImage
   .create({
-    model: "gen4_image",
+    model: "${imageModel}",
     promptText: \`${preview.imagePrompt}\`,
-    ratio: "1920:1080",
+    ratio: "${imageRatio(imageModel)}",
   })
   .waitForTaskOutput();
 
 const logoUrl = imageTask.output[0];
 
-// Step 2: Animate into ${hasNoDuration ? "an" : `a ${duration}s`} intro
+// Step 2: Animate into a ${duration}s intro
 const videoTask = await runway.imageToVideo
   .create({
     model: "${videoModel}",
@@ -230,59 +345,165 @@ console.log(videoTask.output[0]);
     }
   }
 
+  function buildBody(overrideNotes?: string) {
+    return {
+      name: name.trim(), style, tagline: tagline.trim(), duration,
+      imageModel, videoModel, treatment,
+      primaryColor: primaryColor ?? undefined,
+      customNotes: overrideNotes ?? (customNotes.trim() || undefined),
+      audio: isVeoModel ? audio : undefined,
+      imagePromptOverride: imagePromptOverride ?? undefined,
+      videoPromptOverride: videoPromptOverride ?? undefined,
+    };
+  }
+
+  function startTimer() {
+    setElapsedMs(0);
+    genStartRef.current = Date.now();
+    timerRef.current = setInterval(() => setElapsedMs(Date.now() - genStartRef.current), 100);
+  }
+
+  function stopTimer() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }
+
   async function generate() {
     if (!name.trim()) return;
+    if (keyLoaded && !apiKey) { router.push("/setup"); return; }
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (apiKey) headers["x-runway-key"] = apiKey;
 
-    const body = {
-      name: name.trim(), style, tagline: tagline.trim(), duration,
-      videoModel, treatment,
-      primaryColor: primaryColor ?? undefined,
-      customNotes: customNotes.trim() || undefined,
-      audio: isVeoModel ? audio : undefined,
-    };
     setImageUrl(null);
     setVideoUrl(null);
     setError(null);
     setTimings(null);
-    setElapsedMs(0);
-    genStartRef.current = Date.now();
-    timerRef.current = setInterval(() => setElapsedMs(Date.now() - genStartRef.current), 100);
+    setReviewNotes("");
+    imageTimeRef.current = 0;
+    startTimer();
 
     try {
-      let logoImageUrl: string;
-      let imageTime = 0;
-
       if (logoMode === "upload" && uploadedUri) {
-        logoImageUrl = uploadedUri;
         setImageUrl(uploadedUri);
-        setStep("video");
       } else {
         setStep("image");
         const imageStart = Date.now();
-        const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(body) });
+        const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody()) });
         const imageData = await imageRes.json();
         if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
-        imageTime = Date.now() - imageStart;
-        logoImageUrl = imageData.imageUrl;
-        setImageUrl(logoImageUrl);
-        setStep("video");
+        imageTimeRef.current = Date.now() - imageStart;
+        setImageUrl(imageData.imageUrl);
       }
 
-      const videoStart = Date.now();
-      const videoRes = await fetch("/api/video", { method: "POST", headers, body: JSON.stringify({ ...body, imageUrl: logoImageUrl }) });
-      const videoData = await videoRes.json();
-      if (!videoRes.ok) throw new Error(videoData.error ?? "Video generation failed");
-      const videoTime = Date.now() - videoStart;
-      setVideoUrl(videoData.videoUrl);
-      setTimings({ image: imageTime, video: videoTime });
-      setStep("done");
+      if (genMode === "image-only") {
+        setTimings({ image: imageTimeRef.current, video: 0 });
+        setStep("done");
+        return;
+      }
+
+      setStep("review");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setStep("error");
     } finally {
-      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      stopTimer();
+    }
+  }
+
+  async function handleRegenerate() {
+    if (keyLoaded && !apiKey) { router.push("/setup"); return; }
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) headers["x-runway-key"] = apiKey;
+
+    const combined = [customNotes.trim(), reviewNotes.trim()].filter(Boolean).join(". ");
+
+    setImageUrl(null);
+    setError(null);
+    setReviewNotes("");
+    imageTimeRef.current = 0;
+    startTimer();
+    setStep("image");
+
+    try {
+      const imageStart = Date.now();
+      const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody(combined || undefined)) });
+      const imageData = await imageRes.json();
+      if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
+      imageTimeRef.current = Date.now() - imageStart;
+      setImageUrl(imageData.imageUrl);
+      setStep("review");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      setStep("error");
+    } finally {
+      stopTimer();
+    }
+  }
+
+  async function proceedToVideo() {
+    if (!imageUrl || keyLoaded && !apiKey) return;
+    const jsonHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) jsonHeaders["x-runway-key"] = apiKey;
+    const pollHeaders: Record<string, string> = {};
+    if (apiKey) pollHeaders["x-runway-key"] = apiKey;
+
+    setError(null);
+    setPollStatus(null);
+    startTimer();
+    setStep("video");
+
+    try {
+      // Step 1: kick off the Runway task (fast, < 5s)
+      setPollStatus("STARTING");
+      const startRes = await fetch("/api/video/start", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({ ...buildBody(), imageUrl }),
+      });
+      const startData = await startRes.json();
+      if (!startRes.ok) throw new Error(startData.error ?? "Failed to start video generation");
+
+      const taskId: string = startData.taskId;
+      activeTaskIdRef.current = taskId;
+      const videoStart = Date.now();
+      const maxWaitMs = 15 * 60 * 1000; // 15 minutes
+
+      // Step 2: poll every 8s until done (Runway updates no more than every 5s)
+      while (Date.now() - videoStart < maxWaitMs) {
+        await new Promise<void>(r => setTimeout(r, 8_000));
+
+        const pollRes = await fetch(`/api/video/poll?id=${encodeURIComponent(taskId)}`, { headers: pollHeaders });
+        const pollData = await pollRes.json();
+        if (!pollRes.ok) throw new Error(pollData.error ?? "Status check failed");
+
+        const { status, output, failure, progress } = pollData;
+        setPollStatus(status);
+        if (typeof progress === "number") setPollProgress(Math.round(progress * 100));
+        else if (status !== "RUNNING") setPollProgress(null);
+
+        if (status === "SUCCEEDED") {
+          activeTaskIdRef.current = null;
+          const videoTime = Date.now() - videoStart;
+          setVideoUrl(output);
+          setTimings({ image: imageTimeRef.current, video: videoTime });
+          setPollStatus(null);
+          setPollProgress(null);
+          setStep("done");
+          return;
+        }
+        if (status === "FAILED")    throw new Error(failure ?? "Video generation failed");
+        if (status === "CANCELLED") throw new Error("Video generation was cancelled");
+        // PENDING / THROTTLED / RUNNING → keep polling
+      }
+
+      throw new Error("Video generation timed out after 15 minutes. Check your Runway dashboard for task status.");
+    } catch (e) {
+      activeTaskIdRef.current = null;
+      setPollStatus(null);
+      setPollProgress(null);
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      setStep("error");
+    } finally {
+      stopTimer();
     }
   }
 
@@ -371,6 +592,12 @@ console.log(videoTask.output[0]);
         )}
       </div>
 
+      {/* Example montage */}
+      <div className="w-full max-w-2xl mb-10">
+        <VideoMontage />
+        <p className="text-center text-xs text-neutral-700 mt-2">Real outputs — generated with StreamRoll</p>
+      </div>
+
       <div className="w-full max-w-2xl space-y-8">
 
         {/* Inspo presets */}
@@ -408,7 +635,10 @@ console.log(videoTask.output[0]);
           </div>
 
           <div className="mt-3">
-            <div className="text-xs text-neutral-700 mb-2 tracking-wide">Seasonal</div>
+            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
+              <span style={{ color: "#166534" }}>✦</span>
+              <span className="text-neutral-600">Seasons</span>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {SEASONAL.map((i) => {
                 const isActive = name === i.name && style === i.style;
@@ -418,14 +648,44 @@ console.log(videoTask.output[0]);
                     key={i.name}
                     onClick={() => applyInspo(i)}
                     disabled={isGenerating}
-                    className="text-left p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
                     style={isActive
                       ? { borderColor: color + "60", backgroundColor: color + "12" }
-                      : { borderColor: "#262626" }
+                      : { borderColor: "#1c2a1c" }
                     }
                   >
-                    <div className="font-medium text-sm" style={isActive ? { color } : undefined}>{i.name}</div>
-                    <div className="text-xs text-neutral-600 mt-0.5">{i.desc}</div>
+                    <span className="text-xl mb-1">{i.emoji}</span>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#4a5e4a" }}>{i.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
+              <span style={{ color: "#92400e" }}>✦</span>
+              <span className="text-neutral-600">Holidays</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {HOLIDAYS.map((i) => {
+                const isActive = name === i.name && style === i.style;
+                const color = STYLE_COLOR[i.style];
+                return (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    style={isActive
+                      ? { borderColor: color + "60", backgroundColor: color + "12" }
+                      : { borderColor: "#2a1e0e" }
+                    }
+                  >
+                    <span className="text-xl mb-1">{i.emoji}</span>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#5c4a2a" }}>{i.desc}</div>
                   </button>
                 );
               })}
@@ -534,7 +794,14 @@ console.log(videoTask.output[0]);
               return (
                 <button
                   key={s.id}
-                  onClick={() => setStyle(s.id)}
+                  onClick={() => {
+                    setStyle(s.id);
+                    const d = STYLE_DEFAULTS[s.id];
+                    setVideoModel(d.videoModel);
+                    setImageModel(d.imageModel);
+                    setTreatment(d.treatment);
+                    setDuration(d.duration);
+                  }}
                   disabled={isGenerating}
                   className="flex flex-col items-start p-3 rounded-lg border transition-all disabled:opacity-50"
                   style={isActive
@@ -549,40 +816,36 @@ console.log(videoTask.output[0]);
               );
             })}
           </div>
+          {STYLES.find(s => s.id === style)?.tip && (
+            <p className="mt-2 text-xs text-neutral-600">
+              💡 {STYLES.find(s => s.id === style)!.tip}
+            </p>
+          )}
         </section>
 
         {/* Duration */}
-        {!hasNoDuration ? (
-          <section>
-            <label className="block text-sm font-medium text-neutral-300 mb-3">Duration</label>
-            <div className="flex gap-3">
-              {activeDurations.map((d) => (
-                <button
-                  key={d.value}
-                  onClick={() => setDuration(d.value)}
-                  disabled={isGenerating}
-                  className="flex-1 flex flex-col items-center gap-1 py-3 rounded-lg border text-xs transition-all disabled:opacity-50"
-                  style={duration === d.value
-                    ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                    : { borderColor: "#262626" }
-                  }
-                >
-                  <span className="text-base font-bold" style={duration === d.value ? { color: accentColor } : { color: "#e5e7eb" }}>
-                    {d.label}
-                  </span>
-                  <span className="text-neutral-500">{d.value * crPerSec + 8} cr · {d.est}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <section>
-            <label className="block text-sm font-medium text-neutral-300 mb-3">Duration</label>
-            <div className="px-4 py-3 rounded-lg border text-xs text-neutral-500" style={{ borderColor: "#262626" }}>
-              Gen4.5 generates a fixed-length video — duration is set automatically.
-            </div>
-          </section>
-        )}
+        <section>
+          <label className="block text-sm font-medium text-neutral-300 mb-3">Duration</label>
+          <div className="flex gap-3">
+            {activeDurations.map((d) => (
+              <button
+                key={d.value}
+                onClick={() => setDuration(d.value)}
+                disabled={isGenerating}
+                className="flex-1 flex flex-col items-center gap-1 py-3 rounded-lg border text-xs transition-all disabled:opacity-50"
+                style={duration === d.value
+                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                  : { borderColor: "#262626" }
+                }
+              >
+                <span className="text-base font-bold" style={duration === d.value ? { color: accentColor } : { color: "#e5e7eb" }}>
+                  {d.label}
+                </span>
+                <span className="text-neutral-500">{d.value * crPerSec + 8} cr · {d.est}</span>
+              </button>
+            ))}
+          </div>
+        </section>
 
         {/* Advanced Settings */}
         <section>
@@ -596,6 +859,39 @@ console.log(videoTask.output[0]);
 
           {showAdvanced && (
             <div className="space-y-7 pt-1">
+
+              {/* Image model */}
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Image model</label>
+                <div className="space-y-1.5">
+                  {(["Runway", "OpenAI", "Google"] as const).map((group) => {
+                    const models = IMAGE_MODELS.filter(m => m.group === group);
+                    if (!models.length) return null;
+                    return (
+                      <div key={group}>
+                        <div className="text-xs text-neutral-700 mb-2">{group === "OpenAI" ? "OpenAI via Runway" : group === "Google" ? "Google via Runway" : "Runway"}</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {models.map((m) => (
+                            <button
+                              key={m.id}
+                              onClick={() => setImageModel(m.id)}
+                              disabled={isGenerating}
+                              className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
+                              style={imageModel === m.id
+                                ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                                : { borderColor: "#262626" }
+                              }
+                            >
+                              <span className="font-semibold mb-0.5" style={imageModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
+                              <span className="text-neutral-600 leading-tight">{m.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Video model */}
               <div>
@@ -764,19 +1060,47 @@ console.log(videoTask.output[0]);
           </div>
           {showPrompt && (
             <div className="space-y-3">
-              <PromptBlock label="Step 1 · Gen4 Image · 1920x1080" text={preview.imagePrompt} />
-              <PromptBlock label={`Step 2 · ${videoModel} · 1280x720${isVeoModel && audio ? " · audio on" : ""}`} text={preview.videoPrompt} />
+              <EditablePromptBlock
+                label={`Step 1 · ${IMAGE_MODELS.find(m => m.id === imageModel)?.label ?? imageModel} · ${imageRatio(imageModel).replace(":", "x")}`}
+                generated={preview.imagePrompt}
+                override={imagePromptOverride}
+                onChange={setImagePromptOverride}
+              />
+              <EditablePromptBlock
+                label={`Step 2 · ${videoModel} · 1280x720${isVeoModel && audio ? " · audio on" : ""}`}
+                generated={preview.videoPrompt}
+                override={videoPromptOverride}
+                onChange={setVideoPromptOverride}
+              />
             </div>
           )}
         </section>
 
+        {/* Generation mode */}
+        <div className="flex gap-2">
+          {(["image-only", "full"] as GenMode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => setGenMode(m)}
+              disabled={isGenerating}
+              className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
+              style={genMode === m
+                ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
+                : { borderColor: "#262626", color: "#a3a3a3" }
+              }
+            >
+              {m === "image-only" ? "🖼 Logo only" : "🎬 Full intro (logo + video)"}
+            </button>
+          ))}
+        </div>
+
         {/* Generate */}
         <button
           onClick={generate}
-          disabled={isGenerating || !name.trim()}
+          disabled={isGenerating || !name.trim() || (keyLoaded && !apiKey)}
           className="w-full font-semibold py-3.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed text-base"
           style={
-            isGenerating || !name.trim()
+            isGenerating || !name.trim() || (keyLoaded && !apiKey)
               ? { background: "#fff", color: "#000" }
               : {
                   background: `linear-gradient(135deg, ${accentColor}22 0%, transparent 60%), #fff`,
@@ -785,21 +1109,39 @@ console.log(videoTask.output[0]);
                 }
           }
         >
-          {isGenerating ? `Generating... ${(elapsedMs / 1000).toFixed(1)}s` : "Generate Intro"}
+          {isGenerating
+            ? `Generating... ${(elapsedMs / 1000).toFixed(1)}s`
+            : keyLoaded && !apiKey
+            ? "Add API key to generate →"
+            : genMode === "image-only"
+            ? "Generate Logo"
+            : "Generate Intro"}
         </button>
       </div>
 
       {/* Progress + results */}
-      {(isGenerating || step === "done") && (
+      {(isGenerating || step === "review" || step === "done" || (step === "error" && imageUrl)) && (
         <div className="mt-10 w-full max-w-2xl">
           <div className="flex items-center gap-4 mb-6">
             <StepIndicator label="Scene 1 · Design poster" status={step === "image" ? "active" : "done"} color={accentColor} />
-            <div className="flex-1 h-px bg-neutral-800" />
-            <StepIndicator
-              label="Scene 2 · Roll camera"
-              status={step === "video" ? "active" : step === "done" ? "done" : "pending"}
-              color={accentColor}
-            />
+            {genMode === "full" && (
+              <>
+                <div className="flex-1 h-px bg-neutral-800" />
+                <StepIndicator
+                  label="Scene 2 · Roll camera"
+                  status={step === "video" ? "active" : step === "done" ? "done" : step === "error" ? "error" : "pending"}
+                  color={accentColor}
+                />
+              </>
+            )}
+            {!isGenerating && (
+              <button
+                onClick={reset}
+                className="ml-2 text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"
+              >
+                ✕ Start over
+              </button>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -816,27 +1158,157 @@ console.log(videoTask.output[0]);
             {imageUrl && (
               <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 40px ${accentColor}18` }}>
                 <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
-                  <span>Scene 1 · Logo · 1920x1080</span>
-                  {timings && <span className="tabular-nums">{(timings.image / 1000).toFixed(1)}s</span>}
+                  <span>Scene 1 · Logo · {imageRatio(imageModel).replace(":", "x")}</span>
+                  {timings && timings.image > 0 && <span className="tabular-nums">{(timings.image / 1000).toFixed(1)}s</span>}
                 </div>
                 <Image src={imageUrl} alt="Generated logo" width={1920} height={1080} className="w-full" unoptimized />
+              </div>
+            )}
+
+            {/* Logo-only done — offer to continue to video */}
+            {step === "done" && genMode === "image-only" && imageUrl && (
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-neutral-200">Happy with the logo?</p>
+                  <p className="text-xs text-neutral-500 mt-0.5">You can generate the full intro video from it.</p>
+                </div>
+                <button
+                  onClick={() => { setGenMode("full"); proceedToVideo(); }}
+                  className="py-2.5 px-5 rounded-lg text-sm font-semibold text-black shrink-0 transition-all"
+                  style={{ background: accentColor }}
+                >
+                  Generate video →
+                </button>
+              </div>
+            )}
+
+            {/* Review step — approve or regenerate before animating */}
+            {step === "review" && genMode === "full" && (
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 space-y-3">
+                <p className="text-sm font-medium text-neutral-200">Happy with the logo?</p>
+                <p className="text-xs text-neutral-500">Approve it to animate, or add notes and regenerate.</p>
+                <input
+                  type="text"
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && reviewNotes.trim() && handleRegenerate()}
+                  placeholder='e.g. "make text bolder", "brighter red", "less grain"'
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-sm"
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={reset}
+                    className="py-2.5 px-4 rounded-lg border border-neutral-800 text-sm text-neutral-600 hover:text-neutral-400 hover:border-neutral-700 transition-colors"
+                  >
+                    Start over
+                  </button>
+                  <button
+                    onClick={handleRegenerate}
+                    className="flex-1 py-2.5 rounded-lg border border-neutral-700 text-sm text-neutral-300 hover:border-neutral-500 hover:text-white transition-colors"
+                  >
+                    ↺ Regenerate
+                  </button>
+                  <button
+                    onClick={proceedToVideo}
+                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-black transition-all"
+                    style={{ background: accentColor }}
+                  >
+                    Looks good → Make the video
+                  </button>
+                </div>
               </div>
             )}
 
             {/* Video skeleton */}
             {step === "video" && !videoUrl && (
               <div className="rounded-xl overflow-hidden border border-neutral-800">
-                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800">
-                  <div className="h-3 w-56 rounded bg-neutral-800 animate-pulse" />
+                {/* Status bar */}
+                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2">
+                  <div className="h-3 w-56 rounded bg-neutral-800 animate-pulse shrink-0" />
+                  {pollStatus && (
+                    <span className="text-xs shrink-0" style={{ color: pollStatus === "RUNNING" ? "#22C55E" : pollStatus === "THROTTLED" ? "#F59E0B" : "#6B7280" }}>
+                      {pollStatus === "STARTING"  && "Submitting task…"}
+                      {pollStatus === "PENDING"   && "Queued — waiting to start"}
+                      {pollStatus === "RUNNING"   && `⚙ Generating frames…${pollProgress !== null ? ` ${pollProgress}%` : ""}`}
+                      {pollStatus === "THROTTLED" && "⏳ Throttled — concurrent task limit reached"}
+                    </span>
+                  )}
                 </div>
-                <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }} />
+
+                {/* Progress bar (RUNNING only) */}
+                {pollStatus === "RUNNING" && pollProgress !== null && (
+                  <div className="px-3 py-2 bg-neutral-950 border-b border-neutral-800 flex items-center gap-3">
+                    <div className="flex-1 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${pollProgress}%`, backgroundColor: "#22C55E" }}
+                      />
+                    </div>
+                    <span className="text-xs tabular-nums shrink-0" style={{ color: "#22C55E" }}>
+                      {pollProgress}%
+                    </span>
+                  </div>
+                )}
+
+                {/* Placeholder area */}
+                <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }}>
+                  {pollStatus === "THROTTLED" && (
+                    <div className="flex flex-col items-center justify-center h-full gap-4 py-10 px-6">
+                      <p className="text-sm text-neutral-400 text-center max-w-sm">
+                        Another task is still running on your Runway account (concurrency limit: 1).
+                        Copy a task ID from your{" "}
+                        <span className="text-neutral-300">Runway dev portal → Request History</span>
+                        {" "}and cancel it here, or cancel this queued task and try again later.
+                      </p>
+
+                      {/* Cancel-by-ID input */}
+                      <div className="flex gap-2 w-full max-w-sm">
+                        <input
+                          type="text"
+                          value={cancelTaskId}
+                          onChange={e => { setCancelTaskId(e.target.value); setCancelMsg(null); }}
+                          placeholder="Paste task ID to cancel…"
+                          className="flex-1 text-xs bg-neutral-800 border border-neutral-700 rounded px-3 py-1.5 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-600"
+                        />
+                        <button
+                          disabled={!cancelTaskId.trim()}
+                          onClick={async () => {
+                            const id = cancelTaskId.trim();
+                            setCancelMsg("Cancelling…");
+                            const h: Record<string, string> = {};
+                            if (apiKey) h["x-runway-key"] = apiKey;
+                            const res = await fetch(`/api/video/cancel?id=${encodeURIComponent(id)}`, { method: "DELETE", headers: h });
+                            const data = await res.json();
+                            if (res.ok) { setCancelMsg("Cancelled ✓ — polling will resume shortly."); setCancelTaskId(""); }
+                            else setCancelMsg(`Error: ${data.error ?? "cancel failed"}`);
+                          }}
+                          className="text-xs px-3 py-1.5 rounded border border-amber-700 text-amber-400 hover:bg-amber-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                        >
+                          Cancel task
+                        </button>
+                      </div>
+                      {cancelMsg && (
+                        <p className="text-xs" style={{ color: cancelMsg.startsWith("Error") ? "#EF4444" : "#22C55E" }}>
+                          {cancelMsg}
+                        </p>
+                      )}
+
+                      <button
+                        onClick={reset}
+                        className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+                      >
+                        Cancel this queued task & start over
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {videoUrl && (
               <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 80px ${accentColor}30` }}>
                 <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
-                  <span>Scene 2 · Intro video{!hasNoDuration ? ` · ${duration}s` : ""} · 1280x720</span>
+                  <span>Scene 2 · Intro video · {duration}s · 1280x720</span>
                   {timings && <span className="tabular-nums">{(timings.video / 1000).toFixed(1)}s</span>}
                 </div>
                 {/* TV screen */}
@@ -853,9 +1325,17 @@ console.log(videoTask.output[0]);
                   </div>
                 )}
                 <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2">
-                  <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors shrink-0">
-                    Generate another
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors shrink-0">
+                      Start over
+                    </button>
+                    <button
+                      onClick={() => { setVideoUrl(null); setStep("review"); }}
+                      className="text-sm text-neutral-400 hover:text-white transition-colors shrink-0"
+                    >
+                      Redo video
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={copyScript}
@@ -881,7 +1361,9 @@ console.log(videoTask.output[0]);
                     </a>
                     <a
                       href={videoUrl}
-                      download={`${name.trim()}-intro.mp4`}
+                      download={makeFilename(name, style)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-sm text-black font-medium px-4 py-1.5 rounded transition-all"
                       style={{ background: accentColor }}
                     >
@@ -936,10 +1418,10 @@ console.log(videoTask.output[0]);
         </div>
       )}
 
-      {step === "error" && (
+      {step === "error" && !imageUrl && (
         <div className="mt-8 max-w-2xl w-full space-y-3">
           <div className="bg-red-950 border border-red-800 rounded-lg px-4 py-3 text-red-300 text-sm">{error}</div>
-          <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors">Try again</button>
+          <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors">Start over</button>
         </div>
       )}
 
@@ -971,7 +1453,62 @@ console.log(videoTask.output[0]);
   );
 }
 
-function StepIndicator({ label, status, color }: { label: string; status: "pending" | "active" | "done"; color: string }) {
+const EXAMPLE_CLIPS = [
+  "/examples/clip-1.mp4",
+  "/examples/clip-2.mp4",
+  "/examples/clip-3.mp4",
+];
+
+function VideoMontage() {
+  const [active, setActive] = useState(0);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null]);
+
+  useEffect(() => {
+    videoRefs.current.forEach((vid, i) => {
+      if (!vid) return;
+      if (i === active) {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+        vid.currentTime = 0;
+      }
+    });
+  }, [active]);
+
+  return (
+    <div
+      className="relative w-full rounded-xl overflow-hidden bg-black"
+      style={{ aspectRatio: "16/9", boxShadow: "0 0 60px rgba(255,255,255,0.04)" }}
+    >
+      {EXAMPLE_CLIPS.map((src, i) => (
+        <video
+          key={src}
+          ref={(el) => { videoRefs.current[i] = el; }}
+          src={src}
+          muted
+          playsInline
+          preload="auto"
+          onEnded={() => setActive((a) => (a + 1) % EXAMPLE_CLIPS.length)}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{ opacity: active === i ? 1 : 0 }}
+        />
+      ))}
+      {/* subtle vignette */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.5) 100%)" }} />
+    </div>
+  );
+}
+
+function makeFilename(name: string, style: string): string {
+  const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "intro";
+  const d = new Date();
+  const date = d.toISOString().slice(0, 10);
+  const time = d.toTimeString().slice(0, 5).replace(":", "");
+  return `${slug}-${style}-${date}-${time}.mp4`;
+}
+
+function StepIndicator({ label, status, color }: { label: string; status: "pending" | "active" | "done" | "error"; color: string }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <div
@@ -979,14 +1516,16 @@ function StepIndicator({ label, status, color }: { label: string; status: "pendi
         style={
           status === "done"   ? { background: color, color: "#000" } :
           status === "active" ? { background: "#fff", color: "#000", animation: "pulse 1.5s cubic-bezier(0.4,0,0.6,1) infinite" } :
+          status === "error"  ? { background: "#7f1d1d", color: "#fca5a5" } :
                                 { background: "#262626", color: "#737373" }
         }
       >
-        {status === "done" ? "✓" : status === "active" ? "..." : "○"}
+        {status === "done" ? "✓" : status === "active" ? "..." : status === "error" ? "✕" : "○"}
       </div>
       <span className="text-sm" style={
         status === "active" ? { color: "#fff" } :
         status === "done"   ? { color } :
+        status === "error"  ? { color: "#fca5a5" } :
                               { color: "#525252" }
       }>
         {label}
@@ -995,22 +1534,50 @@ function StepIndicator({ label, status, color }: { label: string; status: "pendi
   );
 }
 
-function PromptBlock({ label, text }: { label: string; text: string }) {
+function EditablePromptBlock({
+  label, generated, override, onChange,
+}: {
+  label: string;
+  generated: string;
+  override: string | null;
+  onChange: (v: string | null) => void;
+}) {
   const [copied, setCopied] = useState(false);
+  const active = override ?? generated;
+  const isEdited = override !== null && override !== generated;
+
   function copy() {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(active);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
+
   return (
-    <div className="rounded-lg border border-neutral-800 overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-neutral-900 border-b border-neutral-800">
-        <span className="text-xs text-neutral-500">{label}</span>
-        <button onClick={copy} className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors">
-          {copied ? "Copied!" : "Copy"}
-        </button>
+    <div className="rounded-lg border overflow-hidden" style={{ borderColor: isEdited ? "#3f3f00" : "#262626" }}>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ backgroundColor: isEdited ? "#1a1a00" : "#171717", borderColor: isEdited ? "#3f3f00" : "#262626" }}>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-neutral-500">{label}</span>
+          {isEdited && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#3f3f00", color: "#facc15" }}>edited</span>}
+        </div>
+        <div className="flex items-center gap-3">
+          {isEdited && (
+            <button onClick={() => onChange(null)} className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors">
+              Reset
+            </button>
+          )}
+          <button onClick={copy} className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors">
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
       </div>
-      <div className="px-3 py-2.5 text-xs text-neutral-400 font-mono leading-relaxed bg-neutral-950">{text}</div>
+      <textarea
+        value={active}
+        onChange={e => onChange(e.target.value === generated ? null : e.target.value)}
+        rows={4}
+        className="w-full px-3 py-2.5 text-xs font-mono leading-relaxed bg-neutral-950 text-neutral-400 resize-y focus:outline-none focus:text-neutral-200 transition-colors"
+        style={{ minHeight: "5rem" }}
+        spellCheck={false}
+      />
     </div>
   );
 }

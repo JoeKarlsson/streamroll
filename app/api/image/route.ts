@@ -23,13 +23,14 @@ export async function POST(req: NextRequest) {
     style: body.style ?? "cinematic",
     tagline: body.tagline,
     duration: body.duration ?? 5,
+    imageModel: body.imageModel,
     treatment: body.treatment,
     primaryColor: body.primaryColor,
     customNotes: body.customNotes,
   };
 
   try {
-    const imageUrl = await generateLogoImage(params, apiKey);
+    const imageUrl = await generateLogoImage(params, apiKey, body.imagePromptOverride ?? undefined);
     return NextResponse.json({ imageUrl });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Image generation failed";
