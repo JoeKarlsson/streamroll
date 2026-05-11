@@ -535,6 +535,7 @@ console.log(videoTask.output[0]);
 
       {/* Full-bleed cinematic video hero */}
       <div className="w-full relative" style={{ height: "clamp(220px, 36vw, 500px)" }}>
+        <h1 className="sr-only">StreamRoll — AI-generated streaming intros for Plex, Jellyfin, and Emby</h1>
         <VideoMontage />
         {/* top: blends nav into video */}
         <div className="absolute inset-x-0 top-0 pointer-events-none z-10" style={{ height: "35%", background: "linear-gradient(to bottom, #080808 0%, transparent 100%)" }} />
