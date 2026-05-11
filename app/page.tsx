@@ -187,6 +187,7 @@ export default function Home() {
   const genStartRef = useRef(0);
   const imageTimeRef = useRef(0);
   const activeTaskIdRef = useRef<string | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
@@ -231,6 +232,12 @@ export default function Home() {
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
+  }, [step]);
+
+  // Move focus to result when generation completes so keyboard/screen-reader users
+  // don't have to discover the change by tabbing.
+  useEffect(() => {
+    if (step === "done") resultRef.current?.focus();
   }, [step]);
 
   const { key: apiKey, loaded: keyLoaded } = useApiKey();
@@ -507,11 +514,35 @@ console.log(videoTask.output[0]);
     }
   }
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "How do I add a pre-roll intro to Plex?",
+        acceptedAnswer: { "@type": "Answer", text: "Go to Settings → Extras → Cinema Trailers → enable pre-roll, then place the .mp4 in your designated Extras folder." },
+      },
+      {
+        "@type": "Question",
+        name: "How do I add a pre-roll video to Jellyfin?",
+        acceptedAnswer: { "@type": "Answer", text: "Go to Dashboard → Administration → Pre-Roll Video → browse and upload your .mp4 file." },
+      },
+      {
+        "@type": "Question",
+        name: "How do I add a pre-roll intro to Emby?",
+        acceptedAnswer: { "@type": "Answer", text: "Go to Server Settings → Cinema Mode → Pre-Roll Videos → add the .mp4 file path, then enable Cinema Mode for playback sessions." },
+      },
+    ],
+  };
+
   return (
     <main
+      id="main-content"
       className="relative min-h-screen text-white flex flex-col items-center overflow-hidden"
       style={{ background: "#080808" }}
     >
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       {/* Film grain overlay */}
       <div
         className="pointer-events-none fixed inset-0 z-50 opacity-[0.032]"
@@ -522,7 +553,7 @@ console.log(videoTask.output[0]);
       />
 
       {/* Nav */}
-      <div className="w-full max-w-2xl px-4 flex justify-between items-center pt-6 pb-3 text-sm text-neutral-500">
+      <nav aria-label="Site navigation" className="w-full max-w-2xl px-4 flex justify-between items-center pt-6 pb-3 text-sm text-neutral-500">
         <span className="font-bold text-white tracking-tight text-lg">StreamRoll</span>
         <div className="flex items-center gap-5">
           <Link href="/how-it-works" className="hover:text-white transition-colors">How it&apos;s built</Link>
@@ -531,7 +562,7 @@ console.log(videoTask.output[0]);
             Get Runway →
           </a>
         </div>
-      </div>
+      </nav>
 
       {/* Full-bleed cinematic video hero */}
       <div className="w-full relative" style={{ height: "clamp(220px, 36vw, 500px)" }}>
@@ -645,7 +676,7 @@ console.log(videoTask.output[0]);
                   >
                     <span className="text-xl mb-1">{i.emoji}</span>
                     <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#4a5e4a" }}>{i.desc}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#7aaa7a" }}>{i.desc}</div>
                   </button>
                 );
               })}
@@ -674,7 +705,7 @@ console.log(videoTask.output[0]);
                   >
                     <span className="text-xl mb-1">{i.emoji}</span>
                     <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#5c4a2a" }}>{i.desc}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#b8895a" }}>{i.desc}</div>
                   </button>
                 );
               })}
@@ -685,8 +716,9 @@ console.log(videoTask.output[0]);
         {/* Name & tagline */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">Service name</label>
+            <label htmlFor="service-name" className="block text-sm font-medium text-neutral-300 mb-2">Service name</label>
             <input
+              id="service-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -697,10 +729,11 @@ console.log(videoTask.output[0]);
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
+            <label htmlFor="tagline" className="block text-sm font-medium text-neutral-300 mb-2">
               Tagline <span className="text-neutral-600">(optional)</span>
             </label>
             <input
+              id="tagline"
               type="text"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
@@ -994,7 +1027,7 @@ console.log(videoTask.output[0]);
                       key={c.value}
                       onClick={() => setPrimaryColor(primaryColor === c.value ? null : c.value)}
                       disabled={isGenerating}
-                      title={c.label}
+                      aria-label={`Select ${c.label} color`}
                       className="w-7 h-7 rounded-full transition-all disabled:opacity-50 shrink-0"
                       style={{
                         backgroundColor: c.value,
@@ -1007,10 +1040,11 @@ console.log(videoTask.output[0]);
 
               {/* Custom notes */}
               <div>
-                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">
+                <label htmlFor="custom-details" className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">
                   Custom details <span className="text-neutral-700 font-normal normal-case">(optional)</span>
                 </label>
                 <input
+                  id="custom-details"
                   type="text"
                   value={customNotes}
                   onChange={(e) => setCustomNotes(e.target.value)}
@@ -1110,7 +1144,7 @@ console.log(videoTask.output[0]);
 
       {/* Progress + results */}
       {(isGenerating || step === "review" || step === "done" || (step === "error" && imageUrl)) && (
-        <div className="mt-10 w-full max-w-2xl px-4">
+        <div ref={resultRef} tabIndex={-1} className="mt-10 w-full max-w-2xl px-4 focus:outline-none">
           <div className="flex items-center gap-4 mb-6">
             <StepIndicator label="Scene 1 · Design poster" status={step === "image" ? "active" : "done"} color={accentColor} />
             {genMode === "full" && (
@@ -1182,6 +1216,7 @@ console.log(videoTask.output[0]);
                   onChange={(e) => setReviewNotes(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && reviewNotes.trim() && handleRegenerate()}
                   placeholder='e.g. "make text bolder", "brighter red", "less grain"'
+                  aria-label="Notes for logo regeneration"
                   className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-sm"
                 />
                 <div className="flex gap-3">
@@ -1212,7 +1247,12 @@ console.log(videoTask.output[0]);
             {step === "video" && !videoUrl && (
               <div className="rounded-xl overflow-hidden border border-neutral-800">
                 {/* Status bar */}
-                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2">
+                <div
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2"
+                >
                   <div className="h-3 w-56 rounded bg-neutral-800 animate-pulse shrink-0" />
                   {pollStatus && (
                     <span className="text-xs shrink-0" style={{ color: pollStatus === "RUNNING" ? "#22C55E" : pollStatus === "THROTTLED" ? "#F59E0B" : "#6B7280" }}>
@@ -1409,13 +1449,13 @@ console.log(videoTask.output[0]);
 
       {step === "error" && !imageUrl && (
         <div className="mt-8 max-w-2xl w-full px-4 space-y-3">
-          <div className="bg-red-950 border border-red-800 rounded-lg px-4 py-3 text-red-300 text-sm">{error}</div>
+          <div role="alert" className="bg-red-950 border border-red-800 rounded-lg px-4 py-3 text-red-300 text-sm">{error}</div>
           <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors">Start over</button>
         </div>
       )}
 
       {/* Footer */}
-      <div className="mt-16 w-full max-w-2xl px-4 border-t border-neutral-900 pt-8 pb-12 flex flex-col items-center gap-4 text-xs text-neutral-600">
+      <footer className="mt-16 w-full max-w-2xl px-4 border-t border-neutral-900 pt-8 pb-12 flex flex-col items-center gap-4 text-xs text-neutral-600">
         <div className="flex items-center gap-4">
           <Link href="/how-it-works" className="hover:text-neutral-400 transition-colors">How it&apos;s built</Link>
           <a href={LINKS.repoGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Fork on GitHub</a>
@@ -1437,7 +1477,7 @@ console.log(videoTask.output[0]);
             Powered by Runway
           </a>
         </div>
-      </div>
+      </footer>
     </main>
   );
 }
@@ -1453,6 +1493,9 @@ function VideoMontage() {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null]);
 
   useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
     videoRefs.current.forEach((vid, i) => {
       if (!vid) return;
       if (i === active) {
@@ -1466,7 +1509,7 @@ function VideoMontage() {
   }, [active]);
 
   return (
-    <div className="absolute inset-0 bg-black">
+    <div className="absolute inset-0 bg-black" aria-hidden="true">
       {EXAMPLE_CLIPS.map((src, i) => (
         <video
           key={src}

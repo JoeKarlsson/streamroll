@@ -1,0 +1,16 @@
+{
+  "name": "StreamRoll",
+  "short_name": "StreamRoll",
+  "description": "AI-generated streaming intros for Plex, Jellyfin, and Emby",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

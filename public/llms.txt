@@ -1,0 +1,28 @@
+# StreamRoll
+> AI-generated streaming intros for Plex, Jellyfin, and Emby
+
+StreamRoll generates custom animated pre-roll video intros for home media servers using the Runway API. Users enter a service name and a visual style, and StreamRoll chains a text-to-image call with an image-to-video call to produce a downloadable .mp4 in about 30 seconds — the same idea as Netflix's "Tudum" logo sting, but for personal Plex, Jellyfin, or Emby setups.
+
+## How it works
+
+Two Runway API calls, chained:
+1. textToImage — a style-tuned prompt produces a 1920×1080 title card
+2. imageToVideo — that still frame animates into a 4–5 second intro
+
+The output URL from step 1 is the input to step 2. The app exposes the generated Node.js code so users can reproduce the result in their own projects.
+
+## Pages
+
+- [Home](https://streamroll.vercel.app): The main generator — enter a name, pick a style, generate and download.
+- [How it's built](https://streamroll.vercel.app/how-it-works): Technical walkthrough of the Runway API chaining pattern.
+- [Setup](https://streamroll.vercel.app/setup): Add your Runway API key to get started.
+
+## Tech stack
+
+- Runway API (textToImage + imageToVideo) via @runwayml/sdk
+- Next.js App Router
+- Deployed on Vercel
+
+## Author
+
+Joe Karlsson — https://joekarlsson.com

@@ -119,6 +119,9 @@ export default function SetupPage() {
                           value={input}
                           onChange={(e) => { setInput(e.target.value); setSaved(false); }}
                           placeholder="key_••••••••••••••••••••••"
+                          aria-label="Runway API key"
+                          aria-describedby="api-key-privacy"
+                          autoComplete="off"
                           className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder:text-neutral-700 focus:outline-none focus:border-neutral-400"
                           onKeyDown={(e) => e.key === "Enter" && handleSave()}
                         />
@@ -138,7 +141,7 @@ export default function SetupPage() {
                       </p>
                     )}
 
-                    <p className="text-xs text-neutral-600">
+                    <p id="api-key-privacy" className="text-xs text-neutral-600">
                       Your key is stored only in your browser&apos;s localStorage and sent directly
                       to Runway&apos;s API. It is never logged or stored on any server.
                     </p>
