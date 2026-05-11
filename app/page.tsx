@@ -509,8 +509,8 @@ console.log(videoTask.output[0]);
 
   return (
     <main
-      className="relative min-h-screen text-white flex flex-col items-center px-4 py-12 overflow-hidden"
-      style={{ background: "radial-gradient(ellipse 55% 40% at 50% -2%, rgba(255,248,200,0.07) 0%, transparent 65%), #080808" }}
+      className="relative min-h-screen text-white flex flex-col items-center overflow-hidden"
+      style={{ background: "#080808" }}
     >
       {/* Film grain overlay */}
       <div
@@ -522,7 +522,7 @@ console.log(videoTask.output[0]);
       />
 
       {/* Nav */}
-      <div className="w-full max-w-2xl flex justify-between items-center mb-12 text-sm text-neutral-500">
+      <div className="w-full max-w-2xl px-4 flex justify-between items-center pt-6 pb-3 text-sm text-neutral-500">
         <span className="font-bold text-white tracking-tight text-lg">StreamRoll</span>
         <div className="flex items-center gap-5">
           <Link href="/how-it-works" className="hover:text-white transition-colors">How it&apos;s built</Link>
@@ -533,26 +533,21 @@ console.log(videoTask.output[0]);
         </div>
       </div>
 
-      {/* Hero */}
-      <div className="mb-12 text-center">
-        <div className="inline-flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-neutral-600 mb-4 font-medium">
-          <span className="w-8 h-px bg-neutral-800 inline-block" />
-          Now Showing
-          <span className="w-8 h-px bg-neutral-800 inline-block" />
-        </div>
+      {/* Full-bleed cinematic video hero */}
+      <div className="w-full relative" style={{ height: "clamp(220px, 36vw, 500px)" }}>
+        <VideoMontage />
+        {/* top: blends nav into video */}
+        <div className="absolute inset-x-0 top-0 pointer-events-none z-10" style={{ height: "35%", background: "linear-gradient(to bottom, #080808 0%, transparent 100%)" }} />
+        {/* bottom: dissolves into page */}
+        <div className="absolute inset-x-0 bottom-0 pointer-events-none z-10" style={{ height: "50%", background: "linear-gradient(to top, #080808 0%, transparent 100%)" }} />
+        {/* side vignettes */}
+        <div className="absolute inset-y-0 left-0 w-16 pointer-events-none z-10" style={{ background: "linear-gradient(to right, #080808, transparent)" }} />
+        <div className="absolute inset-y-0 right-0 w-16 pointer-events-none z-10" style={{ background: "linear-gradient(to left, #080808, transparent)" }} />
+      </div>
 
-        <h1
-          className="text-6xl font-bold tracking-tight mb-3"
-          style={{ backgroundImage: "linear-gradient(to bottom, #fff 40%, #6b7280)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
-        >
-          StreamRoll
-        </h1>
-        <p className="text-neutral-400 text-lg mb-5">
-          AI-generated pre-roll intros for your media server, ready in 30 seconds
-        </p>
-
-        {/* Platform badges */}
-        <div className="flex items-center justify-center gap-5 mb-3">
+      {/* Works with + API key — sits over the bottom fade of the video */}
+      <div className="w-full max-w-2xl px-4 -mt-10 z-20 relative flex flex-col items-center gap-3 pb-8">
+        <div className="flex items-center justify-center gap-5">
           <span className="text-xs text-neutral-600">Works with</span>
           {PLATFORMS.map((p) => (
             <div key={p.name} className="flex items-center gap-1.5">
@@ -563,8 +558,7 @@ console.log(videoTask.output[0]);
           ))}
         </div>
 
-        {/* Community resources */}
-        <div className="flex items-center justify-center gap-2 text-xs text-neutral-700 mb-5">
+        <div className="flex items-center justify-center gap-2 text-xs text-neutral-700">
           <span>Community:</span>
           <a href={LINKS.prerollSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">r/plexprerolls</a>
           <span>·</span>
@@ -592,13 +586,7 @@ console.log(videoTask.output[0]);
         )}
       </div>
 
-      {/* Example montage */}
-      <div className="w-full max-w-2xl mb-10">
-        <VideoMontage />
-        <p className="text-center text-xs text-neutral-700 mt-2">Real outputs — generated with StreamRoll</p>
-      </div>
-
-      <div className="w-full max-w-2xl space-y-8">
+      <div className="w-full max-w-2xl px-4 space-y-8">
 
         {/* Inspo presets */}
         <section>
@@ -1121,7 +1109,7 @@ console.log(videoTask.output[0]);
 
       {/* Progress + results */}
       {(isGenerating || step === "review" || step === "done" || (step === "error" && imageUrl)) && (
-        <div className="mt-10 w-full max-w-2xl">
+        <div className="mt-10 w-full max-w-2xl px-4">
           <div className="flex items-center gap-4 mb-6">
             <StepIndicator label="Scene 1 · Design poster" status={step === "image" ? "active" : "done"} color={accentColor} />
             {genMode === "full" && (
@@ -1419,14 +1407,14 @@ console.log(videoTask.output[0]);
       )}
 
       {step === "error" && !imageUrl && (
-        <div className="mt-8 max-w-2xl w-full space-y-3">
+        <div className="mt-8 max-w-2xl w-full px-4 space-y-3">
           <div className="bg-red-950 border border-red-800 rounded-lg px-4 py-3 text-red-300 text-sm">{error}</div>
           <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors">Start over</button>
         </div>
       )}
 
       {/* Footer */}
-      <div className="mt-16 w-full max-w-2xl border-t border-neutral-900 pt-8 flex flex-col items-center gap-4 text-xs text-neutral-600">
+      <div className="mt-16 w-full max-w-2xl px-4 border-t border-neutral-900 pt-8 pb-12 flex flex-col items-center gap-4 text-xs text-neutral-600">
         <div className="flex items-center gap-4">
           <Link href="/how-it-works" className="hover:text-neutral-400 transition-colors">How it&apos;s built</Link>
           <a href={LINKS.repoGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Fork on GitHub</a>
@@ -1477,10 +1465,7 @@ function VideoMontage() {
   }, [active]);
 
   return (
-    <div
-      className="relative w-full rounded-xl overflow-hidden bg-black"
-      style={{ aspectRatio: "16/9", boxShadow: "0 0 60px rgba(255,255,255,0.04)" }}
-    >
+    <div className="absolute inset-0 bg-black">
       {EXAMPLE_CLIPS.map((src, i) => (
         <video
           key={src}
@@ -1494,8 +1479,6 @@ function VideoMontage() {
           style={{ opacity: active === i ? 1 : 0 }}
         />
       ))}
-      {/* subtle vignette */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.5) 100%)" }} />
     </div>
   );
 }
