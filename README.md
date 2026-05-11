@@ -70,6 +70,28 @@ See the [How it's built](https://streamroll.vercel.app/how-it-works) page for a 
 
 ---
 
+## Deploy to Vercel
+
+The easiest way to run StreamRoll for others to use. Each visitor brings their own Runway API key — no server-side credentials needed.
+
+**1. Install the Vercel CLI**
+
+```bash
+npm i -g vercel
+```
+
+**2. Deploy**
+
+```bash
+vercel
+```
+
+The CLI will prompt you to log in and link the project on first run. No environment variables are required — the app is BYOK (users enter their own Runway API key in the browser).
+
+That's it. Vercel's Hobby plan (free) is sufficient for a personal or demo deployment.
+
+---
+
 ## Running locally
 
 **1. Clone and install**
@@ -108,7 +130,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - [Next.js](https://nextjs.org) App Router
 - [`@runwayml/sdk`](https://github.com/runwayml/sdk-node) — official Runway Node.js SDK
 - [Tailwind CSS](https://tailwindcss.com)
-- Deployable to [Vercel](https://vercel.com) with zero config
+- Deployed on [Vercel](https://vercel.com) — free Hobby tier, no env vars needed
 
 ---
 
