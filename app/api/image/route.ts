@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateLogoImage, type GenerationParams } from "@/lib/runway";
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

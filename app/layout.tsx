@@ -13,8 +13,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StreamRoll: AI Streaming Intros",
-  description: "Generate custom Plex pre-roll intro videos with Runway AI",
+  title: "StreamRoll — AI Streaming Intros",
+  description:
+    "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI. Type your service name, pick a style, get a downloadable MP4 in 30 seconds.",
+  metadataBase: new URL("https://streamroll.vercel.app"),
+  openGraph: {
+    title: "StreamRoll — AI Streaming Intros",
+    description:
+      "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI. Type your service name, pick a style, get a downloadable MP4 in 30 seconds.",
+    url: "https://streamroll.vercel.app",
+    siteName: "StreamRoll",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StreamRoll — AI Streaming Intros",
+    description:
+      "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI.",
+    creator: "@joekarlsson1",
+  },
 };
 
 export default function RootLayout({

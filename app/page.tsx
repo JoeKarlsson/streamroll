@@ -19,9 +19,11 @@ const STYLE_COLOR: Record<Style, string> = {
   anime:      "#F472B6",
   epic:       "#F97316",
   nature:     "#22C55E",
+  prestige:   "#E50914",
 };
 
 const STYLES: { id: Style; label: string; emoji: string; desc: string }[] = [
+  { id: "prestige",   label: "Prestige",   emoji: "🔴", desc: "Bold red on black" },
   { id: "cinematic",  label: "Cinematic",  emoji: "🎬", desc: "Navy & gold, film grain" },
   { id: "retro",      label: "Retro",      emoji: "📺", desc: "80s neon synthwave" },
   { id: "futuristic", label: "Futuristic", emoji: "🚀", desc: "Holographic chrome" },
@@ -32,14 +34,14 @@ const STYLES: { id: Style; label: string; emoji: string; desc: string }[] = [
   { id: "nature",     label: "Nature",     emoji: "🌿", desc: "Earthy documentary" },
 ];
 
-const DURATIONS: { value: Duration; label: string; credits: number; est: string }[] = [
-  { value: 2,  label: "2s",  credits: 10, est: "~20 sec" },
-  { value: 5,  label: "5s",  credits: 25, est: "~35 sec" },
-  { value: 10, label: "10s", credits: 50, est: "~60 sec" },
+const DURATIONS: { value: Duration; label: string; est: string }[] = [
+  { value: 2,  label: "2s",  est: "~20 sec" },
+  { value: 5,  label: "5s",  est: "~35 sec" },
+  { value: 10, label: "10s", est: "~60 sec" },
 ];
 
 const INSPO: { name: string; style: Style; tagline: string; desc: string }[] = [
-  { name: "Joeflix",   style: "cinematic",  tagline: "Where stories come alive",  desc: "Example · your name here" },
+  { name: "Joeflix",   style: "prestige",   tagline: "Where stories come alive",  desc: "Example · your name here" },
   { name: "NightOwl",  style: "horror",     tagline: "Streaming after dark",       desc: "Late-night horror hub" },
   { name: "SkyBox",    style: "futuristic", tagline: "Beyond the horizon",         desc: "Sci-fi & space content" },
   { name: "VibeTube",  style: "retro",      tagline: "Totally tubular",            desc: "80s & 90s nostalgia" },
@@ -73,6 +75,21 @@ const TREATMENTS: { id: Treatment; label: string; desc: string }[] = [
   { id: "full-bleed",  label: "Full Bleed",  desc: "Logo fills the frame" },
   { id: "theatrical",  label: "Theatrical",  desc: "Black letterbox bars" },
   { id: "minimal",     label: "Minimal",     desc: "Small logo, vast space" },
+];
+
+const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
+  { value: 4, label: "4s", est: "~45 sec" },
+  { value: 6, label: "6s", est: "~60 sec" },
+  { value: 8, label: "8s", est: "~75 sec" },
+];
+
+const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crInfo: string; desc: string }[] = [
+  { id: "gen4_turbo",  label: "Gen4 Turbo",  group: "Runway", crInfo: "5 cr/s",   desc: "Fast, great quality" },
+  { id: "gen4.5",      label: "Gen4.5",       group: "Runway", crInfo: "12 cr/s",  desc: "Highest quality" },
+  { id: "gen3a_turbo", label: "Gen3a Turbo",  group: "Runway", crInfo: "5 cr/s",   desc: "Previous generation" },
+  { id: "veo3",        label: "Veo 3",        group: "Google", crInfo: "~25 cr/s", desc: "Google video model" },
+  { id: "veo3.1",      label: "Veo 3.1",      group: "Google", crInfo: "~25 cr/s", desc: "Google latest" },
+  { id: "veo3.1_fast", label: "Veo 3.1 Fast", group: "Google", crInfo: "~15 cr/s", desc: "Fast Google model" },
 ];
 
 const PLATFORMS = [
@@ -115,6 +132,8 @@ export default function Home() {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [timings, setTimings] = useState<{ image: number; video: number } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [audio, setAudio] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const genStartRef = useRef(0);
 
@@ -125,7 +144,10 @@ export default function Home() {
   const isGenerating = step === "image" || step === "video";
   const selectedDuration = DURATIONS.find((d) => d.value === duration)!;
   const accentColor = STYLE_COLOR[style];
-  const crPerSec = videoModel === "gen4.5" ? 12 : 5;
+  const crPerSec = videoModel === "gen4.5" ? 12 : videoModel === "veo3" || videoModel === "veo3.1" ? 25 : videoModel === "veo3.1_fast" ? 15 : 5;
+  const isVeoModel = videoModel === "veo3" || videoModel === "veo3.1" || videoModel === "veo3.1_fast";
+  const hasNoDuration = videoModel === "gen4.5";
+  const activeDurations = isVeoModel ? VEO_DURATIONS : DURATIONS;
 
   function applyInspo(i: (typeof INSPO)[number]) {
     setName(i.name);
@@ -146,7 +168,16 @@ export default function Home() {
     setElapsedMs(0);
   }
 
+  function handleModelChange(m: VideoModel) {
+    setVideoModel(m);
+    const veo = m === "veo3" || m === "veo3.1" || m === "veo3.1_fast";
+    if (veo && ![4, 6, 8].includes(duration)) setDuration(4 as Duration);
+    else if (!veo && m !== "gen4.5" && ![2, 5, 10].includes(duration)) setDuration(5 as Duration);
+  }
+
   function copyScript() {
+    const durationLine = hasNoDuration ? "" : `    duration: ${duration},\n`;
+    const audioLine = isVeoModel && audio ? `    audio: true,\n` : "";
     const script = `import RunwayML from "@runwayml/sdk";
 
 const runway = new RunwayML({ apiKey: process.env.RUNWAYML_API_SECRET });
@@ -162,15 +193,14 @@ const imageTask = await runway.textToImage
 
 const logoUrl = imageTask.output[0];
 
-// Step 2: Animate into a ${duration}s intro
+// Step 2: Animate into ${hasNoDuration ? "an" : `a ${duration}s`} intro
 const videoTask = await runway.imageToVideo
   .create({
     model: "${videoModel}",
     promptImage: logoUrl,
     promptText: \`${preview.videoPrompt}\`,
     ratio: "1280:720",
-    duration: ${duration},
-  })
+${durationLine}${audioLine}  })
   .waitForTaskOutput();
 
 console.log(videoTask.output[0]);
@@ -210,6 +240,7 @@ console.log(videoTask.output[0]);
       videoModel, treatment,
       primaryColor: primaryColor ?? undefined,
       customNotes: customNotes.trim() || undefined,
+      audio: isVeoModel ? audio : undefined,
     };
     setImageUrl(null);
     setVideoUrl(null);
@@ -496,7 +527,7 @@ console.log(videoTask.output[0]);
           <label className="block text-sm font-medium text-neutral-300 mb-3">
             {logoMode === "upload" ? "Motion style" : "Visual style"}
           </label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {STYLES.map((s) => {
               const isActive = style === s.id;
               const color = STYLE_COLOR[s.id];
@@ -521,115 +552,192 @@ console.log(videoTask.output[0]);
         </section>
 
         {/* Duration */}
-        <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Duration</label>
-          <div className="flex gap-3">
-            {DURATIONS.map((d) => (
-              <button
-                key={d.value}
-                onClick={() => setDuration(d.value)}
-                disabled={isGenerating}
-                className="flex-1 flex flex-col items-center gap-1 py-3 rounded-lg border text-xs transition-all disabled:opacity-50"
-                style={duration === d.value
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                  : { borderColor: "#262626" }
-                }
-              >
-                <span className="text-base font-bold" style={duration === d.value ? { color: accentColor } : { color: "#e5e7eb" }}>
-                  {d.label}
-                </span>
-                <span className="text-neutral-500">{d.value * crPerSec + 8} cr · {d.est}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        {!hasNoDuration ? (
+          <section>
+            <label className="block text-sm font-medium text-neutral-300 mb-3">Duration</label>
+            <div className="flex gap-3">
+              {activeDurations.map((d) => (
+                <button
+                  key={d.value}
+                  onClick={() => setDuration(d.value)}
+                  disabled={isGenerating}
+                  className="flex-1 flex flex-col items-center gap-1 py-3 rounded-lg border text-xs transition-all disabled:opacity-50"
+                  style={duration === d.value
+                    ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                    : { borderColor: "#262626" }
+                  }
+                >
+                  <span className="text-base font-bold" style={duration === d.value ? { color: accentColor } : { color: "#e5e7eb" }}>
+                    {d.label}
+                  </span>
+                  <span className="text-neutral-500">{d.value * crPerSec + 8} cr · {d.est}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section>
+            <label className="block text-sm font-medium text-neutral-300 mb-3">Duration</label>
+            <div className="px-4 py-3 rounded-lg border text-xs text-neutral-500" style={{ borderColor: "#262626" }}>
+              Gen4.5 generates a fixed-length video — duration is set automatically.
+            </div>
+          </section>
+        )}
 
-        {/* Card treatment */}
+        {/* Advanced Settings */}
         <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Card treatment</label>
-          <div className="flex gap-3">
-            {TREATMENTS.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTreatment(t.id)}
-                disabled={isGenerating}
-                className="flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-xs transition-all disabled:opacity-50"
-                style={treatment === t.id
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                  : { borderColor: "#262626" }
-                }
-              >
-                <span className="font-medium mb-0.5" style={treatment === t.id ? { color: accentColor } : { color: "#e5e7eb" }}>{t.label}</span>
-                <span style={{ color: "#525252" }}>{t.desc}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+          <button
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="w-full flex items-center justify-between text-sm font-medium text-neutral-400 hover:text-white transition-colors mb-3"
+          >
+            <span>Advanced Settings</span>
+            <span className="text-neutral-600 text-xs">{showAdvanced ? "▾ collapse" : "▸ expand"}</span>
+          </button>
 
-        {/* Primary color */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-neutral-300">Primary color <span className="text-neutral-600 font-normal">(optional)</span></label>
-            {primaryColor && (
-              <button onClick={() => setPrimaryColor(null)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Clear</button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {COLOR_SWATCHES.map((c) => (
-              <button
-                key={c.value}
-                onClick={() => setPrimaryColor(primaryColor === c.value ? null : c.value)}
-                disabled={isGenerating}
-                title={c.label}
-                className="w-7 h-7 rounded-full transition-all disabled:opacity-50 shrink-0"
-                style={{
-                  backgroundColor: c.value,
-                  boxShadow: primaryColor === c.value ? `0 0 0 2px #0a0a0a, 0 0 0 4px ${c.value}` : "none",
-                }}
-              />
-            ))}
-          </div>
-        </section>
+          {showAdvanced && (
+            <div className="space-y-7 pt-1">
 
-        {/* Custom notes */}
-        <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-2">
-            Custom details <span className="text-neutral-600 font-normal">(optional)</span>
-          </label>
-          <input
-            type="text"
-            value={customNotes}
-            onChange={(e) => setCustomNotes(e.target.value)}
-            placeholder='e.g. "wolf mascot", "slow burn reveal", "HBO Max aesthetic"'
-            maxLength={120}
-            disabled={isGenerating}
-            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors text-sm"
-          />
-        </section>
+              {/* Video model */}
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Video model</label>
+                <div className="space-y-1.5">
+                  <div className="text-xs text-neutral-700 mb-2">Runway</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {VIDEO_MODELS.filter((m) => m.group === "Runway").map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => handleModelChange(m.id)}
+                        disabled={isGenerating}
+                        className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
+                        style={videoModel === m.id
+                          ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                          : { borderColor: "#262626" }
+                        }
+                      >
+                        <div className="flex items-center justify-between w-full mb-1">
+                          <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
+                          <span className="text-neutral-700 text-[10px]">{m.crInfo}</span>
+                        </div>
+                        <span className="text-neutral-600 leading-tight">{m.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-xs text-neutral-700 mt-3 mb-2">Google via Runway</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {VIDEO_MODELS.filter((m) => m.group === "Google").map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => handleModelChange(m.id)}
+                        disabled={isGenerating}
+                        className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
+                        style={videoModel === m.id
+                          ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                          : { borderColor: "#262626" }
+                        }
+                      >
+                        <div className="flex items-center justify-between w-full mb-1">
+                          <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
+                          <span className="text-neutral-700 text-[10px]">{m.crInfo}</span>
+                        </div>
+                        <span className="text-neutral-600 leading-tight">{m.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-        {/* Model quality */}
-        <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Video quality</label>
-          <div className="flex gap-3">
-            {([
-              { id: "gen4_turbo" as VideoModel, label: "Fast",    sub: "Gen4 Turbo · 5 cr/s · ~30s" },
-              { id: "gen4.5"     as VideoModel, label: "Quality", sub: "Gen4.5 · 12 cr/s · ~60s" },
-            ]).map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setVideoModel(m.id)}
-                disabled={isGenerating}
-                className="flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-xs transition-all disabled:opacity-50"
-                style={videoModel === m.id
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                  : { borderColor: "#262626" }
-                }
-              >
-                <span className="font-semibold mb-0.5" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                <span style={{ color: "#525252" }}>{m.sub}</span>
-              </button>
-            ))}
-          </div>
+                {/* Audio toggle — Veo models only */}
+                {isVeoModel && (
+                  <div
+                    className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-lg border"
+                    style={{ borderColor: "#262626" }}
+                  >
+                    <div className="flex-1">
+                      <div className="text-xs font-medium text-neutral-300">Generate audio</div>
+                      <div className="text-xs text-neutral-600 mt-0.5">Veo can auto-generate ambient sound &amp; music</div>
+                    </div>
+                    <button
+                      onClick={() => setAudio((v) => !v)}
+                      disabled={isGenerating}
+                      aria-label="Toggle audio generation"
+                      className="relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 shrink-0"
+                      style={{ backgroundColor: audio ? accentColor : "#404040" }}
+                    >
+                      <div
+                        className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all"
+                        style={{ left: audio ? "calc(100% - 18px)" : "2px" }}
+                      />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Card treatment */}
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Card treatment</label>
+                <div className="flex gap-3">
+                  {TREATMENTS.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTreatment(t.id)}
+                      disabled={isGenerating}
+                      className="flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-xs transition-all disabled:opacity-50"
+                      style={treatment === t.id
+                        ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                        : { borderColor: "#262626" }
+                      }
+                    >
+                      <span className="font-medium mb-0.5" style={treatment === t.id ? { color: accentColor } : { color: "#e5e7eb" }}>{t.label}</span>
+                      <span style={{ color: "#525252" }}>{t.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Primary color */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Primary color <span className="text-neutral-700 font-normal normal-case">(optional)</span>
+                  </label>
+                  {primaryColor && (
+                    <button onClick={() => setPrimaryColor(null)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Clear</button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {COLOR_SWATCHES.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => setPrimaryColor(primaryColor === c.value ? null : c.value)}
+                      disabled={isGenerating}
+                      title={c.label}
+                      className="w-7 h-7 rounded-full transition-all disabled:opacity-50 shrink-0"
+                      style={{
+                        backgroundColor: c.value,
+                        boxShadow: primaryColor === c.value ? `0 0 0 2px #0a0a0a, 0 0 0 4px ${c.value}` : "none",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom notes */}
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">
+                  Custom details <span className="text-neutral-700 font-normal normal-case">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={customNotes}
+                  onChange={(e) => setCustomNotes(e.target.value)}
+                  placeholder='e.g. "wolf mascot", "slow burn reveal", "HBO Max aesthetic"'
+                  maxLength={120}
+                  disabled={isGenerating}
+                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors text-sm"
+                />
+              </div>
+
+            </div>
+          )}
         </section>
 
         {/* Prompt preview */}
@@ -657,7 +765,7 @@ console.log(videoTask.output[0]);
           {showPrompt && (
             <div className="space-y-3">
               <PromptBlock label="Step 1 · Gen4 Image · 1920x1080" text={preview.imagePrompt} />
-              <PromptBlock label={`Step 2 · ${videoModel} · 1280x720`} text={preview.videoPrompt} />
+              <PromptBlock label={`Step 2 · ${videoModel} · 1280x720${isVeoModel && audio ? " · audio on" : ""}`} text={preview.videoPrompt} />
             </div>
           )}
         </section>
@@ -728,7 +836,7 @@ console.log(videoTask.output[0]);
             {videoUrl && (
               <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 80px ${accentColor}30` }}>
                 <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
-                  <span>Scene 2 · Intro video · {duration}s · 1280x720</span>
+                  <span>Scene 2 · Intro video{!hasNoDuration ? ` · ${duration}s` : ""} · 1280x720</span>
                   {timings && <span className="tabular-nums">{(timings.video / 1000).toFixed(1)}s</span>}
                 </div>
                 {/* TV screen */}

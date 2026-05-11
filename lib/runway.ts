@@ -12,10 +12,11 @@ export type Style =
   | "horror"
   | "anime"
   | "epic"
-  | "nature";
+  | "nature"
+  | "prestige";
 
-export type Duration = 2 | 5 | 10;
-export type VideoModel = "gen4_turbo" | "gen4.5";
+export type Duration = 2 | 4 | 5 | 6 | 8 | 10;
+export type VideoModel = "gen4_turbo" | "gen4.5" | "gen3a_turbo" | "veo3" | "veo3.1" | "veo3.1_fast";
 export type Treatment = "full-bleed" | "theatrical" | "minimal";
 
 const styleDescriptions: Record<Style, string> = {
@@ -35,6 +36,8 @@ const styleDescriptions: Record<Style, string> = {
     "golden hour light, sweeping dust, monumental scale, bronze and amber tones, cinematic widescreen",
   nature:
     "earthy organic tones, lush green, soft natural light, documentary aesthetic, clean sans-serif",
+  prestige:
+    "pure black background, bold crimson red wordmark, clean minimal modern sans-serif typography, stark negative space, no grain or particles, high contrast, prestige streaming service aesthetic",
 };
 
 const styleMotion: Record<Style, string> = {
@@ -54,6 +57,8 @@ const styleMotion: Record<Style, string> = {
     "dust clouds part to reveal the logo, golden sunlight erupts behind it, massive cinematic scale",
   nature:
     "logo grows organically like a vine, soft morning light washes across it, gentle leaf particles",
+  prestige:
+    "logo snaps into frame from pure darkness with a single bold confident reveal, bold red wordmark appears decisively from black, no particles or atmospheric haze, clean authoritative impact, holds on the logo",
 };
 
 const treatmentImage: Record<Treatment, string> = {
@@ -77,6 +82,7 @@ export interface GenerationParams {
   treatment?: Treatment;
   primaryColor?: string;
   customNotes?: string;
+  audio?: boolean;
 }
 
 export interface PromptPreview {
@@ -108,7 +114,7 @@ export async function generateLogoImage(params: GenerationParams, apiKey: string
       promptText: imagePrompt,
       ratio: "1920:1080",
     })
-    .waitForTaskOutput({ timeout: 120_000 });
+    .waitForTaskOutput({ timeout: 270_000 });
 
   if (!task.output?.[0]) throw new Error("Image generation produced no output");
   return task.output[0];
@@ -122,15 +128,23 @@ export async function generateIntroVideo(
   const { videoPrompt } = buildPrompts(params);
   const model = params.videoModel ?? "gen4_turbo";
 
+  const isVeoModel = model === "veo3" || model === "veo3.1" || model === "veo3.1_fast";
+  const hasNoDuration = model === "gen4.5";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createParams: Record<string, any> = {
+    model,
+    promptImage: imageUrl,
+    promptText: videoPrompt,
+    ratio: "1280:720",
+  };
+  if (!hasNoDuration) createParams.duration = params.duration;
+  if (isVeoModel && params.audio) createParams.audio = true;
+
   const task = await getClient(apiKey).imageToVideo
-    .create({
-      model,
-      promptImage: imageUrl,
-      promptText: videoPrompt,
-      ratio: "1280:720",
-      duration: params.duration,
-    })
-    .waitForTaskOutput({ timeout: 120_000 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .create(createParams as any)
+    .waitForTaskOutput({ timeout: 270_000 });
 
   if (!task.output?.[0]) throw new Error("Video generation produced no output");
   return task.output[0];
