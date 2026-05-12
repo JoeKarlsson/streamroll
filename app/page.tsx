@@ -1800,7 +1800,7 @@ console.log(videoTask.output[0]);
 }
 
 const EXAMPLE_CLIPS = [
-  "/examples/clip-netflix.mp4",
+  "/examples/clip-netflix-v2.mp4",
   "/examples/clip-vhs.mp4",
   "/examples/clip-outrun.mp4",
   "/examples/clip-adultswim.mp4",
