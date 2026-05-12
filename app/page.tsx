@@ -921,6 +921,13 @@ console.log(videoTask.output[0]);
               <label
                 className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
                 style={{ borderColor: uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const f = e.dataTransfer.files?.[0];
+                  if (f && !isGenerating && !isUploading) handleFileUpload(f);
+                }}
               >
                 {uploadPreview ? (
                   <div className="relative w-full h-full">
