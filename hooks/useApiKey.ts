@@ -8,9 +8,12 @@ export function useApiKey() {
   const [key, setKeyState] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
 
+  // Reading from localStorage on mount is the standard SSR-safe pattern.
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setKeyState(localStorage.getItem(STORAGE_KEY) ?? "");
     setLoaded(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   function saveKey(k: string) {

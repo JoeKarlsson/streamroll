@@ -6,10 +6,31 @@ StreamRoll generates custom animated pre-roll video intros for home media server
 ## How it works
 
 Two Runway API calls, chained:
-1. textToImage — a style-tuned prompt produces a 1920×1080 title card
-2. imageToVideo — that still frame animates into a 4–5 second intro
+1. textToImage — a style-tuned prompt produces a title card (1920×1080 or 1344×768 depending on model)
+2. imageToVideo — that still frame animates into a 2–10 second intro
 
 The output URL from step 1 is the input to step 2. The app exposes the generated Node.js code so users can reproduce the result in their own projects.
+
+## Image models supported
+
+- Runway Gen4 Image — creative, artistic style
+- Runway Gen4 Image Turbo — faster, great quality
+- OpenAI GPT Image 2 (via Runway) — precise instruction-following, 1920×1088
+- Google Gemini Image 3 Pro (via Runway) — vivid, instruction-aware, 1344×768
+- Google Gemini 2.5 Flash (via Runway) — fast, 1344×768
+
+## Video models supported
+
+- Runway Gen4 Turbo — fast, great quality (5 cr/s)
+- Runway Gen4.5 — highest quality, supports timestamp-based motion scripting (12 cr/s)
+- Runway Gen3a Turbo — previous generation (5 cr/s)
+- Google Veo 3 (via Runway) — Google video model, supports audio generation (~25 cr/s)
+- Google Veo 3.1 (via Runway) — Google latest (~25 cr/s)
+- Google Veo 3.1 Fast (via Runway) — fast Google model (~15 cr/s)
+
+## Visual styles (18 total)
+
+Netflix/Prestige, Cinematic, Retro (80s neon), Futuristic, Minimal, Horror, Anime (shonen), Adult Swim, Cartoon Network, VHS, Grindhouse, Lo-fi, Vaporwave, Cyberpunk, HBO, Epic, Nature, Blockbuster
 
 ## Pages
 
@@ -20,8 +41,9 @@ The output URL from step 1 is the input to step 2. The app exposes the generated
 ## Tech stack
 
 - Runway API (textToImage + imageToVideo) via @runwayml/sdk
-- Next.js App Router
+- Next.js 16 App Router
 - Deployed on Vercel
+- BYOK — users supply their own Runway API key in the browser
 
 ## Author
 

@@ -179,12 +179,12 @@ const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 8, label: "8s", est: "~75 sec" },
 ];
 
-const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; crInfo: string; desc: string }[] = [
-  { id: "gen4_image",        label: "Gen4 Image",         group: "Runway",  crInfo: "~30 cr",  desc: "Creative, artistic style" },
-  { id: "gen4_image_turbo",  label: "Gen4 Turbo",         group: "Runway",  crInfo: "~15 cr",  desc: "Faster, great quality" },
-  { id: "gpt_image_2",       label: "GPT Image 2",        group: "OpenAI",  crInfo: "~40 cr",  desc: "Precise instruction-following" },
-  { id: "gemini_image3_pro", label: "Gemini Image 3 Pro", group: "Google",  crInfo: "~20 cr",  desc: "Vivid, instruction-aware" },
-  { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  crInfo: "~10 cr",  desc: "Fast, Google quality" },
+const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; crInfo: string; crCost: number; desc: string }[] = [
+  { id: "gen4_image",        label: "Gen4 Image",         group: "Runway",  crInfo: "~30 cr",  crCost: 30, desc: "Creative, artistic style" },
+  { id: "gen4_image_turbo",  label: "Gen4 Turbo",         group: "Runway",  crInfo: "~15 cr",  crCost: 15, desc: "Faster, great quality" },
+  { id: "gpt_image_2",       label: "GPT Image 2",        group: "OpenAI",  crInfo: "~40 cr",  crCost: 40, desc: "Precise instruction-following" },
+  { id: "gemini_image3_pro", label: "Gemini Image 3 Pro", group: "Google",  crInfo: "~20 cr",  crCost: 20, desc: "Vivid, instruction-aware" },
+  { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  crInfo: "~10 cr",  crCost: 10, desc: "Fast, Google quality" },
 ];
 
 const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crInfo: string; desc: string }[] = [
@@ -252,6 +252,7 @@ export default function Home() {
   const [cancelTaskId, setCancelTaskId] = useState("");
   const [cancelMsg, setCancelMsg] = useState<string | null>(null);
   const [imageProgress, setImageProgress] = useState(0);
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const imageProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const genStartRef = useRef(0);
@@ -265,13 +266,15 @@ export default function Home() {
     if (imageProgressRef.current) clearInterval(imageProgressRef.current);
   }, []);
 
-  // Restore completed generation from sessionStorage on mount
+  // Restore completed generation from sessionStorage on mount.
+  // Multiple setState calls here are intentional — we batch-restore persisted state.
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(SESSION_KEY);
       if (saved) {
         const p = JSON.parse(saved);
         if (p.step === "done" || p.step === "error" || p.step === "review") {
+          /* eslint-disable react-hooks/set-state-in-effect */
           if (p.name)    setName(p.name);
           if (p.style)   setStyle(p.style);
           if (p.tagline !== undefined) setTagline(p.tagline);
@@ -284,6 +287,7 @@ export default function Home() {
           if (p.treatment)   setTreatment(p.treatment);
           if (p.duration)    setDuration(p.duration);
           setStep(p.step);
+          /* eslint-enable react-hooks/set-state-in-effect */
         }
       }
     } catch {}
@@ -302,7 +306,7 @@ export default function Home() {
     } else if (step === "idle") {
       try { sessionStorage.removeItem(SESSION_KEY); } catch {}
     }
-  }, [step, imageUrl, videoUrl, timings, error, name, style, tagline, sessionRestored]);
+  }, [step, imageUrl, videoUrl, timings, error, name, style, tagline, sessionRestored, videoModel, imageModel, treatment, duration]);
 
   // Warn before browser-level unload (refresh/close) while a generation is running
   useEffect(() => {
@@ -321,8 +325,9 @@ export default function Home() {
   const { key: apiKey, loaded: keyLoaded } = useApiKey();
   const preview = buildPrompts({ name, style, tagline, duration, treatment, videoModel, primaryColor: primaryColor ?? undefined, customNotes: customNotes || undefined });
   const isGenerating = step === "image" || step === "video";
-  const selectedDuration = DURATIONS.find((d) => d.value === duration)!;
   const accentColor = STYLE_COLOR[style];
+  const imageCrCost = CANVAS_STYLES.has(style) ? 0 : (IMAGE_MODELS.find(m => m.id === imageModel)?.crCost ?? 30);
+  const gen3aTurboPromptTooLong = videoModel === "gen3a_turbo" && (videoPromptOverride ?? preview.videoPrompt).length > 768;
   const crPerSec = videoModel === "gen4.5" ? 12 : videoModel === "veo3" || videoModel === "veo3.1" ? 25 : videoModel === "veo3.1_fast" ? 15 : 5;
   const isVeoModel = videoModel === "veo3" || videoModel === "veo3.1" || videoModel === "veo3.1_fast";
   const activeDurations = isVeoModel ? VEO_DURATIONS : DURATIONS;
@@ -405,6 +410,7 @@ export default function Home() {
     setPollProgress(null);
     setCancelMsg(null);
     setCancelTaskId("");
+    setConfirmingReset(false);
     setStep("idle");
     setImageUrl(null);
     setVideoUrl(null);
@@ -416,8 +422,11 @@ export default function Home() {
   }
 
   function safeReset() {
-    if (step === "done" && videoUrl && !window.confirm("Start over? Your generated video will be lost.")) return;
-    reset();
+    if (step === "done" && videoUrl) {
+      setConfirmingReset(true);
+    } else {
+      reset();
+    }
   }
 
   function handleModelChange(m: VideoModel) {
@@ -838,7 +847,7 @@ console.log(videoTask.output[0]);
       {/* Works with + API key — sits over the bottom fade of the video */}
       <div className="w-full max-w-2xl px-4 -mt-10 z-20 relative flex flex-col items-center gap-3 pb-8">
         <div className="flex items-center justify-center gap-5">
-          <span className="text-xs text-neutral-600">Works with</span>
+          <span className="text-xs text-neutral-500">Works with</span>
           {PLATFORMS.map((p) => (
             <div key={p.name} className="flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -848,15 +857,15 @@ console.log(videoTask.output[0]);
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-xs text-neutral-700">
+        <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
           <span>Community:</span>
-          <a href={LINKS.prerollSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">r/plexprerolls</a>
+          <a href={LINKS.prerollSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">r/plexprerolls</a>
           <span>·</span>
-          <a href={LINKS.plexSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">r/PleX</a>
+          <a href={LINKS.plexSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">r/PleX</a>
           <span>·</span>
-          <a href={LINKS.jellyfinSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">r/jellyfin</a>
+          <a href={LINKS.jellyfinSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">r/jellyfin</a>
           <span>·</span>
-          <a href={LINKS.plexForums} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Plex Forums</a>
+          <a href={LINKS.plexForums} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">Plex Forums</a>
         </div>
 
         {keyLoaded && (
@@ -1003,8 +1012,8 @@ console.log(videoTask.output[0]);
               className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors"
             />
             <div className="flex justify-between mt-1">
-              <span className="text-xs text-neutral-700">Short names render best</span>
-              <span className={`text-xs tabular-nums ${name.length > 18 ? "text-amber-600" : "text-neutral-700"}`}>{name.length}/30</span>
+              <span className="text-xs text-neutral-500">Short names render best</span>
+              <span className={`text-xs tabular-nums ${name.length > 18 ? "text-amber-600" : "text-neutral-500"}`}>{name.length}/30</span>
             </div>
           </div>
           <div>
@@ -1055,7 +1064,7 @@ console.log(videoTask.output[0]);
                 <span className="text-base font-bold" style={duration === d.value ? { color: accentColor } : { color: "#e5e7eb" }}>
                   {d.label}
                 </span>
-                <span className="text-neutral-500">{d.value * crPerSec + 8} cr · {d.est}</span>
+                <span className="text-neutral-500">{d.value * crPerSec + imageCrCost} cr · {d.est}</span>
               </button>
             ))}
           </div>
@@ -1083,7 +1092,7 @@ console.log(videoTask.output[0]);
                     if (!models.length) return null;
                     return (
                       <div key={group}>
-                        <div className="text-xs text-neutral-700 mb-2">{group === "OpenAI" ? "OpenAI via Runway" : group === "Google" ? "Google via Runway" : "Runway"}</div>
+                        <div className="text-xs text-neutral-500 mb-2">{group === "OpenAI" ? "OpenAI via Runway" : group === "Google" ? "Google via Runway" : "Runway"}</div>
                         <div className="grid grid-cols-2 gap-2">
                           {models.map((m) => (
                             <button
@@ -1098,9 +1107,9 @@ console.log(videoTask.output[0]);
                             >
                               <div className="flex items-center justify-between w-full mb-0.5">
                                 <span className="font-semibold" style={imageModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                                <span className="text-neutral-700 text-[10px]">{m.crInfo}</span>
+                                <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
                               </div>
-                              <span className="text-neutral-600 leading-tight">{m.desc}</span>
+                              <span className="text-neutral-500 leading-tight">{m.desc}</span>
                             </button>
                           ))}
                         </div>
@@ -1114,7 +1123,7 @@ console.log(videoTask.output[0]);
               <div>
                 <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Video model</label>
                 <div className="space-y-1.5">
-                  <div className="text-xs text-neutral-700 mb-2">Runway</div>
+                  <div className="text-xs text-neutral-500 mb-2">Runway</div>
                   <div className="grid grid-cols-3 gap-2">
                     {VIDEO_MODELS.filter((m) => m.group === "Runway").map((m) => (
                       <button
@@ -1129,13 +1138,13 @@ console.log(videoTask.output[0]);
                       >
                         <div className="flex items-center justify-between w-full mb-1">
                           <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                          <span className="text-neutral-700 text-[10px]">{m.crInfo}</span>
+                          <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
                         </div>
-                        <span className="text-neutral-600 leading-tight">{m.desc}</span>
+                        <span className="text-neutral-500 leading-tight">{m.desc}</span>
                       </button>
                     ))}
                   </div>
-                  <div className="text-xs text-neutral-700 mt-3 mb-2">Google via Runway</div>
+                  <div className="text-xs text-neutral-500 mt-3 mb-2">Google via Runway</div>
                   <div className="grid grid-cols-3 gap-2">
                     {VIDEO_MODELS.filter((m) => m.group === "Google").map((m) => (
                       <button
@@ -1150,9 +1159,9 @@ console.log(videoTask.output[0]);
                       >
                         <div className="flex items-center justify-between w-full mb-1">
                           <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                          <span className="text-neutral-700 text-[10px]">{m.crInfo}</span>
+                          <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
                         </div>
-                        <span className="text-neutral-600 leading-tight">{m.desc}</span>
+                        <span className="text-neutral-500 leading-tight">{m.desc}</span>
                       </button>
                     ))}
                   </div>
@@ -1266,7 +1275,7 @@ console.log(videoTask.output[0]);
             >
               <span>{showPrompt ? "▾" : "▸"}</span>
               <span className="font-medium text-neutral-300">Prompt preview</span>
-              <span className="text-neutral-700">· see what gets sent to the API</span>
+              <span className="text-neutral-500">· see what gets sent to the API</span>
             </button>
             <button
               onClick={copyScript}
@@ -1293,6 +1302,11 @@ console.log(videoTask.output[0]);
                 override={videoPromptOverride}
                 onChange={setVideoPromptOverride}
               />
+              {gen3aTurboPromptTooLong && (
+                <p className="text-xs text-amber-500 flex items-center gap-1.5">
+                  <span>⚠</span> Gen3a Turbo has a 768-character prompt limit — this video prompt is {(videoPromptOverride ?? preview.videoPrompt).length} chars. Switch to Gen4 Turbo or shorten custom notes to avoid an API error.
+                </p>
+              )}
             </div>
           )}
         </section>
@@ -1350,7 +1364,7 @@ console.log(videoTask.output[0]);
                   <div className="text-center pointer-events-none">
                     <div className="text-3xl mb-2">🖼</div>
                     <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
-                    <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 10MB</div>
+                    <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 3 MB</div>
                   </div>
                 )}
                 <input
@@ -1446,12 +1460,20 @@ console.log(videoTask.output[0]);
               </button>
             )}
             {!isGenerating && (
-              <button
-                onClick={safeReset}
-                className="ml-2 text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"
-              >
-                ✕ Start over
-              </button>
+              confirmingReset ? (
+                <div className="ml-2 flex items-center gap-1.5 shrink-0">
+                  <span className="text-xs text-neutral-500">Video will be lost —</span>
+                  <button onClick={reset} className="text-xs text-red-400 hover:text-red-300 transition-colors">Confirm</button>
+                  <button onClick={() => setConfirmingReset(false)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Cancel</button>
+                </div>
+              ) : (
+                <button
+                  onClick={safeReset}
+                  className="ml-2 text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"
+                >
+                  ✕ Start over
+                </button>
+              )
             )}
           </div>
 
@@ -1604,6 +1626,7 @@ console.log(videoTask.output[0]);
                           value={cancelTaskId}
                           onChange={e => { setCancelTaskId(e.target.value); setCancelMsg(null); }}
                           placeholder="Paste task ID to cancel…"
+                          aria-label="Runway task ID to cancel"
                           className="flex-1 text-xs bg-neutral-800 border border-neutral-700 rounded px-3 py-1.5 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-600"
                         />
                         <button
@@ -1672,9 +1695,21 @@ console.log(videoTask.output[0]);
                 </div>
                 <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <button onClick={safeReset} className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
-                      Start over
-                    </button>
+                    {confirmingReset ? (
+                      <>
+                        <span className="text-xs text-neutral-400 shrink-0">Video will be lost —</span>
+                        <button onClick={reset} className="text-sm text-red-400 border border-red-900 hover:border-red-700 px-4 py-1.5 rounded transition-colors shrink-0">
+                          Confirm
+                        </button>
+                        <button onClick={() => setConfirmingReset(false)} className="text-sm text-neutral-400 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={safeReset} className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
+                        Start over
+                      </button>
+                    )}
                     <button
                       onClick={() => { setVideoUrl(null); setStep("review"); }}
                       className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0"

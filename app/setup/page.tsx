@@ -164,11 +164,15 @@ export default function SetupPage() {
 
         {/* Pricing note */}
         <div className="mt-10 p-4 rounded-lg border border-neutral-800 bg-neutral-900/50 text-sm text-neutral-400 space-y-1">
-          <div className="font-medium text-neutral-300">Credit costs per generation</div>
-          <div className="flex justify-between"><span>Logo image (Gen4 Image)</span><span className="text-neutral-500">~8 credits</span></div>
-          <div className="flex justify-between"><span>2s intro (Gen4 Turbo)</span><span className="text-neutral-500">10 credits</span></div>
-          <div className="flex justify-between"><span>5s intro (Gen4 Turbo)</span><span className="text-neutral-500">25 credits</span></div>
-          <div className="flex justify-between"><span>10s intro (Gen4 Turbo)</span><span className="text-neutral-500">50 credits</span></div>
+          <div className="font-medium text-neutral-300">Estimated credit costs</div>
+          <div className="flex justify-between"><span>Logo image (Gen4 Image)</span><span className="text-neutral-500">~30 cr</span></div>
+          <div className="flex justify-between"><span>Logo image (Gen4 Image Turbo)</span><span className="text-neutral-500">~15 cr</span></div>
+          <div className="flex justify-between"><span>Logo image (Gemini 2.5 Flash)</span><span className="text-neutral-500">~10 cr</span></div>
+          <div className="flex justify-between text-neutral-600"><span>— canvas styles (Adult Swim, Minimal, Prestige)</span><span>0 cr</span></div>
+          <div className="mt-2 flex justify-between"><span>2s video (Gen4 Turbo)</span><span className="text-neutral-500">10 cr</span></div>
+          <div className="flex justify-between"><span>5s video (Gen4 Turbo)</span><span className="text-neutral-500">25 cr</span></div>
+          <div className="flex justify-between"><span>5s video (Gen4.5)</span><span className="text-neutral-500">60 cr</span></div>
+          <div className="flex justify-between"><span>10s video (Gen4 Turbo)</span><span className="text-neutral-500">50 cr</span></div>
           <a
             href={LINKS.runwayPricing}
             target="_blank"
