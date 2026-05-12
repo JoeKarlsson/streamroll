@@ -22,7 +22,11 @@ export type Style =
   | "vaporwave"
   | "cyberpunk"
   | "hbo"
-  | "blockbuster";
+  | "blockbuster"
+  | "dreamworks"
+  | "tristar"
+  | "hannabarbera"
+  | "columbia";
 
 export type Duration = 2 | 4 | 5 | 6 | 8 | 10;
 export type VideoModel = "gen4_turbo" | "gen4.5" | "gen3a_turbo" | "veo3" | "veo3.1" | "veo3.1_fast";
@@ -72,6 +76,10 @@ const styleDescriptions: Record<Style, string> = {
     "bold crimson red wordmark — vivid saturated red (#E50914) primary faces with dark maroon shadow sides giving the letterforms subtle dimensional depth, clean geometric sans-serif, logo centered with generous negative space on all sides, premium streaming service identity",
   blockbuster:
     "late 1980s video rental store logo aesthetic, bold golden-yellow (#FFDE00) all-caps condensed block lettering on deep navy blue (#00157C), enormous heavy letterforms filling the frame, horizontal yellow accent band behind the text, film strip perforations bordering the top and bottom edges, warm incandescent glow radiating from the letterforms, late 80s corporate retail signage energy, nostalgic and bold",
+  dreamworks:   "dreamy sky, boy on crescent moon, clouds, cinematic",
+  tristar:      "pegasus in sky, clouds, golden light, cinematic",
+  hannabarbera: "rainbow swirl circle, chrome star, black background, retro broadcast",
+  columbia:     "columbia figure with torch, clouds and light beams, classical cinematic",
 };
 
 // Motion descriptions use positive phrasing only — no "don't/no/never".
@@ -131,6 +139,10 @@ const styleMotion: Record<Style, string> = {
   blockbuster:
     "A warm golden-yellow spotlight ignites at center — bright incandescent light floods outward across the deep navy background. The bold block letters radiate warm yellow glow, letterforms pulsing with a buzzing fluorescent warmth. Film strip perforations along the frame edges rattle lightly with a subtle vibration. That familiar store-opening energy: bright, cheerful, unmistakably late-80s retail. Camera holds completely static. Nostalgic, golden, bold.",
 
+  dreamworks:   "Clouds drift slowly. The crescent moon glows. The camera drifts upward. Dreamy and cinematic.",
+  tristar:      "The Pegasus gallops powerfully in mid-air, wings beating, clouds churning. Dynamic and epic.",
+  hannabarbera: "The rainbow swirl and chrome star animate in retro broadcast style. Retro cel-animation.",
+  columbia:     "Light beams sweep the sky, clouds churn. Classical cinematic logo reveal.",
 };
 
 // Gen4.5 supports timestamp-based sequencing for tighter control over pacing.
@@ -189,6 +201,10 @@ const styleMotionGen45: Record<Style, string> = {
   blockbuster:
     "[00:00] Deep navy frame. A warm golden-yellow spotlight ignites at center — bright incandescent light floods outward. [00:01] Bold block letters radiate warm yellow glow. Letterforms pulse with buzzing fluorescent warmth. Film strip perforations along frame edges rattle with subtle vibration. [00:02] Yellow glow intensifies then settles. The horizontal accent band behind the text brightens. [00:03] Perforations pulse again with golden light. That familiar store-opening energy fills the frame. [00:04] Scene holds. Camera completely static throughout. Late 80s, nostalgic, golden.",
 
+  dreamworks:   "[00:00] Clouds drift slowly. [00:02] Camera drifts upward through the clouds. [00:04] Crescent moon glows. Dreamy and cinematic.",
+  tristar:      "[00:00] Pegasus gallops powerfully in mid-air. [00:02] Wings beat, clouds churn. [00:04] Sunlight pulses. Dynamic and epic.",
+  hannabarbera: "[00:00] Rainbow swirl animates on black. [00:02] Chrome star flies along the arc. [00:04] Star settles. Retro broadcast.",
+  columbia:     "[00:00] Light beams sweep the sky. [00:02] Clouds churn, torch shines. [00:04] Scene holds. Classical cinematic.",
 };
 
 const styleBackground: Record<Style, string> = {
@@ -209,7 +225,11 @@ const styleBackground: Record<Style, string> = {
   epic:        "Background: dark warm amber-black.",
   nature:      "Background: deep dark natural green-black.",
   prestige:    "",
-  blockbuster: "Background: deep navy blue (#00157C).",
+  blockbuster:  "Background: deep navy blue (#00157C).",
+  dreamworks:   "Background: sky blue with clouds.",
+  tristar:      "Background: golden sky, clouds, water below.",
+  hannabarbera: "Background: pure black.",
+  columbia:     "Background: warm sky, clouds, light beams.",
 };
 
 const treatmentImage: Record<Treatment, string> = {

@@ -32,6 +32,10 @@ const STYLE_COLOR: Record<Style, string> = {
   cyberpunk:  "#F43F5E",
   hbo:         "#A1A1AA",
   blockbuster: "#FFDE00",
+  dreamworks:  "#93C5FD",
+  tristar:     "#F59E0B",
+  hannabarbera:"#A855F7",
+  columbia:    "#F5DEB3",
 };
 
 const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string }[] = [
@@ -74,7 +78,11 @@ const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageM
   hbo:        { videoModel: "gen4.5",      imageModel: "gemini_image3_pro", treatment: "theatrical",  duration: 5 },
   epic:        { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   nature:      { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
-  blockbuster: { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
+  blockbuster:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
+  dreamworks:   { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  tristar:      { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  hannabarbera: { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  columbia:     { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
 };
 
 const STYLE_TAGLINES: Record<Style, string[]> = {
@@ -95,7 +103,11 @@ const STYLE_TAGLINES: Record<Style, string[]> = {
   vaporwave:   ["aesthetic dreams","lost in the mall of content","remember when?","the simulation is streaming","totally.aesthetic","enter the mall","stream it on repeat","the past is pretty","Windows 95 never died","aesthetic.jpg streaming"],
   cyberpunk:   ["The future is now","Neon and nightmare","Jack in and stream","The signal never sleeps","Dark city, bright screen","Interface engaged","The net is alive","Rain on glass, fire on screen","Outlaws watch this","Escape velocity streaming"],
   hbo:         ["It's not TV","Prestige, defined","The gold standard","Some things are worth it","Where television grew up","The serious watch","Excellence, delivered","Nothing compromises here","Not for casual viewers","It's HBO"],
-  blockbuster: ["Make it a Blockbuster night","Be kind, rewind","Open seven nights a week","Your entertainment destination","No streaming required","Late fees apply","Member since opening night","The original binge destination","Returns due by midnight","Where the movies lived"],
+  blockbuster:  ["Make it a Blockbuster night","Be kind, rewind","Open seven nights a week","Your entertainment destination","No streaming required","Late fees apply","Member since opening night","The original binge destination","Returns due by midnight","Where the movies lived"],
+  dreamworks:   ["A new kind of story","Imagination has a home","Dreams take flight here","Where the impossible streams","Beyond the clouds","Stories that soar","The dream is streaming","From a different world","Look up","Wonder, delivered"],
+  tristar:      ["Fly higher","Legendary from the start","The wings of cinema","Born to run","Soaring stories","Above and beyond","Where legends take flight","The sky is the screen","Epic from the first frame","Ride the sky"],
+  hannabarbera: ["Yabba dabba do","The original cartoon magic","Fun is timeless","Classics never stop","Saturday morning forever","The golden age of cartoons","Laugh until it loops","Animation nation","The original binge","Never not funny"],
+  columbia:     ["A torch for great stories","Since the beginning of cinema","The original prestige","Illuminate your screen","Legacy in every frame","Where classics are born","The light of cinema","Timeless, always","A century of stories","The torch burns on"],
 };
 
 const DURATIONS: { value: Duration; label: string; est: string }[] = [
@@ -105,7 +117,7 @@ const DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 10, label: "10s", est: "~60 sec" },
 ];
 
-type Preset = { name: string; style: Style; tagline: string; desc: string; emoji?: string; customNotes?: string };
+type Preset = { name: string; style: Style; tagline: string; desc: string; emoji?: string; customNotes?: string; videoPromptOverride?: string };
 
 const INSPO: Preset[] = [
   { name: "Joeflix",   style: "prestige",   tagline: "Where stories come alive",  desc: "Example · your name here" },
@@ -157,8 +169,31 @@ const CUSTOM_TEMPLATES: Preset[] = [
   { name: "NatureView",  emoji: "🌿", style: "nature",    tagline: "Stories from the wild",         desc: "Nature",     customNotes: "" },
 ];
 
+const STUDIOS: Preset[] = [
+  {
+    name: "DreamFlix", emoji: "🌙", style: "dreamworks", tagline: "Where dreams take flight",
+    desc: "DreamWorks",
+    videoPromptOverride: `The camera drifts slowly upward through the clouds. Billowing white cumulus clouds roll and churn around the edges of the frame, their soft puffy shapes shifting and morphing as they pass. The boy sits on the crescent moon holding his fishing rod, the fishing line sways and dangles in the breeze. The crescent moon glows faintly. Sunlight filters through the clouds with shifting highlights. The text at the bottom of the frame remains steady and stable, completely motionless, no warping or movement. Cinematic, dreamy atmosphere.`,
+  },
+  {
+    name: "TriFlix", emoji: "🐴", style: "tristar", tagline: "Soar above the rest",
+    desc: "TriStar",
+    videoPromptOverride: `The Pegasus gallops in place mid-air, its front legs reaching forward and rear legs kicking back in a powerful running motion, hooves cycling through the air as if charging across the sky. Its massive wings flap up and down with strong, powerful strokes, feathers flexing with each beat. Its mane whips wildly in the wind and its tail streams behind it. The clouds churn and roll across the sky, moving from right to left. Sunlight pulses and flares behind the horse. The water below ripples and shimmers with bright reflections. Dynamic, dramatic motion throughout the entire frame.`,
+  },
+  {
+    name: "HannaFlix", emoji: "⭐", style: "hannabarbera", tagline: "The original cartoon magic",
+    desc: "Hanna-Barbera",
+    videoPromptOverride: `A 1980s broadcast logo animation on a pure black background. A bright chrome five-pointed star flies through the air in a swooping circular motion, looping around in a full ring, then at the end of its path it swoops upward in a final flourish and comes to rest at the top of the circle. As the star flies, it leaves behind a thick glowing ribbon of rainbow light in its wake — purple, magenta, pink, green, and blue streaks layered like a long-exposure light painting. The rainbow trail persists and remains fully visible after the star finishes its motion, forming a complete glowing circular swirl with an upward tail at the end, with the star resting at the top. Once the star settles into place, the chunky white wordmark fades in below. Retro cel-animation-meets-early-CGI aesthetic, soft neon glow, slight film grain.`,
+  },
+  {
+    name: "ColumbiaFlix", emoji: "🏛️", style: "columbia", tagline: "A torch for great stories",
+    desc: "Columbia",
+    videoPromptOverride: ``,
+  },
+];
+
 // Styles that skip Runway image generation and render the logo directly on canvas
-const CANVAS_STYLES = new Set<Style>(["adultswim", "minimal", "prestige"]);
+const CANVAS_STYLES = new Set<Style>(["adultswim", "minimal", "prestige", "dreamworks", "tristar", "hannabarbera", "columbia"]);
 
 type LogoMode = "ai" | "upload";
 type GenMode = "image-only" | "full";
@@ -391,6 +426,7 @@ export default function Home() {
     setTreatment(d.treatment);
     setDuration(d.duration);
     setCustomNotes(i.customNotes ?? "");
+    setVideoPromptOverride(i.videoPromptOverride ?? null);
     setStep("idle");
     setImageUrl(null);
     setVideoUrl(null);
@@ -617,6 +653,80 @@ console.log(videoTask.output[0]);
         ctx.font = `400 ${tagFontSize}px "Geist","Helvetica Neue",Helvetica,sans-serif`;
         ctx.fillStyle = "#666666";
         ctx.fillText(tagline!.trim().toUpperCase(), W / 2, H * 0.62);
+      }
+
+    } else if (style === "dreamworks" || style === "tristar" || style === "hannabarbera" || style === "columbia") {
+      // Load background image
+      const bg = document.createElement("img");
+      bg.src = `/studios/${style}.png`;
+      await new Promise<void>((resolve, reject) => { bg.onload = () => resolve(); bg.onerror = reject; });
+      ctx.drawImage(bg, 0, 0, W, H);
+
+      // Per-studio text styling
+      const studioConfigs: Record<string, { font: (sz: number) => string; color: string; shadowColor: string; textY: number; clearY: number; clearH: number }> = {
+        dreamworks: {
+          font: sz => `300 italic ${sz}px Georgia,"Times New Roman",serif`,
+          color: "#ffffff",
+          shadowColor: "rgba(0,30,80,0.6)",
+          textY: H * 0.88,
+          clearY: H * 0.78,
+          clearH: H * 0.22,
+        },
+        tristar: {
+          font: sz => `400 ${sz}px Georgia,"Times New Roman",serif`,
+          color: "#ffffff",
+          shadowColor: "rgba(0,0,0,0.7)",
+          textY: H * 0.88,
+          clearY: H * 0.75,
+          clearH: H * 0.25,
+        },
+        hannabarbera: {
+          font: sz => `900 ${sz}px Arial,Helvetica,sans-serif`,
+          color: "#ffffff",
+          shadowColor: "rgba(0,0,0,0.0)",
+          textY: H * 0.82,
+          clearY: H * 0.68,
+          clearH: H * 0.32,
+        },
+        columbia: {
+          font: sz => `700 ${sz}px Georgia,"Times New Roman",serif`,
+          color: "#f5deb3",
+          shadowColor: "rgba(0,0,0,0.5)",
+          textY: H * 0.88,
+          clearY: H * 0.76,
+          clearH: H * 0.24,
+        },
+      };
+
+      const cfg = studioConfigs[style];
+
+      // Gradient overlay so text is readable
+      const grad = ctx.createLinearGradient(0, cfg.clearY, 0, H);
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(1, cfg.shadowColor);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, cfg.clearY, W, cfg.clearH);
+
+      // For Hanna-Barbera, clear a solid black strip under the circle for the text
+      if (style === "hannabarbera") {
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, H * 0.68, W, H * 0.32);
+      }
+
+      // Service name
+      const fontSize = fitFontSize(cfg.font, displayName, W * 0.80, 120, 28);
+      ctx.font = cfg.font(fontSize);
+      ctx.fillStyle = cfg.color;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(displayName, W / 2, cfg.textY);
+
+      // Tagline
+      if (hasTagline) {
+        const tagFontSize = Math.max(14, Math.floor(fontSize * 0.28));
+        ctx.font = cfg.font(tagFontSize).replace("300 italic", "300").replace("900", "400").replace("700", "400");
+        ctx.fillStyle = style === "columbia" ? "#e8d5a3" : "rgba(255,255,255,0.75)";
+        ctx.fillText(tagline!.trim(), W / 2, cfg.textY + fontSize * 0.72);
       }
     }
 
@@ -1009,6 +1119,35 @@ console.log(videoTask.output[0]);
                     <span className="text-xl mb-1">{i.emoji}</span>
                     <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
                     <div className="text-xs mt-0.5" style={{ color: "#b8895a" }}>{i.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
+              <span style={{ color: "#b45309" }}>✦</span>
+              <span className="text-neutral-600">Classic Studios</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {STUDIOS.map((i) => {
+                const isActive = name === i.name && style === i.style;
+                const color = STYLE_COLOR[i.style];
+                return (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    style={isActive
+                      ? { borderColor: color + "60", backgroundColor: color + "12" }
+                      : { borderColor: "#1e1a0e" }
+                    }
+                  >
+                    <span className="text-xl mb-1">{i.emoji}</span>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#a16207" }}>{i.desc}</div>
                   </button>
                 );
               })}
