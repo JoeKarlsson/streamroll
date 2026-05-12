@@ -19,10 +19,22 @@ const STYLE_COLOR: Record<Style, string> = {
   futuristic: "#06B6D4",
   minimal:    "#E5E7EB",
   horror:     "#EF4444",
-  anime:      "#F472B6",
+  anime:      "#3B82F6",
   epic:       "#F97316",
   nature:     "#22C55E",
   prestige:   "#E50914",
+  adultswim:  "#D4D4D4",
+  adventure:  "#FBBF24",
+  toonami:    "#38BDF8",
+  cartoon:    "#EF4444",
+  vhs:        "#94A3B8",
+  a24:        "#D946EF",
+  grindhouse: "#EC4899",
+  lofi:       "#A78BFA",
+  vaporwave:  "#C084FC",
+  cyberpunk:  "#F43F5E",
+  wesanderson:"#34D399",
+  hbo:        "#A1A1AA",
 };
 
 const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string }[] = [
@@ -32,7 +44,19 @@ const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: str
   { id: "futuristic", label: "Futuristic", emoji: "🚀", desc: "Holographic chrome",       tip: "Auto: Gen4.5 · Full Bleed · 5s" },
   { id: "minimal",    label: "Minimal",    emoji: "✦",  desc: "Clean & elegant",          tip: "Auto: Gen4 Turbo · Minimal · 4s" },
   { id: "horror",     label: "Horror",     emoji: "🩸", desc: "Gothic, fog & shadow",     tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
-  { id: "anime",      label: "Anime",      emoji: "🌸", desc: "Vivid, cherry blossoms",   tip: "Auto: Gen4.5 · Full Bleed · 4s" },
+  { id: "anime",      label: "Anime",      emoji: "⚡", desc: "Shonen energy burst",      tip: "Auto: Gen4.5 · Full Bleed · 4s" },
+  { id: "adultswim",  label: "Adult Swim", emoji: "📺", desc: "Black screen, white text",   tip: "Auto: Gen4 Turbo · Minimal · 2s" },
+  { id: "adventure",  label: "Adventure",  emoji: "🗡️", desc: "Cartoon title card",         tip: "Auto: Gen4.5 · Full Bleed · 5s" },
+  { id: "toonami",    label: "Toonami",    emoji: "🛸", desc: "Deep space action block",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
+  { id: "cartoon",    label: "Cartoon Net",emoji: "🟥", desc: "Checkerboard graphic pop",   tip: "Auto: Gen4 Turbo · Full Bleed · 4s" },
+  { id: "vhs",        label: "VHS",        emoji: "📼", desc: "Tracking errors, tape decay", tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
+  { id: "a24",        label: "A24",        emoji: "🌸", desc: "Neon menace, slow burn",      tip: "Auto: Gen4.5 · Minimal · 5s" },
+  { id: "grindhouse", label: "Feature Pres.", emoji: "🎞️", desc: "Psychedelic cinema pre-show",    tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
+  { id: "lofi",       label: "Lo-fi",      emoji: "🎧", desc: "Cozy rain, study beats",      tip: "Auto: Gen4 Turbo · Minimal · 4s" },
+  { id: "vaporwave",  label: "Vaporwave",  emoji: "🌴", desc: "Pastel grid, marble busts",    tip: "Auto: Gen4.5 · Full Bleed · 5s" },
+  { id: "cyberpunk",  label: "Cyberpunk",  emoji: "🌆", desc: "Neon rain, dark mega-city",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
+  { id: "wesanderson",label: "Wes Anderson",emoji:"🏨", desc: "Symmetry, pastels, deadpan",   tip: "Auto: Gen4.5 · Minimal · 4s" },
+  { id: "hbo",         label: "HBO",         emoji:"⬛", desc: "Chrome on black, prestige",   tip: "Auto: Gen4.5 · Theatrical · 5s" },
   { id: "epic",       label: "Epic",       emoji: "⚔️", desc: "Golden hour, dust",        tip: "Auto: Gen4.5 · Theatrical · 5s" },
   { id: "nature",     label: "Nature",     emoji: "🌿", desc: "Earthy documentary",       tip: "Auto: Gen4 Turbo · Minimal · 4s" },
 ];
@@ -46,8 +70,44 @@ const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageM
   minimal:    { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "minimal",     duration: 4 },
   horror:     { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   anime:      { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 4 },
+  adultswim:  { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "minimal",     duration: 2 },
+  adventure:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  toonami:    { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
+  cartoon:    { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "full-bleed",  duration: 4 },
+  vhs:        { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "theatrical",  duration: 5 },
+  a24:        { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "minimal",     duration: 5 },
+  grindhouse: { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
+  lofi:       { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
+  vaporwave:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  cyberpunk:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
+  wesanderson:{ videoModel: "gen4.5",      imageModel: "gemini_image3_pro", treatment: "minimal",     duration: 4 },
+  hbo:        { videoModel: "gen4.5",      imageModel: "gemini_image3_pro", treatment: "theatrical",  duration: 5 },
   epic:       { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   nature:     { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
+};
+
+const STYLE_TAGLINES: Record<Style, string[]> = {
+  prestige:    ["Where stories come alive","Stream like it matters","The next great thing","Your world, your screen","For the discerning viewer","Stories worth watching","Premium starts here","Not all streams are equal","Everything. Anytime.","The future of watching"],
+  cinematic:   ["Made for the big moments","Cinema lives here","Film, reimagined","Every frame, a story","The cinematic experience, at home","Gold standard streaming","Drama in every pixel","Where movies breathe","Feel everything","The picture is the message"],
+  retro:       ["Totally tubular","Rad to the max","Don't touch that dial","Press play on the past","Rewind and relive","Pop the tape in","Back to the good stuff","Gnarly content ahead","Wicked awesome streaming","Totally radical"],
+  futuristic:  ["The future is on","Tomorrow's content today","Streaming from the future","Next-gen entertainment","Beyond what's possible","Interface with tomorrow","Upgrade your reality","The signal from ahead","Neural-linked entertainment","Stream beyond the horizon"],
+  minimal:     ["Less is more","Only what matters","Simple. Perfect.","Quiet excellence","Nothing extra","Pure signal, no noise","Refined, always","Curated by intention","The essential cut","Elegance in simplicity"],
+  horror:      ["Sleep is for the weak","Don't look behind you","You were warned","Horror has a home","Fear finds a way","Streaming after dark","The dark side of streaming","Watch if you dare","Nightmares, delivered","The screams are real"],
+  anime:       ["Plus ultra streaming","Power level: maximum","The next episode awaits","Your destiny streams here","Unlimited power","The saga continues","Eyes of a warrior","This is your moment","Believe in the run","Arc begins now"],
+  adultswim:   ["on after 11","we're still here","goodnight, almost","stay up with us","you're still watching","it's late. perfect.","don't change the channel","this is the content","ok.","the weird stuff"],
+  adventure:   ["Mathematical!","Algebraic!","It's adventure time!","What time is it?","Oh my glob","Totally wizard","Come on, grab your friends","The fun will never end","Everything is everything","Lump off!"],
+  epic:        ["Every story is legendary","Born for the big screen","Where legends are made","The epic begins","Forged in fire","Rise to the moment","Worthy of the legend","This is your saga","Victory through streaming","The battle for your queue"],
+  nature:      ["The world, unfiltered","Earth has a story","Nature speaks, we listen","Every creature, every moment","Wild and beautiful","The living world, streaming","Find your wild","Planet in focus","Stream with the seasons","The natural order"],
+  toonami:     ["Stay gold","The block is back","Saturday nights, forever","Action anime, always","Where the best fights live","Signal locked","The mission continues","Tune in. Power up.","Built for the night","We know what you're watching"],
+  cartoon:     ["Check it","Serious about fun","Cartoons. Duh.","The original good stuff","Watch more cartoons","Fun is our business","Drawing you in","The animated life","It's cartoon o'clock","Cartoon headquarters"],
+  vhs:         ["Be kind, rewind","Press play","Tracking... please wait","Rewind to remember","Pop it in and press play","Static and stories","The analog age","Rewound and ready","Rewinding is caring","The tape lives on"],
+  a24:         ["Something wicked this way streams","Art has a home here","For the ones who feel it","Strange and beautiful","Not for everyone. For you.","An experience, not a show","Where the art lives","Unnerving. Unforgettable.","Quiet menace, loud impact","This is the one"],
+  grindhouse:  ["NOW SHOWING","FEATURE PRESENTATION","The picture is about to begin","Ladies and gentlemen...","Take your seats","The main event","The show is about to begin","Curtain up","Coming to your screen","A presentation of excellence"],
+  lofi:        ["beats to stream to","study and watch","chill vibes only","soft signal, strong content","rainy day streaming","slow down, watch something","the gentle stream","ambient entertainment","just right","background and foreground"],
+  vaporwave:   ["aesthetic dreams","lost in the mall of content","remember when?","the simulation is streaming","totally.aesthetic","enter the mall","stream it on repeat","the past is pretty","Windows 95 never died","aesthetic.jpg streaming"],
+  cyberpunk:   ["The future is now","Neon and nightmare","Jack in and stream","The signal never sleeps","Dark city, bright screen","Interface engaged","The net is alive","Rain on glass, fire on screen","Outlaws watch this","Escape velocity streaming"],
+  wesanderson: ["A film by you","Symmetrical excellence","Curated with precision","Deadpan and delightful","Whimsy, measured carefully","The concierge of content","Life is a set piece","A carefully arranged stream","Perfectly composed","Every frame, intentional"],
+  hbo:         ["It's not TV","Prestige, defined","The gold standard","Some things are worth it","Where television grew up","The serious watch","Excellence, delivered","Nothing compromises here","Not for casual viewers","It's HBO"],
 };
 
 const DURATIONS: { value: Duration; label: string; est: string }[] = [
@@ -67,6 +127,18 @@ const INSPO: Preset[] = [
   { name: "EpicQuest", style: "epic",       tagline: "Every story is legendary",   desc: "Action & adventure" },
   { name: "TerraDoc",  style: "nature",     tagline: "The world, unfiltered",      desc: "Nature documentaries" },
   { name: "WhiteRoom", style: "minimal",    tagline: "Less is more",               desc: "Arthouse & indie film" },
+  { name: "LateNight",   style: "adultswim",  tagline: "on after dark",               desc: "Adult Swim bumper" },
+  { name: "OooFlix",    style: "adventure",  tagline: "Mathematical!",               desc: "Cartoon adventure hub" },
+  { name: "TomFlix",    style: "toonami",    tagline: "Stay gold",                   desc: "Toonami action block" },
+  { name: "CheckerBox", style: "cartoon",    tagline: "Serious about fun",           desc: "Cartoon Network style" },
+  { name: "RewindFlix", style: "vhs",        tagline: "Be kind, rewind",             desc: "90s home video" },
+  { name: "FilmHaus",   style: "a24",        tagline: "Something wicked this way streams", desc: "Arthouse indie film" },
+  { name: "DriveInFlix",style: "grindhouse", tagline: "NOW SHOWING",                 desc: "Drive-in theater" },
+  { name: "ChillFlix",  style: "lofi",       tagline: "beats to stream to",          desc: "Lo-fi study beats" },
+  { name: "VaporFlix",  style: "vaporwave",  tagline: "aesthetic dreams",             desc: "Vaporwave" },
+  { name: "NeonCity",   style: "cyberpunk",  tagline: "The future is now",            desc: "Cyberpunk night city" },
+  { name: "GrandFlix",  style: "wesanderson",tagline: "A film by you",                desc: "Wes Anderson style" },
+  { name: "StaticFlix", style: "hbo",        tagline: "It's not TV",                 desc: "HBO prestige style" },
 ];
 
 const SEASONAL: Preset[] = [
@@ -113,12 +185,12 @@ const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 8, label: "8s", est: "~75 sec" },
 ];
 
-const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; desc: string }[] = [
-  { id: "gen4_image",        label: "Gen4 Image",         group: "Runway",  desc: "Creative, artistic style" },
-  { id: "gen4_image_turbo",  label: "Gen4 Turbo",         group: "Runway",  desc: "Faster, great quality" },
-  { id: "gpt_image_2",       label: "GPT Image 2",        group: "OpenAI",  desc: "Precise instruction-following" },
-  { id: "gemini_image3_pro", label: "Gemini Image 3 Pro", group: "Google",  desc: "Vivid, instruction-aware" },
-  { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  desc: "Fast, Google quality" },
+const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; crInfo: string; desc: string }[] = [
+  { id: "gen4_image",        label: "Gen4 Image",         group: "Runway",  crInfo: "~30 cr",  desc: "Creative, artistic style" },
+  { id: "gen4_image_turbo",  label: "Gen4 Turbo",         group: "Runway",  crInfo: "~15 cr",  desc: "Faster, great quality" },
+  { id: "gpt_image_2",       label: "GPT Image 2",        group: "OpenAI",  crInfo: "~40 cr",  desc: "Precise instruction-following" },
+  { id: "gemini_image3_pro", label: "Gemini Image 3 Pro", group: "Google",  crInfo: "~20 cr",  desc: "Vivid, instruction-aware" },
+  { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  crInfo: "~10 cr",  desc: "Fast, Google quality" },
 ];
 
 const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crInfo: string; desc: string }[] = [
@@ -176,6 +248,7 @@ export default function Home() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [genMode, setGenMode] = useState<GenMode>("full");
   const [reviewNotes, setReviewNotes] = useState("");
+  const [videoRegenNotes, setVideoRegenNotes] = useState("");
   const [sessionRestored, setSessionRestored] = useState(false);
   const [pollStatus, setPollStatus] = useState<string | null>(null);
   const [pollProgress, setPollProgress] = useState<number | null>(null);
@@ -183,13 +256,18 @@ export default function Home() {
   const [videoPromptOverride, setVideoPromptOverride] = useState<string | null>(null);
   const [cancelTaskId, setCancelTaskId] = useState("");
   const [cancelMsg, setCancelMsg] = useState<string | null>(null);
+  const [imageProgress, setImageProgress] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const imageProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const genStartRef = useRef(0);
   const imageTimeRef = useRef(0);
   const activeTaskIdRef = useRef<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (imageProgressRef.current) clearInterval(imageProgressRef.current);
+  }, []);
 
   // Restore completed generation from sessionStorage on mount
   useEffect(() => {
@@ -249,6 +327,46 @@ export default function Home() {
   const isVeoModel = videoModel === "veo3" || videoModel === "veo3.1" || videoModel === "veo3.1_fast";
   const activeDurations = isVeoModel ? VEO_DURATIONS : DURATIONS;
 
+  function shuffleTagline() {
+    const suggestions = STYLE_TAGLINES[style];
+    const available = suggestions.filter(t => t !== tagline);
+    if (!available.length) return;
+    setTagline(available[Math.floor(Math.random() * available.length)]);
+  }
+
+  function startImageProgress() {
+    setImageProgress(0);
+    let ticks = 0;
+    imageProgressRef.current = setInterval(() => {
+      ticks++;
+      setImageProgress(88 * (1 - Math.exp(-ticks / 150)));
+    }, 200);
+  }
+
+  function stopImageProgress(complete: boolean) {
+    if (imageProgressRef.current) { clearInterval(imageProgressRef.current); imageProgressRef.current = null; }
+    setImageProgress(complete ? 100 : 0);
+  }
+
+  async function downloadPoster() {
+    if (!imageUrl) return;
+    try {
+      const res = await fetch(imageUrl);
+      const blob = await res.blob();
+      const ext = blob.type.includes("png") ? "png" : "jpg";
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = makeFilename(name, style).replace(".mp4", `.${ext}`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objUrl);
+    } catch {
+      window.open(imageUrl, "_blank");
+    }
+  }
+
   function applyInspo(i: Preset) {
     setName(i.name);
     setTagline(i.tagline);
@@ -277,6 +395,7 @@ export default function Home() {
 
   function reset() {
     cancelActiveTask();
+    stopImageProgress(false);
     setPollStatus(null);
     setPollProgress(null);
     setCancelMsg(null);
@@ -287,6 +406,7 @@ export default function Home() {
     setError(null);
     setTimings(null);
     setElapsedMs(0);
+    setVideoRegenNotes("");
     try { sessionStorage.removeItem(SESSION_KEY); } catch {}
   }
 
@@ -393,11 +513,13 @@ console.log(videoTask.output[0]);
         setImageUrl(uploadedUri);
       } else {
         setStep("image");
+        startImageProgress();
         const imageStart = Date.now();
         const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody()) });
         const imageData = await imageRes.json();
-        if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
+        if (!imageRes.ok) { stopImageProgress(false); throw new Error(imageData.error ?? "Image generation failed"); }
         imageTimeRef.current = Date.now() - imageStart;
+        stopImageProgress(true);
         setImageUrl(imageData.imageUrl);
       }
 
@@ -429,13 +551,15 @@ console.log(videoTask.output[0]);
     imageTimeRef.current = 0;
     startTimer();
     setStep("image");
+    startImageProgress();
 
     try {
       const imageStart = Date.now();
       const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody(combined || undefined)) });
       const imageData = await imageRes.json();
-      if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
+      if (!imageRes.ok) { stopImageProgress(false); throw new Error(imageData.error ?? "Image generation failed"); }
       imageTimeRef.current = Date.now() - imageStart;
+      stopImageProgress(true);
       setImageUrl(imageData.imageUrl);
       setStep("review");
     } catch (e) {
@@ -461,10 +585,11 @@ console.log(videoTask.output[0]);
     try {
       // Step 1: kick off the Runway task (fast, < 5s)
       setPollStatus("STARTING");
+      const videoCombinedNotes = [customNotes.trim(), videoRegenNotes.trim()].filter(Boolean).join(". ");
       const startRes = await fetch("/api/video/start", {
         method: "POST",
         headers: jsonHeaders,
-        body: JSON.stringify({ ...buildBody(), imageUrl }),
+        body: JSON.stringify({ ...buildBody(videoCombinedNotes || undefined), imageUrl }),
       });
       const startData = await startRes.json();
       if (!startRes.ok) throw new Error(startData.error ?? "Failed to start video generation");
@@ -620,99 +745,6 @@ console.log(videoTask.output[0]);
 
       <div className="w-full max-w-2xl px-4 space-y-8">
 
-        {/* Inspo presets */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-neutral-300">Inspiration</label>
-            <button
-              onClick={() => applyInspo(INSPO[Math.floor(Math.random() * INSPO.length)])}
-              disabled={isGenerating}
-              className="text-xs text-neutral-400 hover:text-white border border-neutral-700 hover:border-neutral-500 px-3 py-1 rounded-full transition-colors disabled:opacity-40"
-            >
-              🎲 Surprise me
-            </button>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {INSPO.map((i) => {
-              const isActive = name === i.name && style === i.style;
-              const color = STYLE_COLOR[i.style];
-              return (
-                <button
-                  key={i.name}
-                  onClick={() => applyInspo(i)}
-                  disabled={isGenerating}
-                  className="text-left p-2.5 rounded-lg border transition-all disabled:opacity-40"
-                  style={isActive
-                    ? { borderColor: color + "60", backgroundColor: color + "12" }
-                    : { borderColor: "#262626" }
-                  }
-                >
-                  <div className="font-medium text-sm" style={isActive ? { color } : undefined}>{i.name}</div>
-                  <div className="text-xs text-neutral-600 mt-0.5">{i.desc}</div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-3">
-            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
-              <span style={{ color: "#166534" }}>✦</span>
-              <span className="text-neutral-600">Seasons</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {SEASONAL.map((i) => {
-                const isActive = name === i.name && style === i.style;
-                const color = STYLE_COLOR[i.style];
-                return (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
-                    style={isActive
-                      ? { borderColor: color + "60", backgroundColor: color + "12" }
-                      : { borderColor: "#1c2a1c" }
-                    }
-                  >
-                    <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#7aaa7a" }}>{i.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
-              <span style={{ color: "#92400e" }}>✦</span>
-              <span className="text-neutral-600">Holidays</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {HOLIDAYS.map((i) => {
-                const isActive = name === i.name && style === i.style;
-                const color = STYLE_COLOR[i.style];
-                return (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
-                    style={isActive
-                      ? { borderColor: color + "60", backgroundColor: color + "12" }
-                      : { borderColor: "#2a1e0e" }
-                    }
-                  >
-                    <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#b8895a" }}>{i.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
         {/* Name & tagline */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -732,16 +764,26 @@ console.log(videoTask.output[0]);
             <label htmlFor="tagline" className="block text-sm font-medium text-neutral-300 mb-2">
               Tagline <span className="text-neutral-600">(optional)</span>
             </label>
-            <input
-              id="tagline"
-              type="text"
-              value={tagline}
-              onChange={(e) => setTagline(e.target.value)}
-              placeholder="e.g. Where stories come alive"
-              maxLength={60}
-              disabled={isGenerating}
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors"
-            />
+            <div className="relative">
+              <input
+                id="tagline"
+                type="text"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                placeholder="e.g. Where stories come alive"
+                maxLength={60}
+                disabled={isGenerating}
+                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors pr-10"
+              />
+              <button
+                onClick={shuffleTagline}
+                disabled={isGenerating}
+                title="Suggest a tagline"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-300 transition-colors disabled:opacity-40 text-base leading-none"
+              >
+                🎲
+              </button>
+            </div>
           </div>
         </section>
 
@@ -806,9 +848,18 @@ console.log(videoTask.output[0]);
 
         {/* Style */}
         <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">
-            {logoMode === "upload" ? "Motion style" : "Visual style"}
-          </label>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-medium text-neutral-300">
+              {logoMode === "upload" ? "Motion style" : "Style"}
+            </label>
+            <button
+              onClick={() => applyInspo(INSPO[Math.floor(Math.random() * INSPO.length)])}
+              disabled={isGenerating}
+              className="text-xs text-neutral-400 hover:text-white border border-neutral-700 hover:border-neutral-500 px-3 py-1 rounded-full transition-colors disabled:opacity-40"
+            >
+              🎲 Surprise me
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-2">
             {STYLES.map((s) => {
               const isActive = style === s.id;
@@ -843,6 +894,65 @@ console.log(videoTask.output[0]);
               💡 {STYLES.find(s => s.id === style)!.tip}
             </p>
           )}
+
+          {/* Themed presets */}
+          <div className="mt-4">
+            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
+              <span style={{ color: "#166534" }}>✦</span>
+              <span className="text-neutral-600">Seasonal</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {SEASONAL.map((i) => {
+                const isActive = name === i.name && style === i.style;
+                const color = STYLE_COLOR[i.style];
+                return (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    style={isActive
+                      ? { borderColor: color + "60", backgroundColor: color + "12" }
+                      : { borderColor: "#1c2a1c" }
+                    }
+                  >
+                    <span className="text-xl mb-1">{i.emoji}</span>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#7aaa7a" }}>{i.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
+              <span style={{ color: "#92400e" }}>✦</span>
+              <span className="text-neutral-600">Holidays</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {HOLIDAYS.map((i) => {
+                const isActive = name === i.name && style === i.style;
+                const color = STYLE_COLOR[i.style];
+                return (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    style={isActive
+                      ? { borderColor: color + "60", backgroundColor: color + "12" }
+                      : { borderColor: "#2a1e0e" }
+                    }
+                  >
+                    <span className="text-xl mb-1">{i.emoji}</span>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#b8895a" }}>{i.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* Duration */}
@@ -904,7 +1014,10 @@ console.log(videoTask.output[0]);
                                 : { borderColor: "#262626" }
                               }
                             >
-                              <span className="font-semibold mb-0.5" style={imageModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
+                              <div className="flex items-center justify-between w-full mb-0.5">
+                                <span className="font-semibold" style={imageModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
+                                <span className="text-neutral-700 text-[10px]">{m.crInfo}</span>
+                              </div>
                               <span className="text-neutral-600 leading-tight">{m.desc}</span>
                             </button>
                           ))}
@@ -1171,10 +1284,20 @@ console.log(videoTask.output[0]);
             {/* Image skeleton */}
             {step === "image" && !imageUrl && logoMode === "ai" && (
               <div className="rounded-xl overflow-hidden border border-neutral-800">
-                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800">
+                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
                   <div className="h-3 w-44 rounded bg-neutral-800 animate-pulse" />
+                  <span className="text-xs tabular-nums" style={{ color: accentColor }}>{Math.round(imageProgress)}%</span>
                 </div>
                 <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }} />
+                <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800 flex items-center gap-3">
+                  <div className="flex-1 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${imageProgress}%`, backgroundColor: accentColor }}
+                    />
+                  </div>
+                  <span className="text-xs text-neutral-500 shrink-0">Generating poster…</span>
+                </div>
               </div>
             )}
 
@@ -1182,7 +1305,16 @@ console.log(videoTask.output[0]);
               <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 40px ${accentColor}18` }}>
                 <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
                   <span>Scene 1 · Logo · {imageRatio(imageModel).replace(":", "x")}</span>
-                  {timings && timings.image > 0 && <span className="tabular-nums">{(timings.image / 1000).toFixed(1)}s</span>}
+                  <div className="flex items-center gap-3">
+                    {timings && timings.image > 0 && <span className="tabular-nums">{(timings.image / 1000).toFixed(1)}s</span>}
+                    <button
+                      onClick={downloadPoster}
+                      className="text-xs border px-2 py-0.5 rounded transition-colors hover:text-white hover:border-neutral-500"
+                      style={{ borderColor: "#404040", color: "#737373" }}
+                    >
+                      ↓ Download poster
+                    </button>
+                  </div>
                 </div>
                 <Image src={imageUrl} alt="Generated logo" width={1920} height={1080} className="w-full" unoptimized />
               </div>
@@ -1353,19 +1485,27 @@ console.log(videoTask.output[0]);
                     <span className="text-neutral-500 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
                   </div>
                 )}
-                <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors shrink-0">
+                <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={videoRegenNotes}
+                    onChange={(e) => setVideoRegenNotes(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && videoRegenNotes.trim()) { setVideoUrl(null); setStep("review"); } }}
+                    placeholder='Notes for redo: e.g. "more energy", "darker background", "slower reveal"'
+                    className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
+                  />
+                </div>
+                <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <button onClick={reset} className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
                       Start over
                     </button>
                     <button
                       onClick={() => { setVideoUrl(null); setStep("review"); }}
-                      className="text-sm text-neutral-400 hover:text-white transition-colors shrink-0"
+                      className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0"
                     >
                       Redo video
                     </button>
-                  </div>
-                  <div className="flex items-center gap-2">
                     <button
                       onClick={copyScript}
                       className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"

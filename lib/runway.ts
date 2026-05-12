@@ -13,7 +13,19 @@ export type Style =
   | "anime"
   | "epic"
   | "nature"
-  | "prestige";
+  | "prestige"
+  | "adultswim"
+  | "adventure"
+  | "toonami"
+  | "cartoon"
+  | "vhs"
+  | "a24"
+  | "grindhouse"
+  | "lofi"
+  | "vaporwave"
+  | "cyberpunk"
+  | "wesanderson"
+  | "hbo";
 
 export type Duration = 2 | 4 | 5 | 6 | 8 | 10;
 export type VideoModel = "gen4_turbo" | "gen4.5" | "gen3a_turbo" | "veo3" | "veo3.1" | "veo3.1_fast";
@@ -38,7 +50,31 @@ const styleDescriptions: Record<Style, string> = {
   horror:
     "blood red and pitch black, gothic serif font, creeping fog, dark shadows, candle-lit atmosphere",
   anime:
-    "vibrant Japanese animation style, cherry blossom petals, bold outline typography, pastel and vivid colors",
+    "bold shonen anime title card, explosive energy burst behind letterforms, thick black ink outlines on the logo text, speed lines radiating outward from center, dramatic aura glow — electric blue outer rim, white-hot inner core, deep black background, saturated vivid orange and blue power colors, dynamic manga composition",
+  adultswim:
+    "Adult Swim network bumper, absolute pure black (#000000) background with zero texture or gradient, single block of clean white Helvetica Neue Condensed Bold text centered in frame — 2 to 3 lines of lowercase deadpan text in the service name, small lowercase brand mark in square brackets '[service name]' in the lower-right corner subordinate to the main text, white (#FFFFFF) on pure black only — no colors, no borders, no decoration of any kind, clinical broadcast television identity",
+  adventure:
+    "Adventure Time cartoon style title card, flat vector illustration, bold thick black outlines, bright saturated cobalt blue sky background, vivid green rolling hills, warm sunshine yellow accents, bold cartoonish logo typography with thick ink outlines, playful hand-drawn Land of Ooo aesthetic, flat color fills no gradients",
+  toonami:
+    "Toonami late-1990s action block aesthetic, wide-angle interior view of a sleek dark spacecraft — polished cool slate-blue metallic corridor walls (#3D5A73) with illuminated grid floor panels glowing cool blue-white, a large panoramic viewport window filling the far wall with a dense star field and soft painterly teal and purple nebulae drifting in deep space, dramatic cool blue-white volumetric light raking across all metal surfaces, service name logo in bold white letterforms with electric blue glow energy aura centered prominently in frame, high-quality late-1990s broadcast 3D CGI rendering style with smooth surface shaders and lens flare on bright elements",
+  cartoon:
+    "classic Cartoon Network checkerboard logo — 'CARTOON' stacked above 'NETWORK' in Eagle Bold slab-influenced sans-serif, each letter set inside alternating black and white checkerboard tiles forming a perfect square grid, white letters on black tiles and black letters on white tiles, flat fill with zero gradients, surrounding environment in maximum-saturation flat primary colors — fire engine red, cobalt blue, canary yellow, grass green — classic 1990s television network graphic identity, bold and punchy",
+  vhs:
+    "90s VHS home video aesthetic, washed-out faded colors, magnetic tape tracking error artifacts — horizontal glitch bands across the image, analog scan lines visible, timestamp counter in corner, muted desaturated palette with color bleeding at edges, soft focus and analog warmth, recorded-over-many-times tape degradation quality",
+  a24:
+    "A24 film studio title card, absolute black (#000000) background, white custom Didone-influenced Art Deco geometric serif wordmark — the letter A with a tapered apex, the 2 with a graceful elongated base, letterforms constructed from geometric component shapes: trapezoids, rectangles, circles — the logo depicted mid-assembly as if component geometric strokes are converging into place, fine monochromatic film grain over the entire frame, white on absolute black only, ultra-minimal and precise",
+  grindhouse:
+    "1968 National Screen Service psychedelic feature presentation bumper, frame entirely filled with pulsing kaleidoscopic concentric rings radiating outward from center — maximum saturation of ALL colors simultaneously: electric red, acid orange, lime green, cobalt blue, hot magenta, gold-yellow — rings animate outward continuously, glowing central orb in warm amber-pink, bold all-caps condensed gothic sans-serif typography 'OUR FEATURE PRESENTATION' in white or yellow at center, heavy film grain over entire frame, the text reads as if cut from cardstock with hard edges",
+  lofi:
+    "lo-fi hip hop study beats anime aesthetic, cozy warm interior, rain streaking slowly down a window in the background, soft warm amber lamp light glowing, vinyl record player or cassette tape in scene, logo text sitting quietly centered, hand-drawn anime illustration style, muted warm amber and soft cool blue palette, ChilledCow lofi girl energy, peaceful and nostalgic",
+  vaporwave:
+    "vaporwave aesthetic, white marble Hellenistic Apollo bust statue floating in a digital void, flat magenta (#FF71CE) and cyan (#01CDFE) perspective-grid floor receding to horizon at low angle, flat circle semi-circle sun on horizon with gradient from deep magenta (#F52E97) through violet to indigo, full-width Japanese katakana characters ＡＥＳＴＨＥＴＩＣ floating decoratively in wide geometric sans-serif, RGB chromatic aberration color channel offset on all edges — red channel shifted left, blue channel shifted right creating prismatic fringing, VHS scan lines at 20% opacity across entire image, deep purple background (#300350), soft bloom glow on neon elements, logo text in wide-spaced ITC Avant Garde geometric sans-serif",
+  cyberpunk:
+    "cyberpunk dystopia, dark rain-soaked night city, neon signs in Japanese characters glowing electric red and blue reflected on wet pavement, dense fog and smog between towering megabuildings, mega-city skyline silhouette in background, logo glowing with electric neon light against the darkness, Blade Runner 2049 meets Akira aesthetic, neon rain streaking through smog, moody atmospheric and dangerous",
+  wesanderson:
+    "Wes Anderson film aesthetic, perfectly symmetrical dead-center one-point perspective composition, pastel color palette — dusty rose pink, seafoam green, golden yellow, cream white, Futura bold sans-serif typography perfectly centered, whimsical and precise vintage illustration style, Grand Budapest Hotel energy, flat even lighting with no harsh shadows, perfectly composed deadpan graphic design",
+  hbo:
+    "1982 HBO Feature Presentation broadcast opening, massive three-dimensional chrome-plated brass letter forms floating in near-black space — physically thick beveled letters with visible metallic sheen, hard specular highlights on edges, the interior of the letter O contains a disc of spinning fiber optic light rays in electric blue, crimson red, gold and emerald green rotating outward, deep cobalt-black background (#050510) with dense hand-animated star field, warm amber-orange atmospheric glow at lower frame suggesting a miniature city below, high-contrast analog television static texture at the edges, cinematic scope composition",
   epic:
     "golden hour light, sweeping dust, monumental scale, bronze and amber tones, cinematic widescreen",
   nature:
@@ -66,7 +102,43 @@ const styleMotion: Record<Style, string> = {
     "The logo flickers and breathes — candleflicker lighting pulses across the letterforms with eerie warmth variations. Deep red smoke curls upward from the base of the frame. A creeping shadow vignette closes slowly inward from all four edges. Camera holds completely static. Gothic, eerie, atmospheric.",
 
   anime:
-    "The logo blazes into frame — letterforms emerge from a brilliant burst of light with dramatic speed lines radiating outward. Cherry blossom petals swirl in a spiral vortex around the glowing animated text. The text shimmers with vivid energy. Camera holds completely static. Vivid, high-energy.",
+    "Speed lines explode outward from center. A white-hot energy burst ignites behind the logo. The letterforms slam into frame — thick-outlined, vibrating with power. An electric aura pulses around the text: deep blue outer glow, white inner core. Energy particles shower downward. Camera holds completely static. Intense, high-energy shonen anime.",
+
+  adultswim:
+    "Hard cut to pure black. Two or three lines of white Helvetica Condensed text appear — either all at once or fading in line by line over two seconds. The text holds completely still, deadpan. The small lowercase brand mark in square brackets sits quietly in the lower corner, subordinate and unassuming. A single barely perceptible scan line flickers once across the frame and disappears. Nothing else moves. The stillness is absolute. Camera completely static throughout. The text just sits there.",
+
+  adventure:
+    "The logo bounces into frame from below with a cartoon squash-and-stretch pop — overshoots slightly, then snaps to center with a springy settle. Colorful cartoon stars burst outward with a cheerful pop. The background hills bob gently up and down. Rainbow sparkle particles spiral around the logo. Camera holds completely static. Fun, bouncy, cartoonish.",
+
+  toonami:
+    "Slow cinematic camera drift moves forward through a sleek dark spacecraft corridor — cool slate-blue metallic walls, illuminated grid floor panels glowing blue-white below. The large panoramic viewport ahead reveals deep space: dense star field, soft painterly teal-purple nebulae drifting beyond the glass. Cool blue-white volumetric light rakes dramatically across all metal surfaces. The logo fades in with an electric blue energy flash — white letterforms with a blue glow aura. A brief warp-speed star-trail effect pulses: white streaks elongate outward from the viewport then snap back to points. Camera drift continues slowly toward the stars. Late-1990s broadcast 3D CGI quality — smooth motion blur, volumetric lighting, lens flare on bright elements.",
+
+  cartoon:
+    "Individual checkerboard tiles fly into frame from all directions simultaneously, each snapping into position with a sharp graphic impact. Character heads and body parts briefly peek from individual squares — cartoon ears, eyes, hands — then pull back as tiles settle. The letter tiles flip to reveal 'CARTOON' on top, 'NETWORK' below in Eagle Bold. Maximum saturation color flashes — fire engine red, cobalt blue, canary yellow — burst from the character tiles. The complete CN checkerboard logo locks into place. Bold, flat, zero gradients. Camera completely static throughout.",
+
+  vhs:
+    "The logo stutters into view — horizontal tracking error bands sweep across the frame as the letterforms struggle to lock in. Color bleeds laterally from the text. A timestamp blinks in the lower corner. The image rolls and warps with analog instability. Scan lines flicker across the composition. The logo stabilizes briefly, then judders again with magnetic dropout noise. Camera holds completely static. Lo-fi, analog, degraded.",
+
+  a24:
+    "From absolute black: a diagonal white line slices in at 45°. A brief one-frame RGB channel split — red layer, green layer, blue layer separate and snap back together. A horizontal white stroke slides in. A vertical stroke drops from above. A circle and semicircle slide in from opposite sides. Fine construction lines draw in connecting the shapes. The logo letterforms snap together from their geometric components — assembled, locked, precise. Fine film grain drifts over the entire black frame throughout. Logo holds for one second. Hard cut to black. 4-second total runtime. Camera completely static throughout.",
+
+  grindhouse:
+    "Kaleidoscopic concentric rings pulse outward from center — maximum saturation of ALL colors simultaneously: electric red, acid orange, lime green, cobalt blue, hot magenta, gold-yellow — rings radiate outward continuously. The central warm amber-pink orb expands and contracts. The text logo 'snipes' in from the four corners of the frame simultaneously, converging at center with mechanical linear motion and no easing — hard edges, no soft antialiasing. Film grain drifts across the entire frame. The 'Funky Fanfare' visual energy: barely-contained color chaos, brassy and driving. Camera holds completely static. Maximum saturation, maximum intent.",
+
+  lofi:
+    "The logo drifts gently into the cozy frame and settles — like it belongs there. Rain trickles slowly down the window behind the scene. Warm amber lamp light pulses softly. Steam curls lazily upward from somewhere off-frame. The logo breathes with the scene, unhurried. A barely perceptible warmth washes gently through the image. Camera holds completely static. Peaceful, cozy, hypnotic.",
+
+  vaporwave:
+    "The perspective-grid floor pulses slowly toward the magenta-to-indigo horizon. The white marble Apollo bust rotates imperceptibly in the digital void. The flat circle sun breathes — rising slightly, falling slowly. Full-width Japanese katakana characters drift with subtle VHS tracking displacement. RGB chromatic aberration pulses on all elements: the red channel shifts left, blue shifts right — prismatic fringing on every edge — then snaps back. VHS horizontal scan lines sweep slowly upward across the entire frame at 20% opacity. A brief glitch cut: the image corrupts into horizontal displacement blocks for one frame, then snaps back clean. Camera completely static throughout. Dreamy, surreal, hypnotic.",
+
+  cyberpunk:
+    "Neon rain falls through dark smog-thick air — streaks of red and blue neon catching in the fog. The logo materializes glowing with electric neon energy against the dark mega-city backdrop. Distant neon signs flicker and reflect on rain-slicked surfaces below. Fog drifts slowly between towers. The logo pulses with neon light — breathing, dangerous. Camera holds completely static. Dark, atmospheric, dystopian.",
+
+  wesanderson:
+    "The logo is centered with mathematical precision — perfectly symmetrical, deadpan, unmoving. A barely perceptible slow zoom begins, maintaining exact one-point perspective symmetry throughout. Soft pastel colors hold in perfect even flatness. A small whimsical detail — a tiny bird or falling leaf — drifts past in perfectly composed frame. Nothing is out of place. Camera performs an imperceptibly slow symmetrical dolly in. Deadpan, precise, whimsical.",
+
+  hbo:
+    "Pure analog television static fills the frame — high-contrast black-and-white snow grain, textured and three-dimensional, not flat noise. The static holds for a beat. Then the massive chrome-plated brass 3D letterforms phase in through the noise as if a broadcast signal is locking in — physically thick beveled letters with hard specular highlights on every edge. The static recedes. Inside the letter O, a spinning disc of fiber optic light rays ignites: electric blue, crimson red, gold, emerald green beams rotating outward. Warm amber glow pulses from below suggesting the model city. Camera holds completely static. Prestige, broadcast, definitive.",
 
   epic:
     "The logo rises into frame from below as if cresting a ridge — letterforms scale up and settle center. A golden sunburst erupts from directly behind the text, warm light intensifies and spreads outward. Dust and debris blast outward from around the text and drift into the foreground. Camera eases into a very slow dolly in. Bronze and amber tones. Cinematic widescreen.",
@@ -96,7 +168,43 @@ const styleMotionGen45: Record<Style, string> = {
     "[00:00] Logo flickers and breathes — candleflicker lighting pulses across the letterforms with eerie warmth variations. [00:01] Deep red smoke curls upward from the base of the frame. [00:02] Creeping shadow vignette begins closing inward from all four edges. [00:04] Vignette tightens — logo flickers through the darkness. Camera completely static throughout. Gothic, eerie.",
 
   anime:
-    "[00:00] Logo blazes into frame — letterforms emerge from a burst of brilliant light. [00:01] Cherry blossom petals swirl in a spiral vortex around the glowing animated text. Speed lines radiate outward. [00:02] Flash ignites from behind the text and expands outward. [00:03] Flash settles — logo bold, sharp, glowing. [00:04] Scene holds. Camera completely static throughout.",
+    "[00:00] Speed lines explode outward from center — white-hot energy burst ignites behind the logo. [00:01] Letterforms slam into frame, thick-outlined, vibrating with power. Electric aura erupts: deep blue outer glow, white inner core. [00:02] Energy particles shower downward from the text. Power aura pulses intensely. [00:03] Aura settles — logo bold, sharp, glowing with residual energy. [00:04] Scene holds, logo radiating heat. Camera completely static throughout. Intense shonen anime.",
+
+  adultswim:
+    "[00:00] Hard cut to pure black. [00:01] White Helvetica Condensed text lines appear — fading in sequentially, line by line, over one second. Small lowercase brand mark in brackets fades into lower corner. [00:02] A single scan line flickers once across the frame and disappears. Everything holds still. [00:03] Absolute stillness. Pure black field. White text. That's all. [00:04] Still there. Deadpan. Camera completely static throughout.",
+
+  adventure:
+    "[00:00] Logo launches into frame from below with a cartoon squash-and-stretch bounce — overshoots then snaps to center. [00:01] Colorful cartoon stars burst outward with a cheerful pop. [00:02] Background hills bob gently. Rainbow sparkle particles spiral around the logo. [00:03] Sparkles settle, logo bounces once more with happy energy. [00:04] Scene holds, logo cheerful and bright. Camera completely static throughout. Cartoonish, fun.",
+
+  toonami:
+    "[00:00] Slow camera drift begins forward through a sleek dark spacecraft corridor — cool slate-blue metallic walls, illuminated grid floor panels glowing blue-white. [00:01] Panoramic viewport ahead reveals deep space: dense star field, soft painterly teal-purple nebulae beyond the glass. Cool blue-white volumetric light rakes across the metal surfaces. [00:02] Logo fades in with an electric blue energy flash — white letterforms with blue glow aura. [00:03] Warp-speed star-trail burst from the viewport: white streaks elongate outward then snap back to points. [00:05] Camera drift continues slowly toward the stars. Smooth late-90s broadcast CGI motion blur, volumetric lighting, lens flare. Brooding, atmospheric.",
+
+  cartoon:
+    "[00:00] Individual checkerboard tiles fly in from all directions — snapping into position with sharp graphic impacts. [00:01] Character body parts peek from individual squares — cartoon ears, eyes, hands — then pull back as tiles settle. [00:02] Letter tiles flip to reveal 'CARTOON' over 'NETWORK' in Eagle Bold. Maximum saturation color flash — fire engine red, cobalt blue, canary yellow. [00:03] Complete CN checkerboard logo locked into place. Bold, flat, zero gradients. [00:04] Scene holds — iconic. Camera completely static throughout.",
+
+  vhs:
+    "[00:00] Tracking error bands sweep horizontally — the image rolls and warps with analog instability. [00:01] Logo letterforms struggle into view through the magnetic noise, color bleeding from the edges. Timestamp blinks in the corner. [00:02] Image stabilizes briefly — logo visible but degraded, scan lines flickering. [00:03] Another tracking glitch sweeps the frame, logo judders. [00:04] Logo holds through the interference. Camera completely static throughout. Lo-fi, analog.",
+
+  a24:
+    "[00:00] Absolute black. A diagonal white line slices in at 45°. [00:01] One-frame RGB channel split — red, green, blue layers separate and snap back together in a single frame. A horizontal white stroke slides in from the left. A vertical stroke drops from above. [00:02] A circle and semicircle slide in from opposite sides. Fine construction lines draw in, connecting the geometric components. [00:03] Logo letterforms snap together from their geometric components — assembled, locked, precise. Fine film grain drifts over the black frame. [00:04] Logo holds one beat. Hard cut to black. Camera completely static throughout.",
+
+  grindhouse:
+    "[00:00] Kaleidoscopic concentric rings pulse outward from center — maximum saturation of ALL colors simultaneously: electric red, acid orange, lime green, cobalt blue, hot magenta, gold-yellow. [00:01] Central warm amber-pink orb expands. Text logo snipes in from all four corners of the frame simultaneously — mechanical linear motion, zero easing, hard edges, no antialiasing. [00:02] Text converges at center. Orb contracts. Film grain thickens across the entire frame. [00:03] Rings continue radiating outward continuously — all colors breathing and pulsing. [00:04] Logo centered and bold. Orb expands again. Maximum saturation, maximum intent. Camera completely static throughout.",
+
+  lofi:
+    "[00:00] Cozy interior. Rain trickles down the window. Warm amber lamp light glows softly. [00:01] Logo drifts gently into frame and settles — quiet, at home. Steam curls lazily upward from off-frame. [00:02] Rain continues. Lamp pulses softly. Logo breathes with the scene. [00:03] A gentle warmth washes across the frame. Everything still and peaceful. [00:04] Logo holds in the quiet. Camera completely static throughout. Cozy, hypnotic.",
+
+  vaporwave:
+    "[00:00] Deep purple void (#300350). Flat magenta (#FF71CE) and cyan (#01CDFE) perspective grid pulses forward toward the horizon. Flat semicircle sun sits on the horizon — gradient from deep magenta (#F52E97) through violet to indigo. [00:01] White marble Hellenistic Apollo bust floats into the digital void. Full-width Japanese katakana ＡＥＳＴＨＥＴＩＣ drifts with subtle VHS tracking displacement. [00:02] RGB chromatic aberration pulses across all elements: red channel shifts left, blue channel shifts right — prismatic fringing on every edge, then snaps back. VHS horizontal scan lines sweep upward at low opacity. [00:03] Single-frame glitch cut: image corrupts into horizontal displacement blocks, then snaps back clean. Logo shimmers. [00:04] Grid pulses again. Scene holds — dreamy, surreal, hypnotic. Camera completely static throughout.",
+
+  cyberpunk:
+    "[00:00] Dark rain-soaked night. Neon rain falls through fog — streaks of red and blue neon light. Mega-city silhouette looms in background. [00:01] Logo materializes — glowing with electric neon against the darkness. Neon reflections ripple on wet surfaces below. [00:02] Fog drifts slowly between towers. Distant neon signs flicker. Logo pulses with electric energy. [00:03] Rain continues. Smog thickens. Logo breathes — electric and dangerous. [00:04] Scene holds, dark and atmospheric. Camera completely static throughout.",
+
+  wesanderson:
+    "[00:00] Perfect symmetry. Logo centered with mathematical precision — Futura bold, pastel, deadpan. Flat even lighting. [00:01] Barely perceptible slow dolly in begins — maintaining exact one-point perspective. Pastel colors hold in perfect flatness. [00:02] A small whimsical detail drifts past in perfectly composed frame — a bird, a leaf, precisely placed. [00:03] Dolly continues, almost imperceptibly slow. Everything perfectly in place. [00:04] Scene holds, symmetrical and precise. Whimsical, deadpan.",
+
+  hbo:
+    "[00:00] Frame fills with pure analog television static — high-contrast black-and-white snow grain, dense and textured, not flat noise. [00:01] Broadcast signal begins locking in: massive chrome-plated brass 3D letterforms phase through the static — physically thick beveled letters with hard specular highlights on every edge emerging from the noise. [00:02] Static fully recedes. Letters resolved — chrome-plated, dimensional, imposing. Inside the letter O, a spinning disc of fiber optic light rays ignites: electric blue, crimson red, gold, emerald green beams rotating outward. [00:03] Fiber optic disc blazes with color. Warm amber-orange glow pulses from below, suggesting a model city. [00:04] Logo holds — chrome letters, fiber optic disc spinning, amber glow below. Camera completely static throughout. Prestige, broadcast, definitive.",
 
   epic:
     "[00:00] Logo rises into frame from below — letterforms scale up and settle center. [00:01] Golden sunburst erupts from directly behind the text — warm light intensifies and spreads. [00:02] Dust and debris blast outward and drift into the foreground. [00:03] Camera begins a very slow dolly in. [00:05] Scene settles — logo large, powerful, sharp. Bronze and amber tones.",
@@ -114,7 +222,19 @@ const styleBackground: Record<Style, string> = {
   futuristic: "Background: space black, pure dark.",
   minimal:    "Background: clean soft white or very light grey.",
   horror:     "Background: pitch black.",
-  anime:      "Background: soft light pastel.",
+  anime:      "Background: deep black with intense energy core at center.",
+  adultswim:  "Background: pure black. Nothing else.",
+  adventure:  "Background: bright cobalt blue sky with green rolling hills.",
+  toonami:    "Background: deep space, dark navy-black with drifting stars and purple-blue nebula glow.",
+  cartoon:    "Background: bold black and white checkerboard grid.",
+  vhs:        "Background: washed-out faded gray-blue, analog static at the edges.",
+  a24:        "Background: deep dark purple-black, almost void.",
+  grindhouse: "Background: frame entirely filled with kaleidoscopic concentric rings in ALL colors simultaneously — electric red, acid orange, lime green, cobalt blue, hot magenta, gold-yellow — radiating outward from a warm amber-pink central orb, heavy film grain over the entire frame.",
+  lofi:       "Background: cozy warm amber interior, rain streaking softly down a window.",
+  vaporwave:  "Background: pastel purple-pink gradient sky with retro perspective grid lines converging to glowing horizon.",
+  cyberpunk:  "Background: dark rainy dystopian night, neon-lit smog and fog, mega-city silhouette.",
+  wesanderson:"Background: flat even pastel — dusty rose, seafoam green, or golden cream, perfectly lit.",
+  hbo:        "Background: deep cobalt-black (#050510) near-black space with dense hand-animated star field, high-contrast analog television static texture at the edges, warm amber-orange atmospheric glow at lower frame.",
   epic:       "Background: dark warm amber-black.",
   nature:     "Background: deep dark natural green-black.",
   prestige:   "",
@@ -160,7 +280,16 @@ export function buildPrompts(params: GenerationParams): PromptPreview {
   const notesPart = customNotes?.trim() ? `. ${customNotes.trim()}` : "";
 
   const bg = styleBackground[style] ? `${styleBackground[style]} ` : "";
-  const imagePrompt = `${bg}Streaming service logo for "${upper}"${taglinePart}, ${treatmentImage[treatment]}, bold dramatic typography, ${styleDescriptions[style]}, professional logo design, no people${colorPart}${notesPart}`;
+
+  // Adult Swim: name must appear in lowercase brackets, no tagline shouting, no treatment/color overrides
+  let imagePrompt: string;
+  if (style === "adultswim") {
+    const bracketName = `[${name.toLowerCase()}]`;
+    const taglineLine = tagline?.trim() ? `, deadpan lowercase second line "${tagline.trim().toLowerCase()}"` : "";
+    imagePrompt = `${bg}Adult Swim network ID card: service name "${bracketName}" in white Helvetica Condensed text${taglineLine}, ${styleDescriptions[style]}, professional broadcast design, no people${notesPart}`;
+  } else {
+    imagePrompt = `${bg}Streaming service logo for "${upper}"${taglinePart}, ${treatmentImage[treatment]}, bold dramatic typography, ${styleDescriptions[style]}, professional logo design, no people${colorPart}${notesPart}`;
+  }
 
   // Gen4.5 supports timestamp-based sequencing — use the more precise version.
   const isGen45 = videoModel === "gen4.5";
