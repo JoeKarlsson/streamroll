@@ -150,6 +150,13 @@ const HOLIDAYS: Preset[] = [
   { name: "LuminaryFlix", emoji: "🕎", style: "minimal",   tagline: "Eight nights of great picks",   desc: "Hanukkah",        customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
 
+const CUSTOM_TEMPLATES: Preset[] = [
+  { name: "MyFlix",      emoji: "✨", style: "cinematic", tagline: "", desc: "Blank slate",  customNotes: "" },
+  { name: "SciFlix",     emoji: "🚀", style: "futuristic",tagline: "The future of entertainment", desc: "Sci-Fi",     customNotes: "" },
+  { name: "ChillStream", emoji: "🎵", style: "lofi",      tagline: "Slow down and stream",         desc: "Lo-Fi vibes",customNotes: "" },
+  { name: "NatureView",  emoji: "🌿", style: "nature",    tagline: "Stories from the wild",         desc: "Nature",     customNotes: "" },
+];
+
 // Styles that skip Runway image generation and render the logo directly on canvas
 const CANVAS_STYLES = new Set<Style>(["adultswim", "minimal", "prestige"]);
 
@@ -995,6 +1002,35 @@ console.log(videoTask.output[0]);
               })}
             </div>
           </div>
+
+          <div className="mt-3">
+            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
+              <span style={{ color: "#4f46e5" }}>✦</span>
+              <span className="text-neutral-600">Custom</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {CUSTOM_TEMPLATES.map((i) => {
+                const isActive = name === i.name && style === i.style;
+                const color = STYLE_COLOR[i.style];
+                return (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    style={isActive
+                      ? { borderColor: color + "60", backgroundColor: color + "12" }
+                      : { borderColor: "#1a1a2e" }
+                    }
+                  >
+                    <span className="text-xl mb-1">{i.emoji}</span>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#818cf8" }}>{i.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* Name & tagline */}
@@ -1688,7 +1724,7 @@ console.log(videoTask.output[0]);
                     type="text"
                     value={videoRegenNotes}
                     onChange={(e) => setVideoRegenNotes(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && videoRegenNotes.trim()) { setVideoUrl(null); setStep("review"); } }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { setVideoUrl(null); proceedToVideo(); } }}
                     placeholder='Notes for redo: e.g. "more energy", "darker background", "slower reveal"'
                     className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
                   />
@@ -1711,7 +1747,7 @@ console.log(videoTask.output[0]);
                       </button>
                     )}
                     <button
-                      onClick={() => { setVideoUrl(null); setStep("review"); }}
+                      onClick={() => { setVideoUrl(null); proceedToVideo(); }}
                       className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0"
                     >
                       Redo video
