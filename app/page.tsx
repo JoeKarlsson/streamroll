@@ -745,107 +745,6 @@ console.log(videoTask.output[0]);
 
       <div className="w-full max-w-2xl px-4 space-y-8">
 
-        {/* Name & tagline */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="service-name" className="block text-sm font-medium text-neutral-300 mb-2">Service name</label>
-            <input
-              id="service-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Joeflix"
-              maxLength={30}
-              disabled={isGenerating}
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors"
-            />
-          </div>
-          <div>
-            <label htmlFor="tagline" className="block text-sm font-medium text-neutral-300 mb-2">
-              Tagline <span className="text-neutral-600">(optional)</span>
-            </label>
-            <div className="relative">
-              <input
-                id="tagline"
-                type="text"
-                value={tagline}
-                onChange={(e) => setTagline(e.target.value)}
-                placeholder="e.g. Where stories come alive"
-                maxLength={60}
-                disabled={isGenerating}
-                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors pr-10"
-              />
-              <button
-                onClick={shuffleTagline}
-                disabled={isGenerating}
-                title="Suggest a tagline"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-300 transition-colors disabled:opacity-40 text-base leading-none"
-              >
-                🎲
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Logo mode toggle */}
-        <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Logo source</label>
-          <div className="flex gap-2 mb-4">
-            {(["ai", "upload"] as LogoMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setLogoMode(m)}
-                disabled={isGenerating}
-                className="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
-                style={logoMode === m
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
-                  : { borderColor: "#262626", color: "#a3a3a3" }
-                }
-              >
-                {m === "ai" ? "✦ Generate with AI" : "⬆ Upload your own"}
-              </button>
-            ))}
-          </div>
-
-          {logoMode === "upload" && (
-            <div>
-              <label
-                className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
-                style={{ borderColor: uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
-              >
-                {uploadPreview ? (
-                  <div className="relative w-full h-full">
-                    <Image src={uploadPreview} alt="Uploaded logo" fill className="object-contain p-3 rounded-xl" unoptimized />
-                    {isUploading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
-                        <span className="text-sm text-white animate-pulse">Uploading...</span>
-                      </div>
-                    )}
-                    {uploadedUri && !isUploading && (
-                      <div className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full" style={{ background: accentColor + "30", color: accentColor }}>
-                        Ready
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center pointer-events-none">
-                    <div className="text-3xl mb-2">🖼</div>
-                    <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
-                    <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 10MB</div>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
-                  disabled={isGenerating || isUploading}
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
-                />
-              </label>
-            </div>
-          )}
-        </section>
-
         {/* Style */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -953,6 +852,107 @@ console.log(videoTask.output[0]);
               })}
             </div>
           </div>
+        </section>
+
+        {/* Name & tagline */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="service-name" className="block text-sm font-medium text-neutral-300 mb-2">Service name</label>
+            <input
+              id="service-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Joeflix"
+              maxLength={30}
+              disabled={isGenerating}
+              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="tagline" className="block text-sm font-medium text-neutral-300 mb-2">
+              Tagline <span className="text-neutral-600">(optional)</span>
+            </label>
+            <div className="relative">
+              <input
+                id="tagline"
+                type="text"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                placeholder="e.g. Where stories come alive"
+                maxLength={60}
+                disabled={isGenerating}
+                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors pr-10"
+              />
+              <button
+                onClick={shuffleTagline}
+                disabled={isGenerating}
+                title="Suggest a tagline"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-300 transition-colors disabled:opacity-40 text-base leading-none"
+              >
+                🎲
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Logo mode toggle */}
+        <section>
+          <label className="block text-sm font-medium text-neutral-300 mb-3">Logo source</label>
+          <div className="flex gap-2 mb-4">
+            {(["ai", "upload"] as LogoMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setLogoMode(m)}
+                disabled={isGenerating}
+                className="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
+                style={logoMode === m
+                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
+                  : { borderColor: "#262626", color: "#a3a3a3" }
+                }
+              >
+                {m === "ai" ? "✦ Generate with AI" : "⬆ Upload your own"}
+              </button>
+            ))}
+          </div>
+
+          {logoMode === "upload" && (
+            <div>
+              <label
+                className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
+                style={{ borderColor: uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
+              >
+                {uploadPreview ? (
+                  <div className="relative w-full h-full">
+                    <Image src={uploadPreview} alt="Uploaded logo" fill className="object-contain p-3 rounded-xl" unoptimized />
+                    {isUploading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
+                        <span className="text-sm text-white animate-pulse">Uploading...</span>
+                      </div>
+                    )}
+                    {uploadedUri && !isUploading && (
+                      <div className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full" style={{ background: accentColor + "30", color: accentColor }}>
+                        Ready
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center pointer-events-none">
+                    <div className="text-3xl mb-2">🖼</div>
+                    <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
+                    <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 10MB</div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  disabled={isGenerating || isUploading}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                />
+              </label>
+            </div>
+          )}
         </section>
 
         {/* Duration */}
