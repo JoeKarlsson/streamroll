@@ -3,6 +3,7 @@ import RunwayML from "@runwayml/sdk";
 import { buildPrompts, type GenerationParams } from "@/lib/runway";
 
 export const maxDuration = 30;
+export const config = { api: { bodyParser: { sizeLimit: "5mb" } } };
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

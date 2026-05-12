@@ -241,6 +241,7 @@ export default function Home() {
   const [customNotes, setCustomNotes] = useState("");
   const [uploadedUri, setUploadedUri] = useState<string | null>(null);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [timings, setTimings] = useState<{ image: number; video: number } | null>(null);
@@ -454,20 +455,29 @@ console.log(videoTask.output[0]);
   }
 
   async function handleFileUpload(file: File) {
-    setIsUploading(true);
+    setUploadError(null);
     setUploadedUri(null);
     setUploadPreview(URL.createObjectURL(file));
-    const fd = new FormData();
-    fd.append("file", file);
-    const headers: Record<string, string> = {};
-    if (apiKey) headers["x-runway-key"] = apiKey;
+
+    const MAX_BYTES = 3 * 1024 * 1024; // 3 MB — keeps data URI under Vercel's 4.5 MB body limit
+    if (file.size > MAX_BYTES) {
+      setUploadError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum is 3 MB.`);
+      return;
+    }
+
+    setIsUploading(true);
     try {
-      const res = await fetch("/api/upload", { method: "POST", headers, body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      setUploadedUri(data.uri);
+      // Read as base64 data URI — Runway's promptImage accepts data URIs directly,
+      // so no server-side upload or API key needed for this step.
+      const dataUri = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+      setUploadedUri(dataUri);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setUploadError(e instanceof Error ? e.message : "Failed to read file");
     } finally {
       setIsUploading(false);
     }
@@ -1166,84 +1176,96 @@ console.log(videoTask.output[0]);
           )}
         </section>
 
-        {/* Generation mode + upload escape hatch */}
-        <div className="space-y-3">
-          {/* Mode toggle — only relevant for AI path */}
-          {logoMode === "ai" && (
-            <div className="flex gap-2">
-              {(["image-only", "full"] as GenMode[]).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setGenMode(m)}
-                  disabled={isGenerating}
-                  className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
-                  style={genMode === m
-                    ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
-                    : { borderColor: "#262626", color: "#a3a3a3" }
-                  }
-                >
-                  {m === "image-only" ? "🖼 Logo only" : "🎬 Full intro (logo + video)"}
-                </button>
-              ))}
+        {/* Logo source */}
+        <section>
+          <label className="block text-sm font-medium text-neutral-300 mb-3">Logo source</label>
+          <div className="flex gap-2">
+            {(["ai", "upload"] as LogoMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => { setLogoMode(m); setUploadError(null); }}
+                disabled={isGenerating}
+                className="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
+                style={logoMode === m
+                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
+                  : { borderColor: "#262626", color: "#a3a3a3" }
+                }
+              >
+                {m === "ai" ? "✦ Generate with AI" : "⬆ Upload your own"}
+              </button>
+            ))}
+          </div>
+
+          {logoMode === "upload" && (
+            <div className="mt-4">
+              <label
+                className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
+                style={{ borderColor: uploadError ? "#ef4444" : uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const f = e.dataTransfer.files?.[0];
+                  if (f && !isGenerating && !isUploading) handleFileUpload(f);
+                }}
+              >
+                {uploadPreview ? (
+                  <div className="relative w-full h-full">
+                    <Image src={uploadPreview} alt="Uploaded logo" fill className="object-contain p-3 rounded-xl" unoptimized />
+                    {isUploading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
+                        <span className="text-sm text-white animate-pulse">Uploading to Runway…</span>
+                      </div>
+                    )}
+                    {uploadedUri && !isUploading && (
+                      <div className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full" style={{ background: accentColor + "30", color: accentColor }}>
+                        Ready
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center pointer-events-none">
+                    <div className="text-3xl mb-2">🖼</div>
+                    <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
+                    <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 10MB</div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  disabled={isGenerating || isUploading}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                />
+              </label>
+              {uploadError && (
+                <p className="mt-2 text-xs text-red-400 flex items-center gap-1.5">
+                  <span>⚠</span> {uploadError}
+                </p>
+              )}
             </div>
           )}
+        </section>
 
-          {/* Upload your own logo — shown inline, collapsed by default */}
-          <div>
-            <button
-              onClick={() => { setLogoMode(logoMode === "upload" ? "ai" : "upload"); }}
-              disabled={isGenerating}
-              className="text-xs text-neutral-400 hover:text-white border border-neutral-700 hover:border-neutral-500 px-3 py-1.5 rounded transition-colors disabled:opacity-40"
-            >
-              {logoMode === "upload" ? "← Use AI-generated logo instead" : "⬆ Upload your own logo instead"}
-            </button>
-
-            {logoMode === "upload" && (
-              <div className="mt-2">
-                <label
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all"
-                  style={{ borderColor: uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
-                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const f = e.dataTransfer.files?.[0];
-                    if (f && !isGenerating && !isUploading) handleFileUpload(f);
-                  }}
-                >
-                  {uploadPreview ? (
-                    <div className="relative w-full h-full">
-                      <Image src={uploadPreview} alt="Uploaded logo" fill className="object-contain p-3 rounded-xl" unoptimized />
-                      {isUploading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
-                          <span className="text-sm text-white animate-pulse">Uploading...</span>
-                        </div>
-                      )}
-                      {uploadedUri && !isUploading && (
-                        <div className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full" style={{ background: accentColor + "30", color: accentColor }}>
-                          Ready
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center pointer-events-none">
-                      <div className="text-2xl mb-1.5">🖼</div>
-                      <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
-                      <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 10MB</div>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    disabled={isGenerating || isUploading}
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
-                  />
-                </label>
-              </div>
-            )}
+        {/* Generation mode — AI path only */}
+        {logoMode === "ai" && (
+          <div className="flex gap-2">
+            {(["image-only", "full"] as GenMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setGenMode(m)}
+                disabled={isGenerating}
+                className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
+                style={genMode === m
+                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
+                  : { borderColor: "#262626", color: "#a3a3a3" }
+                }
+              >
+                {m === "image-only" ? "🖼 Logo only" : "🎬 Full intro (logo + video)"}
+              </button>
+            ))}
           </div>
-        </div>
+        )}
 
         {/* Generate */}
         <button
