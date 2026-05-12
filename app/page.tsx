@@ -53,7 +53,6 @@ const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: str
   { id: "epic",        label: "Epic",        emoji: "⚔️", desc: "Golden hour, dust",          tip: "Auto: Gen4.5 · Theatrical · 5s" },
   { id: "nature",      label: "Nature",      emoji: "🌿", desc: "Earthy documentary",         tip: "Auto: Gen4 Turbo · Minimal · 4s" },
   { id: "blockbuster", label: "Blockbuster", emoji: "🎫", desc: "Yellow on navy, video store", tip: "Auto: Gen4.5 · Theatrical · 5s" },
-  { id: "mgm",         label: "MGM Lion",    emoji: "🦁", desc: "Roaring lion, gold frame",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
 ];
 
 const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageModel; treatment: Treatment; duration: Duration }> = {
@@ -76,7 +75,6 @@ const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageM
   epic:        { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   nature:      { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
   blockbuster: { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
-  mgm:         { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
 };
 
 const STYLE_TAGLINES: Record<Style, string[]> = {
