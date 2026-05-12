@@ -135,14 +135,19 @@ const SEASONAL: Preset[] = [
 ];
 
 const HOLIDAYS: Preset[] = [
-  { name: "SpookFlix",    emoji: "🎃", style: "horror",     tagline: "Horror has a home",             desc: "Halloween",       customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
-  { name: "ChristmasFlix",emoji: "🎄", style: "cinematic",  tagline: "The magic of Christmas",        desc: "Christmas",       customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
-  { name: "NightStream",  emoji: "🎆", style: "futuristic", tagline: "The future starts tonight",     desc: "New Year's Eve",  customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
-  { name: "LoveBox",      emoji: "💝", style: "retro",      tagline: "For the love of streaming",     desc: "Valentine's Day", customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
-  { name: "LuckyStream",  emoji: "🍀", style: "nature",     tagline: "Stream your luck tonight",      desc: "St. Patrick's Day",customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
-  { name: "FreedomFlix",  emoji: "🗽", style: "epic",       tagline: "Independence from bad content", desc: "Fourth of July",  customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
-  { name: "HarvestFlix",  emoji: "🦃", style: "cinematic",  tagline: "Gather and stream together",    desc: "Thanksgiving",    customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
-  { name: "LuminaryFlix", emoji: "🕎", style: "minimal",    tagline: "Eight nights of great picks",   desc: "Hanukkah",        customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
+  { name: "SpringBloom",  emoji: "🐣", style: "lofi",      tagline: "Where stories bloom",           desc: "Easter",          customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
+  { name: "MomFlix",      emoji: "💐", style: "lofi",      tagline: "With love, always",              desc: "Mother's Day",    customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
+  { name: "DadFlix",      emoji: "👨", style: "epic",      tagline: "Dad approved content",           desc: "Father's Day",    customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
+  { name: "SpookFlix",    emoji: "🎃", style: "horror",    tagline: "Horror has a home",             desc: "Halloween",       customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
+  { name: "ChristmasFlix",emoji: "🎄", style: "cinematic", tagline: "The magic of Christmas",        desc: "Christmas",       customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
+  { name: "NightStream",  emoji: "🎆", style: "futuristic",tagline: "The future starts tonight",     desc: "New Year's Eve",  customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
+  { name: "AwardsFlix",   emoji: "🏆", style: "cinematic", tagline: "And the award goes to...",      desc: "Oscar Night",     customNotes: "Hollywood red carpet, gleaming gold award statuettes, black-tie glamour, sequins and spotlights" },
+  { name: "PrideFlix",    emoji: "🌈", style: "retro",     tagline: "Stream with pride",             desc: "Pride",           customNotes: "rainbow neon colors blazing, joyful pride parade energy, all colors vivid and electric" },
+  { name: "LoveBox",      emoji: "💝", style: "retro",     tagline: "For the love of streaming",     desc: "Valentine's Day", customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
+  { name: "LuckyStream",  emoji: "🍀", style: "nature",    tagline: "Stream your luck tonight",      desc: "St. Patrick's Day",customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
+  { name: "FreedomFlix",  emoji: "🗽", style: "epic",      tagline: "Independence from bad content", desc: "Fourth of July",  customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
+  { name: "HarvestFlix",  emoji: "🦃", style: "cinematic", tagline: "Gather and stream together",    desc: "Thanksgiving",    customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
+  { name: "LuminaryFlix", emoji: "🕎", style: "minimal",   tagline: "Eight nights of great picks",   desc: "Hanukkah",        customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
 
 // Styles that skip Runway image generation and render the logo directly on canvas
