@@ -1711,12 +1711,17 @@ console.log(videoTask.output[0]);
                   <video src={videoUrl} autoPlay loop muted playsInline className="w-full block" />
                   <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
                 </div>
-                {/* Timing strip */}
+                {/* Timing + cost strip */}
                 {timings && (
-                  <div className="px-3 py-1.5 bg-neutral-950 border-b border-neutral-800 flex gap-4 text-xs text-neutral-600 tabular-nums">
+                  <div className="px-3 py-1.5 bg-neutral-950 border-b border-neutral-800 flex gap-4 text-xs text-neutral-600 tabular-nums flex-wrap">
                     <span>Scene 1: {(timings.image / 1000).toFixed(1)}s</span>
                     <span>Scene 2: {(timings.video / 1000).toFixed(1)}s</span>
                     <span className="text-neutral-500 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
+                    <span className="ml-auto flex gap-3">
+                      {imageCrCost > 0 && <span>Poster: ~{imageCrCost} cr</span>}
+                      <span>Video: ~{crPerSec * duration} cr</span>
+                      <span className="text-neutral-400 font-medium">Total: ~{imageCrCost + crPerSec * duration} cr</span>
+                    </span>
                   </div>
                 )}
                 <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800 flex items-center gap-2">
