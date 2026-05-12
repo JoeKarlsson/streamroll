@@ -497,8 +497,6 @@ console.log(videoTask.output[0]);
   async function generate() {
     if (!name.trim()) return;
     if (keyLoaded && !apiKey) { router.push("/setup"); return; }
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (apiKey) headers["x-runway-key"] = apiKey;
 
     setImageUrl(null);
     setVideoUrl(null);
@@ -506,22 +504,33 @@ console.log(videoTask.output[0]);
     setTimings(null);
     setReviewNotes("");
     imageTimeRef.current = 0;
+
+    // Upload mode: image is already known — skip image generation and review entirely
+    if (logoMode === "upload" && uploadedUri) {
+      setImageUrl(uploadedUri);
+      if (genMode === "image-only") {
+        setStep("done");
+        return;
+      }
+      await proceedToVideo(uploadedUri);
+      return;
+    }
+
+    // AI generation path
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) headers["x-runway-key"] = apiKey;
     startTimer();
 
     try {
-      if (logoMode === "upload" && uploadedUri) {
-        setImageUrl(uploadedUri);
-      } else {
-        setStep("image");
-        startImageProgress();
-        const imageStart = Date.now();
-        const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody()) });
-        const imageData = await imageRes.json();
-        if (!imageRes.ok) { stopImageProgress(false); throw new Error(imageData.error ?? "Image generation failed"); }
-        imageTimeRef.current = Date.now() - imageStart;
-        stopImageProgress(true);
-        setImageUrl(imageData.imageUrl);
-      }
+      setStep("image");
+      startImageProgress();
+      const imageStart = Date.now();
+      const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody()) });
+      const imageData = await imageRes.json();
+      if (!imageRes.ok) { stopImageProgress(false); throw new Error(imageData.error ?? "Image generation failed"); }
+      imageTimeRef.current = Date.now() - imageStart;
+      stopImageProgress(true);
+      setImageUrl(imageData.imageUrl);
 
       if (genMode === "image-only") {
         setTimings({ image: imageTimeRef.current, video: 0 });
@@ -570,8 +579,9 @@ console.log(videoTask.output[0]);
     }
   }
 
-  async function proceedToVideo() {
-    if (!imageUrl || keyLoaded && !apiKey) return;
+  async function proceedToVideo(imageUrlOverride?: string) {
+    const effectiveImageUrl = imageUrlOverride ?? imageUrl;
+    if (!effectiveImageUrl || (keyLoaded && !apiKey)) return;
     const jsonHeaders: Record<string, string> = { "Content-Type": "application/json" };
     if (apiKey) jsonHeaders["x-runway-key"] = apiKey;
     const pollHeaders: Record<string, string> = {};
@@ -589,7 +599,7 @@ console.log(videoTask.output[0]);
       const startRes = await fetch("/api/video/start", {
         method: "POST",
         headers: jsonHeaders,
-        body: JSON.stringify({ ...buildBody(videoCombinedNotes || undefined), imageUrl }),
+        body: JSON.stringify({ ...buildBody(videoCombinedNotes || undefined), imageUrl: effectiveImageUrl }),
       });
       const startData = await startRes.json();
       if (!startRes.ok) throw new Error(startData.error ?? "Failed to start video generation");
@@ -1372,7 +1382,7 @@ console.log(videoTask.output[0]);
                     ↺ Regenerate
                   </button>
                   <button
-                    onClick={proceedToVideo}
+                    onClick={() => proceedToVideo()}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-black transition-all"
                     style={{ background: accentColor }}
                   >
