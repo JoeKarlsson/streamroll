@@ -245,6 +245,7 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [timings, setTimings] = useState<{ image: number; video: number } | null>(null);
+  const [credits, setCredits] = useState<{ image: number; video: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const [audio, setAudio] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -264,6 +265,7 @@ export default function Home() {
   const imageProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const genStartRef = useRef(0);
   const imageTimeRef = useRef(0);
+  const imageCreditCostRef = useRef(0);
   const activeTaskIdRef = useRef<string | null>(null);
   const cancelRequestedRef = useRef(false);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -423,6 +425,7 @@ export default function Home() {
     setVideoUrl(null);
     setError(null);
     setTimings(null);
+    setCredits(null);
     setElapsedMs(0);
     setVideoRegenNotes("");
     try { sessionStorage.removeItem(SESSION_KEY); } catch {}
@@ -629,8 +632,10 @@ console.log(videoTask.output[0]);
     setVideoUrl(null);
     setError(null);
     setTimings(null);
+    setCredits(null);
     setReviewNotes("");
     imageTimeRef.current = 0;
+    imageCreditCostRef.current = 0;
 
     // Upload mode: image is already known — skip image generation and review entirely
     if (logoMode === "upload") {
@@ -685,9 +690,11 @@ console.log(videoTask.output[0]);
       imageTimeRef.current = Date.now() - imageStart;
       stopImageProgress(true);
       setImageUrl(imageData.imageUrl);
+      imageCreditCostRef.current = imageData.creditCost ?? 0;
 
       if (genMode === "image-only") {
         setTimings({ image: imageTimeRef.current, video: 0 });
+        setCredits({ image: imageCreditCostRef.current, video: 0 });
         setStep("done");
         return;
       }
@@ -724,6 +731,7 @@ console.log(videoTask.output[0]);
       imageTimeRef.current = Date.now() - imageStart;
       stopImageProgress(true);
       setImageUrl(imageData.imageUrl);
+      imageCreditCostRef.current = imageData.creditCost ?? 0;
       setStep("review");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -759,6 +767,7 @@ console.log(videoTask.output[0]);
       if (!startRes.ok) throw new Error(startData.error ?? "Failed to start video generation");
 
       const taskId: string = startData.taskId;
+      const videoCreditsBefore: number = startData.creditsBefore ?? 0;
       activeTaskIdRef.current = taskId;
       const videoStart = Date.now();
       const maxWaitMs = 15 * 60 * 1000; // 15 minutes
@@ -779,7 +788,7 @@ console.log(videoTask.output[0]);
         const pollData = await pollRes.json();
         if (!pollRes.ok) throw new Error(pollData.error ?? "Status check failed");
 
-        const { status, output, failure, progress } = pollData;
+        const { status, output, failure, progress, creditsAfter } = pollData;
         setPollStatus(status);
         if (typeof progress === "number") setPollProgress(Math.round(progress * 100));
         else if (status !== "RUNNING") setPollProgress(null);
@@ -789,6 +798,9 @@ console.log(videoTask.output[0]);
           const videoTime = Date.now() - videoStart;
           setVideoUrl(output);
           setTimings({ image: imageTimeRef.current, video: videoTime });
+          if (videoCreditsBefore > 0 && typeof creditsAfter === "number") {
+            setCredits({ image: imageCreditCostRef.current, video: Math.max(0, videoCreditsBefore - creditsAfter) });
+          }
           setPollStatus(null);
           setPollProgress(null);
           setStep("done");
@@ -1718,9 +1730,17 @@ console.log(videoTask.output[0]);
                     <span>Scene 2: {(timings.video / 1000).toFixed(1)}s</span>
                     <span className="text-neutral-500 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
                     <span className="ml-auto flex gap-3">
-                      {imageCrCost > 0 && <span>Poster: ~{imageCrCost} cr</span>}
-                      <span>Video: ~{crPerSec * duration} cr</span>
-                      <span className="text-neutral-400 font-medium">Total: ~{imageCrCost + crPerSec * duration} cr</span>
+                      {(credits ? credits.image : imageCrCost) > 0 && (
+                        <span>Poster: {credits ? `${credits.image} cr` : `~${imageCrCost} cr`}</span>
+                      )}
+                      {(credits?.video ?? 0) > 0 || !credits ? (
+                        <span>Video: {credits ? `${credits.video} cr` : `~${crPerSec * duration} cr`}</span>
+                      ) : null}
+                      <span className="text-neutral-400 font-medium">
+                        Total: {credits
+                          ? `${credits.image + credits.video} cr`
+                          : `~${imageCrCost + crPerSec * duration} cr`}
+                      </span>
                     </span>
                   </div>
                 )}

@@ -48,9 +48,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = new RunwayML({ apiKey, timeout: 25_000 });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const task = await client.imageToVideo.create(createParams as any);
-    return NextResponse.json({ taskId: task.id });
+    const [{ creditBalance: creditsBefore }, task] = await Promise.all([
+      client.organization.retrieve(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      client.imageToVideo.create(createParams as any),
+    ]);
+    return NextResponse.json({ taskId: task.id, creditsBefore });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Failed to start video generation";
     return NextResponse.json({ error: msg }, { status: 500 });

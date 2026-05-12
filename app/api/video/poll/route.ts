@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
     const task = await client.tasks.retrieve(taskId);
 
     if (task.status === "SUCCEEDED") {
-      return NextResponse.json({ status: "SUCCEEDED", output: task.output[0] });
+      const { creditBalance: creditsAfter } = await client.organization.retrieve();
+      return NextResponse.json({ status: "SUCCEEDED", output: task.output[0], creditsAfter });
     }
     if (task.status === "FAILED") {
       return NextResponse.json({ status: "FAILED", failure: task.failure });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import RunwayML from "@runwayml/sdk";
 import { generateLogoImage, type GenerationParams } from "@/lib/runway";
 
 export const maxDuration = 300;
@@ -30,8 +31,13 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    const imageUrl = await generateLogoImage(params, apiKey, body.imagePromptOverride ?? undefined);
-    return NextResponse.json({ imageUrl });
+    const client = new RunwayML({ apiKey, timeout: 25_000 });
+    const [{ creditBalance: before }, imageUrl] = await Promise.all([
+      client.organization.retrieve(),
+      generateLogoImage(params, apiKey, body.imagePromptOverride ?? undefined),
+    ]);
+    const { creditBalance: after } = await client.organization.retrieve();
+    return NextResponse.json({ imageUrl, creditCost: Math.max(0, before - after) });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Image generation failed";
     return NextResponse.json({ error: msg }, { status: 500 });
