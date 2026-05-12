@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
 
-  const apiKey = req.headers.get("x-runway-key") ?? process.env.RUNWAYML_API_SECRET ?? "";
+  const apiKey = req.headers.get("x-runway-key") ?? "";
   if (!apiKey) {
     return NextResponse.json(
       { error: "No Runway API key provided." },

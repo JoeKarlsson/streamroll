@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Cinzel } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -10,6 +10,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -31,8 +38,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [{
       url: "/opengraph-image.png",
-      width: 1200,
-      height: 630,
+      width: 1376,
+      height: 768,
       type: "image/png",
       alt: "StreamRoll — AI-generated streaming intros for Plex, Jellyfin & Emby",
     }],
@@ -56,11 +63,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} h-full antialiased`}
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="preload" href="/examples/clip-1.mp4" as="video" type="video/mp4" />
       </head>
       <body className="min-h-full flex flex-col">
         <a

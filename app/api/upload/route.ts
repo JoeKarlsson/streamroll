@@ -4,7 +4,7 @@ import RunwayML, { toFile } from "@runwayml/sdk";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const apiKey = req.headers.get("x-runway-key") ?? process.env.RUNWAYML_API_SECRET ?? "";
+  const apiKey = req.headers.get("x-runway-key") ?? "";
   if (!apiKey) {
     return NextResponse.json({ error: "No Runway API key provided." }, { status: 401 });
   }

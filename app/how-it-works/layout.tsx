@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [{
       url: "/opengraph-image.png",
-      width: 1200,
-      height: 630,
+      width: 1376,
+      height: 768,
       type: "image/png",
       alt: "StreamRoll — AI-generated streaming intros",
     }],

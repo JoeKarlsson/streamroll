@@ -24,11 +24,8 @@ const STYLE_COLOR: Record<Style, string> = {
   nature:     "#22C55E",
   prestige:   "#E50914",
   adultswim:  "#D4D4D4",
-  adventure:  "#FBBF24",
-  toonami:    "#38BDF8",
   cartoon:    "#EF4444",
   vhs:        "#94A3B8",
-  a24:        "#D946EF",
   grindhouse: "#EC4899",
   lofi:       "#A78BFA",
   vaporwave:  "#C084FC",
@@ -38,7 +35,7 @@ const STYLE_COLOR: Record<Style, string> = {
 };
 
 const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string }[] = [
-  { id: "prestige",   label: "Prestige",   emoji: "🔴", desc: "Bold red on black",       tip: "Auto: Gen4.5 · Minimal · 4s" },
+  { id: "prestige",   label: "Netflix",    emoji: "🔴", desc: "Bold red on black",       tip: "Auto: Gen4.5 · Minimal · 4s" },
   { id: "cinematic",  label: "Cinematic",  emoji: "🎬", desc: "Navy & gold, film grain",  tip: "Auto: Gen4.5 · Full Bleed · 5s" },
   { id: "retro",      label: "Retro",      emoji: "📺", desc: "80s neon synthwave",       tip: "Auto: Gen4 Turbo · Full Bleed · 5s" },
   { id: "futuristic", label: "Futuristic", emoji: "🚀", desc: "Holographic chrome",       tip: "Auto: Gen4.5 · Full Bleed · 5s" },
@@ -46,17 +43,14 @@ const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: str
   { id: "horror",     label: "Horror",     emoji: "🩸", desc: "Gothic, fog & shadow",     tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
   { id: "anime",      label: "Anime",      emoji: "⚡", desc: "Shonen energy burst",      tip: "Auto: Gen4.5 · Full Bleed · 4s" },
   { id: "adultswim",  label: "Adult Swim", emoji: "📺", desc: "Black screen, white text",   tip: "Auto: Gen4 Turbo · Minimal · 2s" },
-  { id: "adventure",  label: "Adventure",  emoji: "🗡️", desc: "Cartoon title card",         tip: "Auto: Gen4.5 · Full Bleed · 5s" },
-  { id: "toonami",    label: "Toonami",    emoji: "🛸", desc: "Deep space action block",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
-  { id: "cartoon",    label: "Cartoon Net",emoji: "🟥", desc: "Checkerboard graphic pop",   tip: "Auto: Gen4 Turbo · Full Bleed · 4s" },
-  { id: "vhs",        label: "VHS",        emoji: "📼", desc: "Tracking errors, tape decay", tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
-  { id: "a24",        label: "A24",        emoji: "🌸", desc: "Neon menace, slow burn",      tip: "Auto: Gen4.5 · Minimal · 5s" },
-  { id: "grindhouse", label: "Feature Pres.", emoji: "🎞️", desc: "Psychedelic cinema pre-show",    tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
-  { id: "lofi",       label: "Lo-fi",      emoji: "🎧", desc: "Cozy rain, study beats",      tip: "Auto: Gen4 Turbo · Minimal · 4s" },
-  { id: "vaporwave",  label: "Vaporwave",  emoji: "🌴", desc: "Pastel grid, marble busts",    tip: "Auto: Gen4.5 · Full Bleed · 5s" },
-  { id: "cyberpunk",  label: "Cyberpunk",  emoji: "🌆", desc: "Neon rain, dark mega-city",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
-  { id: "wesanderson",label: "Wes Anderson",emoji:"🏨", desc: "Symmetry, pastels, deadpan",   tip: "Auto: Gen4.5 · Minimal · 4s" },
-  { id: "hbo",         label: "HBO",         emoji:"⬛", desc: "Chrome on black, prestige",   tip: "Auto: Gen4.5 · Theatrical · 5s" },
+  { id: "cartoon",    label: "Cartoon Network", emoji: "🟥", desc: "Checkerboard graphic pop",   tip: "Auto: Gen4 Turbo · Full Bleed · 4s" },
+  { id: "vhs",        label: "VHS",             emoji: "📼", desc: "Tracking errors, tape decay", tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
+  { id: "grindhouse", label: "Grindhouse",      emoji: "🎞️", desc: "Psychedelic cinema pre-show", tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
+  { id: "lofi",       label: "Lo-fi",           emoji: "🎧", desc: "Cozy rain, study beats",      tip: "Auto: Gen4 Turbo · Minimal · 4s" },
+  { id: "vaporwave",  label: "Vaporwave",       emoji: "🌴", desc: "Pastel grid, marble busts",    tip: "Auto: Gen4.5 · Full Bleed · 5s" },
+  { id: "cyberpunk",  label: "Cyberpunk",       emoji: "🌆", desc: "Neon rain, dark mega-city",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
+  { id: "wesanderson",label: "Wes Anderson",    emoji: "🏨", desc: "Symmetry, pastels, deadpan",   tip: "Auto: Gen4.5 · Minimal · 4s" },
+  { id: "hbo",        label: "HBO",             emoji: "⬛", desc: "3D chrome letters, star field", tip: "Auto: Gen4.5 · Theatrical · 5s" },
   { id: "epic",       label: "Epic",       emoji: "⚔️", desc: "Golden hour, dust",        tip: "Auto: Gen4.5 · Theatrical · 5s" },
   { id: "nature",     label: "Nature",     emoji: "🌿", desc: "Earthy documentary",       tip: "Auto: Gen4 Turbo · Minimal · 4s" },
 ];
@@ -71,11 +65,8 @@ const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageM
   horror:     { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   anime:      { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 4 },
   adultswim:  { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "minimal",     duration: 2 },
-  adventure:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
-  toonami:    { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   cartoon:    { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "full-bleed",  duration: 4 },
   vhs:        { videoModel: "gen4_turbo",  imageModel: "gemini_image3_pro", treatment: "theatrical",  duration: 5 },
-  a24:        { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "minimal",     duration: 5 },
   grindhouse: { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   lofi:       { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
   vaporwave:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
@@ -95,13 +86,10 @@ const STYLE_TAGLINES: Record<Style, string[]> = {
   horror:      ["Sleep is for the weak","Don't look behind you","You were warned","Horror has a home","Fear finds a way","Streaming after dark","The dark side of streaming","Watch if you dare","Nightmares, delivered","The screams are real"],
   anime:       ["Plus ultra streaming","Power level: maximum","The next episode awaits","Your destiny streams here","Unlimited power","The saga continues","Eyes of a warrior","This is your moment","Believe in the run","Arc begins now"],
   adultswim:   ["on after 11","we're still here","goodnight, almost","stay up with us","you're still watching","it's late. perfect.","don't change the channel","this is the content","ok.","the weird stuff"],
-  adventure:   ["Mathematical!","Algebraic!","It's adventure time!","What time is it?","Oh my glob","Totally wizard","Come on, grab your friends","The fun will never end","Everything is everything","Lump off!"],
   epic:        ["Every story is legendary","Born for the big screen","Where legends are made","The epic begins","Forged in fire","Rise to the moment","Worthy of the legend","This is your saga","Victory through streaming","The battle for your queue"],
   nature:      ["The world, unfiltered","Earth has a story","Nature speaks, we listen","Every creature, every moment","Wild and beautiful","The living world, streaming","Find your wild","Planet in focus","Stream with the seasons","The natural order"],
-  toonami:     ["Stay gold","The block is back","Saturday nights, forever","Action anime, always","Where the best fights live","Signal locked","The mission continues","Tune in. Power up.","Built for the night","We know what you're watching"],
   cartoon:     ["Check it","Serious about fun","Cartoons. Duh.","The original good stuff","Watch more cartoons","Fun is our business","Drawing you in","The animated life","It's cartoon o'clock","Cartoon headquarters"],
   vhs:         ["Be kind, rewind","Press play","Tracking... please wait","Rewind to remember","Pop it in and press play","Static and stories","The analog age","Rewound and ready","Rewinding is caring","The tape lives on"],
-  a24:         ["Something wicked this way streams","Art has a home here","For the ones who feel it","Strange and beautiful","Not for everyone. For you.","An experience, not a show","Where the art lives","Unnerving. Unforgettable.","Quiet menace, loud impact","This is the one"],
   grindhouse:  ["NOW SHOWING","FEATURE PRESENTATION","The picture is about to begin","Ladies and gentlemen...","Take your seats","The main event","The show is about to begin","Curtain up","Coming to your screen","A presentation of excellence"],
   lofi:        ["beats to stream to","study and watch","chill vibes only","soft signal, strong content","rainy day streaming","slow down, watch something","the gentle stream","ambient entertainment","just right","background and foreground"],
   vaporwave:   ["aesthetic dreams","lost in the mall of content","remember when?","the simulation is streaming","totally.aesthetic","enter the mall","stream it on repeat","the past is pretty","Windows 95 never died","aesthetic.jpg streaming"],
@@ -129,11 +117,8 @@ const INSPO: Preset[] = [
   { name: "TerraDoc",  style: "nature",     tagline: "The world, unfiltered",      desc: "Nature documentaries" },
   { name: "WhiteRoom", style: "minimal",    tagline: "Less is more",               desc: "Arthouse & indie film" },
   { name: "LateNight",   style: "adultswim",  tagline: "on after dark",               desc: "Adult Swim bumper" },
-  { name: "OooFlix",    style: "adventure",  tagline: "Mathematical!",               desc: "Cartoon adventure hub" },
-  { name: "TomFlix",    style: "toonami",    tagline: "Stay gold",                   desc: "Toonami action block" },
   { name: "CheckerBox", style: "cartoon",    tagline: "Serious about fun",           desc: "Cartoon Network style" },
   { name: "RewindFlix", style: "vhs",        tagline: "Be kind, rewind",             desc: "90s home video" },
-  { name: "FilmHaus",   style: "a24",        tagline: "Something wicked this way streams", desc: "Arthouse indie film" },
   { name: "DriveInFlix",style: "grindhouse", tagline: "NOW SHOWING",                 desc: "Drive-in theater" },
   { name: "ChillFlix",  style: "lofi",       tagline: "beats to stream to",          desc: "Lo-fi study beats" },
   { name: "VaporFlix",  style: "vaporwave",  tagline: "aesthetic dreams",             desc: "Vaporwave" },
@@ -159,6 +144,9 @@ const HOLIDAYS: Preset[] = [
   { name: "HarvestFlix",  emoji: "🦃", style: "cinematic",  tagline: "Gather and stream together",    desc: "Thanksgiving",    customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
   { name: "LuminaryFlix", emoji: "🕎", style: "minimal",    tagline: "Eight nights of great picks",   desc: "Hanukkah",        customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
+
+// Styles that skip Runway image generation and render the logo directly on canvas
+const CANVAS_STYLES = new Set<Style>(["adultswim", "minimal", "prestige"]);
 
 type LogoMode = "ai" | "upload";
 type GenMode = "image-only" | "full";
@@ -264,6 +252,7 @@ export default function Home() {
   const genStartRef = useRef(0);
   const imageTimeRef = useRef(0);
   const activeTaskIdRef = useRef<string | null>(null);
+  const cancelRequestedRef = useRef(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => {
@@ -395,6 +384,11 @@ export default function Home() {
     fetch(`/api/video/cancel?id=${encodeURIComponent(taskId)}`, { method: "DELETE", headers }).catch(() => {});
   }
 
+  function handleCancelVideo() {
+    cancelRequestedRef.current = true;
+    cancelActiveTask();
+  }
+
   function reset() {
     cancelActiveTask();
     stopImageProgress(false);
@@ -505,10 +499,102 @@ console.log(videoTask.output[0]);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
   }
 
+  async function generateCanvasLogo(): Promise<string> {
+    const W = 1280, H = 720;
+    const cvs = document.createElement("canvas");
+    cvs.width = W; cvs.height = H;
+    const ctx = cvs.getContext("2d")!;
+
+    const displayName = name.trim().toUpperCase();
+    const hasTagline = Boolean(tagline?.trim());
+
+    // Helper: auto-fit text to a target pixel width
+    function fitFontSize(fontSpec: (sz: number) => string, text: string, targetW: number, maxSz: number, minSz: number): number {
+      ctx.font = fontSpec(maxSz);
+      const measured = ctx.measureText(text).width;
+      if (measured <= targetW) return maxSz;
+      const scaled = Math.floor(maxSz * (targetW / measured));
+      return Math.max(minSz, scaled);
+    }
+
+    if (style === "adultswim") {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      for (let y = 0; y < H; y += 2) ctx.fillRect(0, y, W, 1);
+
+      const bracketName = `[${name.trim().toLowerCase()}]`;
+      const fontSize = fitFontSize(sz => `400 ${sz}px "Arial Narrow","Helvetica Neue",Helvetica,Arial,sans-serif`, bracketName, W * 0.80, 80, 24);
+      ctx.font = `400 ${fontSize}px "Arial Narrow","Helvetica Neue",Helvetica,Arial,sans-serif`;
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(bracketName, W / 2, hasTagline ? H * 0.46 : H * 0.5);
+
+      if (hasTagline) {
+        const tagFontSize = Math.max(16, Math.floor(fontSize * 0.44));
+        ctx.font = `400 ${tagFontSize}px "Arial Narrow","Helvetica Neue",Helvetica,Arial,sans-serif`;
+        ctx.fillText(tagline!.trim().toLowerCase(), W / 2, H * 0.59);
+      }
+
+    } else if (style === "minimal") {
+      await document.fonts.load(`300 100px "Geist"`);
+      ctx.fillStyle = "#080808";
+      ctx.fillRect(0, 0, W, H);
+
+      const fontSize = fitFontSize(sz => `300 ${sz}px "Geist","Helvetica Neue",Helvetica,sans-serif`, displayName, W * 0.72, 200, 36);
+      ctx.font = `300 ${fontSize}px "Geist","Helvetica Neue",Helvetica,sans-serif`;
+      ctx.fillStyle = "#f0f0f0";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const centerY = hasTagline ? H * 0.44 : H * 0.5;
+      ctx.fillText(displayName, W / 2, centerY);
+
+      // Thin rule beneath
+      const textWidth = ctx.measureText(displayName).width;
+      ctx.strokeStyle = "#282828";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(W / 2 - textWidth / 2, centerY + fontSize * 0.62 + 10);
+      ctx.lineTo(W / 2 + textWidth / 2, centerY + fontSize * 0.62 + 10);
+      ctx.stroke();
+
+      if (hasTagline) {
+        const tagFontSize = Math.max(16, Math.floor(fontSize * 0.20));
+        ctx.font = `300 ${tagFontSize}px "Geist","Helvetica Neue",Helvetica,sans-serif`;
+        ctx.fillStyle = "#555555";
+        ctx.fillText(tagline!.trim().toUpperCase(), W / 2, H * 0.62);
+      }
+
+    } else if (style === "prestige") {
+      await document.fonts.load(`900 100px "Geist"`);
+      ctx.fillStyle = "#0d0d0d";
+      ctx.fillRect(0, 0, W, H);
+
+      const fontSize = fitFontSize(sz => `900 ${sz}px "Geist","Helvetica Neue",Helvetica,sans-serif`, displayName, W * 0.78, 200, 40);
+      ctx.font = `900 ${fontSize}px "Geist","Helvetica Neue",Helvetica,sans-serif`;
+      ctx.fillStyle = "#E50914";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const centerY = hasTagline ? H * 0.44 : H * 0.5;
+      ctx.fillText(displayName, W / 2, centerY);
+
+      if (hasTagline) {
+        const tagFontSize = Math.max(16, Math.floor(fontSize * 0.20));
+        ctx.font = `400 ${tagFontSize}px "Geist","Helvetica Neue",Helvetica,sans-serif`;
+        ctx.fillStyle = "#666666";
+        ctx.fillText(tagline!.trim().toUpperCase(), W / 2, H * 0.62);
+      }
+    }
+
+    return cvs.toDataURL("image/jpeg", 0.95);
+  }
+
   async function generate() {
     if (!name.trim()) return;
     if (keyLoaded && !apiKey) { router.push("/setup"); return; }
 
+    cancelRequestedRef.current = false;
     setImageUrl(null);
     setVideoUrl(null);
     setError(null);
@@ -525,6 +611,32 @@ console.log(videoTask.output[0]);
         return;
       }
       await proceedToVideo(uploadedUri);
+      return;
+    }
+
+    // Canvas mode: render logo locally for flat-design styles — no Runway image credits used
+    if (CANVAS_STYLES.has(style)) {
+      startTimer();
+      try {
+        setStep("image");
+        startImageProgress();
+        const imageStart = Date.now();
+        const dataUri = await generateCanvasLogo();
+        imageTimeRef.current = Date.now() - imageStart;
+        stopImageProgress(true);
+        setImageUrl(dataUri);
+        if (genMode === "image-only") {
+          setTimings({ image: imageTimeRef.current, video: 0 });
+          setStep("done");
+          return;
+        }
+        setStep("review");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Canvas render failed");
+        setStep("error");
+      } finally {
+        stopTimer();
+      }
       return;
     }
 
@@ -624,6 +736,14 @@ console.log(videoTask.output[0]);
       // Step 2: poll every 8s until done (Runway updates no more than every 5s)
       while (Date.now() - videoStart < maxWaitMs) {
         await new Promise<void>(r => setTimeout(r, 8_000));
+
+        if (cancelRequestedRef.current) {
+          cancelRequestedRef.current = false;
+          setPollStatus(null);
+          setPollProgress(null);
+          setStep("review");
+          return;
+        }
 
         const pollRes = await fetch(`/api/video/poll?id=${encodeURIComponent(taskId)}`, { headers: pollHeaders });
         const pollData = await pollRes.json();
@@ -731,7 +851,7 @@ console.log(videoTask.output[0]);
           {PLATFORMS.map((p) => (
             <div key={p.name} className="flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/logos/${p.slug}.svg`} alt={p.name} width={16} height={16} />
+              <img src={`/logos/${p.slug}.svg`} alt="" aria-hidden="true" width={16} height={16} />
               <span className="text-xs font-medium" style={{ color: p.color }}>{p.name}</span>
             </div>
           ))}
@@ -788,6 +908,7 @@ console.log(videoTask.output[0]);
               return (
                 <button
                   key={s.id}
+                  aria-pressed={isActive}
                   onClick={() => {
                     setStyle(s.id);
                     const d = STYLE_DEFAULTS[s.id];
@@ -926,6 +1047,7 @@ console.log(videoTask.output[0]);
             {activeDurations.map((d) => (
               <button
                 key={d.value}
+                aria-pressed={duration === d.value}
                 onClick={() => setDuration(d.value)}
                 disabled={isGenerating}
                 className="flex-1 flex flex-col items-center gap-1 py-3 rounded-lg border text-xs transition-all disabled:opacity-50"
@@ -1051,9 +1173,11 @@ console.log(videoTask.output[0]);
                       <div className="text-xs text-neutral-600 mt-0.5">Veo can auto-generate ambient sound &amp; music</div>
                     </div>
                     <button
+                      role="switch"
+                      aria-checked={audio}
                       onClick={() => setAudio((v) => !v)}
                       disabled={isGenerating}
-                      aria-label="Toggle audio generation"
+                      aria-label="Generate audio"
                       className="relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 shrink-0"
                       style={{ backgroundColor: audio ? accentColor : "#404040" }}
                     >
@@ -1073,6 +1197,7 @@ console.log(videoTask.output[0]);
                   {TREATMENTS.map((t) => (
                     <button
                       key={t.id}
+                      aria-pressed={treatment === t.id}
                       onClick={() => setTreatment(t.id)}
                       disabled={isGenerating}
                       className="flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-xs transition-all disabled:opacity-50"
@@ -1199,6 +1324,7 @@ console.log(videoTask.output[0]);
           {logoMode === "upload" && (
             <div className="mt-4">
               <label
+                aria-label={uploadedUri ? "Replace uploaded logo" : "Upload your logo image"}
                 className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
                 style={{ borderColor: uploadError ? "#ef4444" : uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -1312,6 +1438,14 @@ console.log(videoTask.output[0]);
                   color={accentColor}
                 />
               </>
+            )}
+            {step === "video" && (
+              <button
+                onClick={handleCancelVideo}
+                className="ml-2 text-xs text-red-500 hover:text-red-400 transition-colors shrink-0"
+              >
+                ✕ Cancel
+              </button>
             )}
             {!isGenerating && (
               <button
@@ -1605,7 +1739,7 @@ console.log(videoTask.output[0]);
                           style={{ backgroundColor: p.color + "18" }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={`/logos/${p.slug}.svg`} alt={p.name} width={12} height={12} />
+                          <img src={`/logos/${p.slug}.svg`} alt="" aria-hidden="true" width={12} height={12} />
                           <span className="text-xs font-bold" style={{ color: p.color }}>{p.name}</span>
                         </div>
                         <div className="flex-1">
@@ -1666,14 +1800,15 @@ console.log(videoTask.output[0]);
 }
 
 const EXAMPLE_CLIPS = [
-  "/examples/clip-1.mp4",
-  "/examples/clip-2.mp4",
-  "/examples/clip-3.mp4",
+  "/examples/clip-netflix.mp4",
+  "/examples/clip-vhs.mp4",
+  "/examples/clip-outrun.mp4",
+  "/examples/clip-adultswim.mp4",
 ];
 
 function VideoMontage() {
   const [active, setActive] = useState(0);
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null]);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null, null]);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1700,8 +1835,13 @@ function VideoMontage() {
           src={src}
           muted
           playsInline
-          preload="auto"
-          onEnded={() => setActive((a) => (a + 1) % EXAMPLE_CLIPS.length)}
+          preload={i === 0 ? "auto" : "none"}
+          onEnded={() => {
+            const next = (i + 1) % EXAMPLE_CLIPS.length;
+            const nextVid = videoRefs.current[next];
+            if (nextVid) nextVid.preload = "auto";
+            setActive(next);
+          }}
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
           style={{ opacity: active === i ? 1 : 0 }}
         />
