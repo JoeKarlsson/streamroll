@@ -59,7 +59,7 @@ const styleDescriptions: Record<Style, string> = {
   lofi:
     "lo-fi hip hop study beats anime aesthetic, cozy warm interior, rain streaking slowly down a window in the background, soft warm amber lamp light glowing, vinyl record player or cassette tape in scene, logo text sitting quietly centered, hand-drawn anime illustration style, muted warm amber and soft cool blue palette, ChilledCow lofi girl energy, peaceful and nostalgic",
   vaporwave:
-    "vaporwave aesthetic, white marble Hellenistic Apollo bust statue floating in a digital void, flat magenta (#FF71CE) and cyan (#01CDFE) perspective-grid floor receding to horizon at low angle, flat circle semi-circle sun on horizon with gradient from deep magenta (#F52E97) through violet to indigo, full-width Japanese katakana characters ＡＥＳＴＨＥＴＩＣ floating decoratively in wide geometric sans-serif, RGB chromatic aberration color channel offset on all edges — red channel shifted left, blue channel shifted right creating prismatic fringing, VHS scan lines at 20% opacity across entire image, deep purple background (#300350), soft bloom glow on neon elements, logo text in wide-spaced ITC Avant Garde geometric sans-serif",
+    "vaporwave aesthetic, white marble Hellenistic Apollo bust floating in a digital void, flat magenta (#FF71CE) and cyan (#01CDFE) perspective-grid floor receding to horizon, semi-circle sun with gradient from deep magenta (#F52E97) through violet to indigo, Japanese katakana ＡＥＳＴＨＥＴＩＣ in wide geometric sans-serif, RGB chromatic aberration with prismatic fringing on all edges, VHS scan lines, deep purple background (#300350), soft bloom glow on neon elements, logo in wide-spaced geometric sans-serif",
   cyberpunk:
     "cyberpunk dystopia, dark rain-soaked night city, neon signs in Japanese characters glowing electric red and blue reflected on wet pavement, dense fog and smog between towering megabuildings, mega-city skyline silhouette in background, logo glowing with electric neon light against the darkness, Blade Runner 2049 meets Akira aesthetic, neon rain streaking through smog, moody atmospheric and dangerous",
   wesanderson:
@@ -201,10 +201,10 @@ const styleBackground: Record<Style, string> = {
   vhs:        "Background: washed-out faded gray-blue, analog static at the edges.",
   grindhouse: "",
   lofi:       "Background: cozy warm amber interior, rain streaking softly down a window.",
-  vaporwave:  "Background: pastel purple-pink gradient sky with retro perspective grid lines converging to glowing horizon.",
+  vaporwave:  "",
   cyberpunk:  "Background: dark rainy dystopian night, neon-lit smog and fog, mega-city silhouette.",
   wesanderson:"Background: flat even pastel — dusty rose, seafoam green, or golden cream, perfectly lit.",
-  hbo:        "Background: deep cobalt-black (#050510) near-black space with dense hand-animated star field, high-contrast analog television static texture at the edges, warm amber-orange atmospheric glow at lower frame.",
+  hbo:        "",
   epic:       "Background: dark warm amber-black.",
   nature:     "Background: deep dark natural green-black.",
   prestige:   "",
