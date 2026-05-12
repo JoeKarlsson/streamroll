@@ -22,7 +22,9 @@ export type Style =
   | "vaporwave"
   | "cyberpunk"
   | "wesanderson"
-  | "hbo";
+  | "hbo"
+  | "blockbuster"
+  | "mgm";
 
 export type Duration = 2 | 4 | 5 | 6 | 8 | 10;
 export type VideoModel = "gen4_turbo" | "gen4.5" | "gen3a_turbo" | "veo3" | "veo3.1" | "veo3.1_fast";
@@ -72,6 +74,10 @@ const styleDescriptions: Record<Style, string> = {
     "earthy organic tones, lush green, soft natural light, documentary aesthetic, clean sans-serif",
   prestige:
     "bold crimson red wordmark — vivid saturated red (#E50914) primary faces with dark maroon shadow sides giving the letterforms subtle dimensional depth, clean geometric sans-serif, logo centered with generous negative space on all sides, premium streaming service identity",
+  blockbuster:
+    "late 1980s video rental store logo aesthetic, bold golden-yellow (#FFDE00) all-caps condensed block lettering on deep navy blue (#00157C), enormous heavy letterforms filling the frame, horizontal yellow accent band behind the text, film strip perforations bordering the top and bottom edges, warm incandescent glow radiating from the letterforms, late 80s corporate retail signage energy, nostalgic and bold",
+  mgm:
+    "classic Hollywood studio logo, regal roaring lion head centered inside an ornate circular gold frame, thick decorative ring border with film strip perforations around the circumference, latin motto banner arching across the top of the ring, warm sepia and antique gold palette (#C9A227, #8B6914), dramatic amber spotlight on the lion, vintage Hollywood grandeur, formal symmetrical composition",
 };
 
 // Motion descriptions use positive phrasing only — no "don't/no/never".
@@ -130,6 +136,12 @@ const styleMotion: Record<Style, string> = {
 
   prestige:
     "The logo snaps into view — letterforms crisp, bold, vivid red with a pulse of light. One explosive visual beat: thin vertical bands of deep crimson and dark maroon burst outward from behind the letterforms simultaneously left and right — ribbons of color shooting to the edges of the frame, filling the full width in under one second. The bands hold for a half-beat, then dissolve away. Logo pulses with a final glow. Camera holds completely static throughout.",
+
+  blockbuster:
+    "A warm golden-yellow spotlight ignites at center — bright incandescent light floods outward across the deep navy background. The bold block letters radiate warm yellow glow, letterforms pulsing with a buzzing fluorescent warmth. Film strip perforations along the frame edges rattle lightly with a subtle vibration. That familiar store-opening energy: bright, cheerful, unmistakably late-80s retail. Camera holds completely static. Nostalgic, golden, bold.",
+
+  mgm:
+    "The ornate circular gold frame gleams as warm amber light sweeps slowly across its surface. The regal lion turns to face forward with mounting authority, opens its mouth wide, and releases a powerful silent ROAR — head tilting back with dignified force. Golden light intensifies around the roaring lion, flooding outward. The film strip perforations around the frame pulse with amber warmth. The latin banner glows. Camera holds completely static. Classic Hollywood grandeur, regal and timeless.",
 };
 
 // Gen4.5 supports timestamp-based sequencing for tighter control over pacing.
@@ -187,6 +199,12 @@ const styleMotionGen45: Record<Style, string> = {
 
   prestige:
     "[00:00] Logo snaps into view — letterforms crisp, bold, vivid red with a pulse of light. [00:01] Explosive beat: thin vertical bands of deep crimson and dark maroon burst outward from behind the letterforms simultaneously left and right — ribbons of color shoot to the edges of the frame. [00:02] Color bands fill the full width of the frame. [00:03] Bands dissolve away. [00:04] Logo pulses with a final glow, then holds clean and sharp. Camera completely static throughout.",
+
+  blockbuster:
+    "[00:00] Deep navy frame. A warm golden-yellow spotlight ignites at center — bright incandescent light floods outward. [00:01] Bold block letters radiate warm yellow glow. Letterforms pulse with buzzing fluorescent warmth. Film strip perforations along frame edges rattle with subtle vibration. [00:02] Yellow glow intensifies then settles. The horizontal accent band behind the text brightens. [00:03] Perforations pulse again with golden light. That familiar store-opening energy fills the frame. [00:04] Scene holds. Camera completely static throughout. Late 80s, nostalgic, golden.",
+
+  mgm:
+    "[00:00] Deep warm antique black frame. Ornate circular gold ring gleams — amber light sweeps slowly across its surface and the film strip perforations. [00:01] The regal lion turns to face forward, building tension. [00:02] The lion opens its mouth wide — releases a powerful ROAR, head pulling back with dignified force. Golden light intensifies around the roaring lion. [00:03] Roar peaks — amber warmth floods outward from the lion's open mouth. Film strip perforations pulse with golden light. Latin motto banner glows warm. [00:04] Roar settles. Lion holds — dignified, powerful, regal. Frame gleams with old Hollywood gold. Camera completely static throughout.",
 };
 
 const styleBackground: Record<Style, string> = {
@@ -205,9 +223,11 @@ const styleBackground: Record<Style, string> = {
   cyberpunk:  "Background: dark rainy dystopian night, neon-lit smog and fog, mega-city silhouette.",
   wesanderson:"Background: flat even pastel — dusty rose, seafoam green, or golden cream, perfectly lit.",
   hbo:        "",
-  epic:       "Background: dark warm amber-black.",
-  nature:     "Background: deep dark natural green-black.",
-  prestige:   "",
+  epic:        "Background: dark warm amber-black.",
+  nature:      "Background: deep dark natural green-black.",
+  prestige:    "",
+  blockbuster: "Background: deep navy blue (#00157C).",
+  mgm:         "Background: deep warm antique black with golden sepia warmth.",
 };
 
 const treatmentImage: Record<Treatment, string> = {
