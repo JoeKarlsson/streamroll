@@ -274,6 +274,10 @@ export default function Home() {
           if (p.videoUrl) setVideoUrl(p.videoUrl);
           if (p.timings)  setTimings(p.timings);
           if (p.error)    setError(p.error);
+          if (p.videoModel)  setVideoModel(p.videoModel);
+          if (p.imageModel)  setImageModel(p.imageModel);
+          if (p.treatment)   setTreatment(p.treatment);
+          if (p.duration)    setDuration(p.duration);
           setStep(p.step);
         }
       }
@@ -287,7 +291,7 @@ export default function Home() {
     if (step === "done" || step === "error" || step === "review") {
       try {
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(
-          { step, imageUrl, videoUrl, timings, error, name, style, tagline }
+          { step, imageUrl, videoUrl, timings, error, name, style, tagline, videoModel, imageModel, treatment, duration }
         ));
       } catch {}
     } else if (step === "idle") {
@@ -404,6 +408,11 @@ export default function Home() {
     setElapsedMs(0);
     setVideoRegenNotes("");
     try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+  }
+
+  function safeReset() {
+    if (step === "done" && videoUrl && !window.confirm("Start over? Your generated video will be lost.")) return;
+    reset();
   }
 
   function handleModelChange(m: VideoModel) {
@@ -781,35 +790,12 @@ console.log(videoTask.output[0]);
     }
   }
 
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "How do I add a pre-roll intro to Plex?",
-        acceptedAnswer: { "@type": "Answer", text: "Go to Settings → Extras → Cinema Trailers → enable pre-roll, then place the .mp4 in your designated Extras folder." },
-      },
-      {
-        "@type": "Question",
-        name: "How do I add a pre-roll video to Jellyfin?",
-        acceptedAnswer: { "@type": "Answer", text: "Go to Dashboard → Administration → Pre-Roll Video → browse and upload your .mp4 file." },
-      },
-      {
-        "@type": "Question",
-        name: "How do I add a pre-roll intro to Emby?",
-        acceptedAnswer: { "@type": "Answer", text: "Go to Server Settings → Cinema Mode → Pre-Roll Videos → add the .mp4 file path, then enable Cinema Mode for playback sessions." },
-      },
-    ],
-  };
-
   return (
     <main
       id="main-content"
       className="relative min-h-screen text-white flex flex-col items-center overflow-hidden"
       style={{ background: "#080808" }}
     >
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       {/* Film grain overlay */}
       <div
         className="pointer-events-none fixed inset-0 z-50 opacity-[0.032]"
@@ -926,7 +912,7 @@ console.log(videoTask.output[0]);
                 >
                   <span className="text-lg mb-1">{s.emoji}</span>
                   <div className="font-medium text-xs" style={isActive ? { color } : { color: "#e5e7eb" }}>{s.label}</div>
-                  <div className="text-xs leading-tight mt-0.5" style={{ color: "#525252" }}>{s.desc}</div>
+                  <div className="text-xs leading-tight mt-0.5 text-neutral-500">{s.desc}</div>
                 </button>
               );
             })}
@@ -1011,6 +997,10 @@ console.log(videoTask.output[0]);
               disabled={isGenerating}
               className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors"
             />
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-neutral-700">Short names render best</span>
+              <span className={`text-xs tabular-nums ${name.length > 18 ? "text-amber-600" : "text-neutral-700"}`}>{name.length}/30</span>
+            </div>
           </div>
           <div>
             <label htmlFor="tagline" className="block text-sm font-medium text-neutral-300 mb-2">
@@ -1030,10 +1020,11 @@ console.log(videoTask.output[0]);
               <button
                 onClick={shuffleTagline}
                 disabled={isGenerating}
-                title="Suggest a tagline"
+                aria-label="Shuffle tagline"
+                title="Shuffle tagline"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-300 transition-colors disabled:opacity-40 text-base leading-none"
               >
-                🎲
+                ↺
               </button>
             </div>
           </div>
@@ -1308,6 +1299,7 @@ console.log(videoTask.output[0]);
             {(["ai", "upload"] as LogoMode[]).map((m) => (
               <button
                 key={m}
+                aria-pressed={logoMode === m}
                 onClick={() => { setLogoMode(m); setUploadError(null); }}
                 disabled={isGenerating}
                 className="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
@@ -1379,6 +1371,7 @@ console.log(videoTask.output[0]);
             {(["image-only", "full"] as GenMode[]).map((m) => (
               <button
                 key={m}
+                aria-pressed={genMode === m}
                 onClick={() => setGenMode(m)}
                 disabled={isGenerating}
                 className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
@@ -1449,7 +1442,7 @@ console.log(videoTask.output[0]);
             )}
             {!isGenerating && (
               <button
-                onClick={reset}
+                onClick={safeReset}
                 className="ml-2 text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"
               >
                 ✕ Start over
@@ -1674,7 +1667,7 @@ console.log(videoTask.output[0]);
                 </div>
                 <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <button onClick={reset} className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
+                    <button onClick={safeReset} className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
                       Start over
                     </button>
                     <button

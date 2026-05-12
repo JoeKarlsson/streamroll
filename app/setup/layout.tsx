@@ -4,6 +4,9 @@ export const metadata: Metadata = {
   title: "Get started — StreamRoll",
   description:
     "Add your Runway API key to start generating custom animated pre-roll intros for your Plex, Jellyfin, or Emby media server.",
+  alternates: {
+    canonical: "https://streamroll.vercel.app/setup",
+  },
   openGraph: {
     title: "Get started — StreamRoll",
     description:

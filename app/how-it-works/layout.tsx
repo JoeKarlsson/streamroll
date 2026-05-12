@@ -4,6 +4,9 @@ export const metadata: Metadata = {
   title: "How it's built — StreamRoll",
   description:
     "A walkthrough of the Runway API pattern behind StreamRoll: textToImage chained into imageToVideo to produce custom animated pre-roll intros in about 30 seconds.",
+  alternates: {
+    canonical: "https://streamroll.vercel.app/how-it-works",
+  },
   openGraph: {
     title: "How it's built — StreamRoll",
     description:

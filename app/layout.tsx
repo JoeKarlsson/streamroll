@@ -28,6 +28,9 @@ export const metadata: Metadata = {
   description:
     "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI. Type your service name, pick a style, get a downloadable MP4 in 30 seconds.",
   metadataBase: new URL("https://streamroll.vercel.app"),
+  alternates: {
+    canonical: "https://streamroll.vercel.app",
+  },
   openGraph: {
     title: "StreamRoll — AI Streaming Intros",
     description:
@@ -93,6 +96,32 @@ export default function RootLayout({
                 url: "https://joekarlsson.com",
               },
               offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: [
+                {
+                  "@type": "Question",
+                  name: "How do I add a pre-roll intro to Plex?",
+                  acceptedAnswer: { "@type": "Answer", text: "Go to Settings → Extras → Cinema Trailers → enable pre-roll, then place the .mp4 in your designated Extras folder." },
+                },
+                {
+                  "@type": "Question",
+                  name: "How do I add a pre-roll video to Jellyfin?",
+                  acceptedAnswer: { "@type": "Answer", text: "Go to Dashboard → Administration → Pre-Roll Video → browse and upload your .mp4 file." },
+                },
+                {
+                  "@type": "Question",
+                  name: "How do I add a pre-roll intro to Emby?",
+                  acceptedAnswer: { "@type": "Answer", text: "Go to Server Settings → Cinema Mode → Pre-Roll Videos → add the .mp4 file path, then enable Cinema Mode for playback sessions." },
+                },
+              ],
             }),
           }}
         />

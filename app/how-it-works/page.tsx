@@ -174,7 +174,7 @@ export default function HowItWorksPage() {
               <div key={p.name} className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/logos/${p.slug}.svg`} alt={p.name} width={16} height={16} />
+                  <img src={`/logos/${p.slug}.svg`} alt={p.name} width={16} height={16} loading="lazy" />
                   <span className="text-sm font-semibold" style={{ color: p.color }}>{p.name}</span>
                 </div>
                 <p className="text-sm text-neutral-400 leading-relaxed mb-2">{p.steps}</p>
