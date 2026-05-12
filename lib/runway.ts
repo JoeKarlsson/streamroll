@@ -21,10 +21,8 @@ export type Style =
   | "lofi"
   | "vaporwave"
   | "cyberpunk"
-  | "wesanderson"
   | "hbo"
-  | "blockbuster"
-  | "mgm";
+  | "blockbuster";
 
 export type Duration = 2 | 4 | 5 | 6 | 8 | 10;
 export type VideoModel = "gen4_turbo" | "gen4.5" | "gen3a_turbo" | "veo3" | "veo3.1" | "veo3.1_fast";
@@ -64,8 +62,6 @@ const styleDescriptions: Record<Style, string> = {
     "vaporwave aesthetic, white marble Hellenistic Apollo bust floating in a digital void, flat magenta (#FF71CE) and cyan (#01CDFE) perspective-grid floor receding to horizon, semi-circle sun with gradient from deep magenta (#F52E97) through violet to indigo, Japanese katakana ＡＥＳＴＨＥＴＩＣ in wide geometric sans-serif, RGB chromatic aberration with prismatic fringing on all edges, VHS scan lines, deep purple background (#300350), soft bloom glow on neon elements, logo in wide-spaced geometric sans-serif",
   cyberpunk:
     "cyberpunk dystopia, dark rain-soaked night city, neon signs in Japanese characters glowing electric red and blue reflected on wet pavement, dense fog and smog between towering megabuildings, mega-city skyline silhouette in background, logo glowing with electric neon light against the darkness, Blade Runner 2049 meets Akira aesthetic, neon rain streaking through smog, moody atmospheric and dangerous",
-  wesanderson:
-    "Wes Anderson film aesthetic, perfectly symmetrical dead-center one-point perspective composition, pastel color palette — dusty rose pink, seafoam green, golden yellow, cream white, Futura bold sans-serif typography perfectly centered, whimsical and precise vintage illustration style, Grand Budapest Hotel energy, flat even lighting with no harsh shadows, perfectly composed deadpan graphic design",
   hbo:
     "1982 HBO Feature Presentation broadcast opening, massive three-dimensional chrome-plated brass letter forms floating in near-black space — physically thick beveled letters with visible metallic sheen, hard specular highlights on edges, the interior of the letter O contains a disc of spinning fiber optic light rays in electric blue, crimson red, gold and emerald green rotating outward, deep cobalt-black background (#050510) with dense hand-animated star field, warm amber-orange atmospheric glow at lower frame suggesting a miniature city below, high-contrast analog television static texture at the edges, cinematic scope composition",
   epic:
@@ -76,8 +72,6 @@ const styleDescriptions: Record<Style, string> = {
     "bold crimson red wordmark — vivid saturated red (#E50914) primary faces with dark maroon shadow sides giving the letterforms subtle dimensional depth, clean geometric sans-serif, logo centered with generous negative space on all sides, premium streaming service identity",
   blockbuster:
     "late 1980s video rental store logo aesthetic, bold golden-yellow (#FFDE00) all-caps condensed block lettering on deep navy blue (#00157C), enormous heavy letterforms filling the frame, horizontal yellow accent band behind the text, film strip perforations bordering the top and bottom edges, warm incandescent glow radiating from the letterforms, late 80s corporate retail signage energy, nostalgic and bold",
-  mgm:
-    "classic Hollywood studio logo, regal roaring lion head centered inside an ornate circular gold frame, thick decorative ring border with film strip perforations around the circumference, latin motto banner arching across the top of the ring, warm sepia and antique gold palette (#C9A227, #8B6914), dramatic amber spotlight on the lion, vintage Hollywood grandeur, formal symmetrical composition",
 };
 
 // Motion descriptions use positive phrasing only — no "don't/no/never".
@@ -122,9 +116,6 @@ const styleMotion: Record<Style, string> = {
   cyberpunk:
     "Neon rain falls through dark smog-thick air — streaks of red and blue neon catching in the fog. The logo materializes glowing with electric neon energy against the dark mega-city backdrop. Distant neon signs flicker and reflect on rain-slicked surfaces below. Fog drifts slowly between towers. The logo pulses with neon light — breathing, dangerous. Camera holds completely static. Dark, atmospheric, dystopian.",
 
-  wesanderson:
-    "The logo is centered with mathematical precision — perfectly symmetrical, deadpan, unmoving. A barely perceptible slow zoom begins, maintaining exact one-point perspective symmetry throughout. Soft pastel colors hold in perfect even flatness. A small whimsical detail — a tiny bird or falling leaf — drifts past in perfectly composed frame. Nothing is out of place. Camera performs an imperceptibly slow symmetrical dolly in. Deadpan, precise, whimsical.",
-
   hbo:
     "Pure analog television static fills the frame — high-contrast black-and-white snow grain, textured and three-dimensional, not flat noise. The static holds for a beat. Then the massive chrome-plated brass 3D letterforms phase in through the noise as if a broadcast signal is locking in — physically thick beveled letters with hard specular highlights on every edge. The static recedes. Inside the letter O, a spinning disc of fiber optic light rays ignites: electric blue, crimson red, gold, emerald green beams rotating outward. Warm amber glow pulses from below suggesting the model city. Camera holds completely static. Prestige, broadcast, definitive.",
 
@@ -140,8 +131,6 @@ const styleMotion: Record<Style, string> = {
   blockbuster:
     "A warm golden-yellow spotlight ignites at center — bright incandescent light floods outward across the deep navy background. The bold block letters radiate warm yellow glow, letterforms pulsing with a buzzing fluorescent warmth. Film strip perforations along the frame edges rattle lightly with a subtle vibration. That familiar store-opening energy: bright, cheerful, unmistakably late-80s retail. Camera holds completely static. Nostalgic, golden, bold.",
 
-  mgm:
-    "The ornate circular gold frame gleams as warm amber light sweeps slowly across its surface. The regal lion turns to face forward with mounting authority, opens its mouth wide, and releases a powerful silent ROAR — head tilting back with dignified force. Golden light intensifies around the roaring lion, flooding outward. The film strip perforations around the frame pulse with amber warmth. The latin banner glows. Camera holds completely static. Classic Hollywood grandeur, regal and timeless.",
 };
 
 // Gen4.5 supports timestamp-based sequencing for tighter control over pacing.
@@ -185,9 +174,6 @@ const styleMotionGen45: Record<Style, string> = {
   cyberpunk:
     "[00:00] Dark rain-soaked night. Neon rain falls through fog — streaks of red and blue neon light. Mega-city silhouette looms in background. [00:01] Logo materializes — glowing with electric neon against the darkness. Neon reflections ripple on wet surfaces below. [00:02] Fog drifts slowly between towers. Distant neon signs flicker. Logo pulses with electric energy. [00:03] Rain continues. Smog thickens. Logo breathes — electric and dangerous. [00:04] Scene holds, dark and atmospheric. Camera completely static throughout.",
 
-  wesanderson:
-    "[00:00] Perfect symmetry. Logo centered with mathematical precision — Futura bold, pastel, deadpan. Flat even lighting. [00:01] Barely perceptible slow dolly in begins — maintaining exact one-point perspective. Pastel colors hold in perfect flatness. [00:02] A small whimsical detail drifts past in perfectly composed frame — a bird, a leaf, precisely placed. [00:03] Dolly continues, almost imperceptibly slow. Everything perfectly in place. [00:04] Scene holds, symmetrical and precise. Whimsical, deadpan.",
-
   hbo:
     "[00:00] Frame fills with pure analog television static — high-contrast black-and-white snow grain, dense and textured, not flat noise. [00:01] Broadcast signal begins locking in: massive chrome-plated brass 3D letterforms phase through the static — physically thick beveled letters with hard specular highlights on every edge emerging from the noise. [00:02] Static fully recedes. Letters resolved — chrome-plated, dimensional, imposing. Inside the letter O, a spinning disc of fiber optic light rays ignites: electric blue, crimson red, gold, emerald green beams rotating outward. [00:03] Fiber optic disc blazes with color. Warm amber-orange glow pulses from below, suggesting a model city. [00:04] Logo holds — chrome letters, fiber optic disc spinning, amber glow below. Camera completely static throughout. Prestige, broadcast, definitive.",
 
@@ -203,8 +189,6 @@ const styleMotionGen45: Record<Style, string> = {
   blockbuster:
     "[00:00] Deep navy frame. A warm golden-yellow spotlight ignites at center — bright incandescent light floods outward. [00:01] Bold block letters radiate warm yellow glow. Letterforms pulse with buzzing fluorescent warmth. Film strip perforations along frame edges rattle with subtle vibration. [00:02] Yellow glow intensifies then settles. The horizontal accent band behind the text brightens. [00:03] Perforations pulse again with golden light. That familiar store-opening energy fills the frame. [00:04] Scene holds. Camera completely static throughout. Late 80s, nostalgic, golden.",
 
-  mgm:
-    "[00:00] Deep warm antique black frame. Ornate circular gold ring gleams — amber light sweeps slowly across its surface and the film strip perforations. [00:01] The regal lion turns to face forward, building tension. [00:02] The lion opens its mouth wide — releases a powerful ROAR, head pulling back with dignified force. Golden light intensifies around the roaring lion. [00:03] Roar peaks — amber warmth floods outward from the lion's open mouth. Film strip perforations pulse with golden light. Latin motto banner glows warm. [00:04] Roar settles. Lion holds — dignified, powerful, regal. Frame gleams with old Hollywood gold. Camera completely static throughout.",
 };
 
 const styleBackground: Record<Style, string> = {
@@ -221,13 +205,11 @@ const styleBackground: Record<Style, string> = {
   lofi:       "Background: cozy warm amber interior, rain streaking softly down a window.",
   vaporwave:  "",
   cyberpunk:  "Background: dark rainy dystopian night, neon-lit smog and fog, mega-city silhouette.",
-  wesanderson:"Background: flat even pastel — dusty rose, seafoam green, or golden cream, perfectly lit.",
   hbo:        "",
   epic:        "Background: dark warm amber-black.",
   nature:      "Background: deep dark natural green-black.",
   prestige:    "",
   blockbuster: "Background: deep navy blue (#00157C).",
-  mgm:         "Background: deep warm antique black with golden sepia warmth.",
 };
 
 const treatmentImage: Record<Treatment, string> = {

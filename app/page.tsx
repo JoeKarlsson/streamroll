@@ -30,10 +30,8 @@ const STYLE_COLOR: Record<Style, string> = {
   lofi:       "#A78BFA",
   vaporwave:  "#C084FC",
   cyberpunk:  "#F43F5E",
-  wesanderson: "#34D399",
   hbo:         "#A1A1AA",
   blockbuster: "#FFDE00",
-  mgm:         "#C9A227",
 };
 
 const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string }[] = [
@@ -51,7 +49,6 @@ const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: str
   { id: "lofi",       label: "Lo-fi",           emoji: "🎧", desc: "Cozy rain, study beats",      tip: "Auto: Gen4 Turbo · Minimal · 4s" },
   { id: "vaporwave",  label: "Vaporwave",       emoji: "🌴", desc: "Pastel grid, marble busts",    tip: "Auto: Gen4.5 · Full Bleed · 5s" },
   { id: "cyberpunk",  label: "Cyberpunk",       emoji: "🌆", desc: "Neon rain, dark mega-city",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
-  { id: "wesanderson",label: "Wes Anderson",    emoji: "🏨", desc: "Symmetry, pastels, deadpan",   tip: "Auto: Gen4.5 · Minimal · 4s" },
   { id: "hbo",        label: "HBO",             emoji: "⬛", desc: "3D chrome letters, star field", tip: "Auto: Gen4.5 · Theatrical · 5s" },
   { id: "epic",        label: "Epic",        emoji: "⚔️", desc: "Golden hour, dust",          tip: "Auto: Gen4.5 · Theatrical · 5s" },
   { id: "nature",      label: "Nature",      emoji: "🌿", desc: "Earthy documentary",         tip: "Auto: Gen4 Turbo · Minimal · 4s" },
@@ -75,7 +72,6 @@ const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageM
   lofi:       { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
   vaporwave:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
   cyberpunk:  { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
-  wesanderson:{ videoModel: "gen4.5",      imageModel: "gemini_image3_pro", treatment: "minimal",     duration: 4 },
   hbo:        { videoModel: "gen4.5",      imageModel: "gemini_image3_pro", treatment: "theatrical",  duration: 5 },
   epic:        { videoModel: "gen4.5",      imageModel: "gen4_image",        treatment: "theatrical",  duration: 5 },
   nature:      { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "minimal",     duration: 4 },
@@ -100,10 +96,8 @@ const STYLE_TAGLINES: Record<Style, string[]> = {
   lofi:        ["beats to stream to","study and watch","chill vibes only","soft signal, strong content","rainy day streaming","slow down, watch something","the gentle stream","ambient entertainment","just right","background and foreground"],
   vaporwave:   ["aesthetic dreams","lost in the mall of content","remember when?","the simulation is streaming","totally.aesthetic","enter the mall","stream it on repeat","the past is pretty","Windows 95 never died","aesthetic.jpg streaming"],
   cyberpunk:   ["The future is now","Neon and nightmare","Jack in and stream","The signal never sleeps","Dark city, bright screen","Interface engaged","The net is alive","Rain on glass, fire on screen","Outlaws watch this","Escape velocity streaming"],
-  wesanderson: ["A film by you","Symmetrical excellence","Curated with precision","Deadpan and delightful","Whimsy, measured carefully","The concierge of content","Life is a set piece","A carefully arranged stream","Perfectly composed","Every frame, intentional"],
   hbo:         ["It's not TV","Prestige, defined","The gold standard","Some things are worth it","Where television grew up","The serious watch","Excellence, delivered","Nothing compromises here","Not for casual viewers","It's HBO"],
   blockbuster: ["Make it a Blockbuster night","Be kind, rewind","Open seven nights a week","Your entertainment destination","No streaming required","Late fees apply","Member since opening night","The original binge destination","Returns due by midnight","Where the movies lived"],
-  mgm:         ["Ars Gratia Artis","Art for art's sake","The lion roars","Where legends are made","Born of celluloid","Silver screen forever","More stars than in the heavens","The roar of excellence","Lights, camera, legacy","Classic Hollywood"],
 };
 
 const DURATIONS: { value: Duration; label: string; est: string }[] = [
@@ -131,10 +125,8 @@ const INSPO: Preset[] = [
   { name: "ChillFlix",  style: "lofi",       tagline: "beats to stream to",          desc: "Lo-fi study beats" },
   { name: "VaporFlix",  style: "vaporwave",  tagline: "aesthetic dreams",             desc: "Vaporwave" },
   { name: "NeonCity",   style: "cyberpunk",  tagline: "The future is now",            desc: "Cyberpunk night city" },
-  { name: "GrandFlix",  style: "wesanderson",tagline: "A film by you",                desc: "Wes Anderson style" },
   { name: "StaticFlix",  style: "hbo",         tagline: "It's not TV",                  desc: "HBO prestige style" },
   { name: "VideoVault",  style: "blockbuster", tagline: "Make it a Blockbuster night",   desc: "Video store nostalgia" },
-  { name: "LionFlix",    style: "mgm",         tagline: "Ars Gratia Artis",              desc: "Classic Hollywood" },
 ];
 
 const SEASONAL: Preset[] = [
