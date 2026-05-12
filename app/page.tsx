@@ -112,6 +112,7 @@ const STYLE_TAGLINES: Record<Style, string[]> = {
 
 const DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 2,  label: "2s",  est: "~20 sec" },
+  { value: 4,  label: "4s",  est: "~30 sec" },
   { value: 5,  label: "5s",  est: "~35 sec" },
   { value: 10, label: "10s", est: "~60 sec" },
 ];
@@ -506,7 +507,8 @@ console.log(videoTask.output[0]);
     imageTimeRef.current = 0;
 
     // Upload mode: image is already known — skip image generation and review entirely
-    if (logoMode === "upload" && uploadedUri) {
+    if (logoMode === "upload") {
+      if (!uploadedUri) return; // upload not complete — button should be disabled, but guard anyway
       setImageUrl(uploadedUri);
       if (genMode === "image-only") {
         setStep("done");
@@ -906,71 +908,6 @@ console.log(videoTask.output[0]);
           </div>
         </section>
 
-        {/* Logo mode toggle */}
-        <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Logo source</label>
-          <div className="flex gap-2 mb-4">
-            {(["ai", "upload"] as LogoMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setLogoMode(m)}
-                disabled={isGenerating}
-                className="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
-                style={logoMode === m
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
-                  : { borderColor: "#262626", color: "#a3a3a3" }
-                }
-              >
-                {m === "ai" ? "✦ Generate with AI" : "⬆ Upload your own"}
-              </button>
-            ))}
-          </div>
-
-          {logoMode === "upload" && (
-            <div>
-              <label
-                className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
-                style={{ borderColor: uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
-                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const f = e.dataTransfer.files?.[0];
-                  if (f && !isGenerating && !isUploading) handleFileUpload(f);
-                }}
-              >
-                {uploadPreview ? (
-                  <div className="relative w-full h-full">
-                    <Image src={uploadPreview} alt="Uploaded logo" fill className="object-contain p-3 rounded-xl" unoptimized />
-                    {isUploading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
-                        <span className="text-sm text-white animate-pulse">Uploading...</span>
-                      </div>
-                    )}
-                    {uploadedUri && !isUploading && (
-                      <div className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full" style={{ background: accentColor + "30", color: accentColor }}>
-                        Ready
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center pointer-events-none">
-                    <div className="text-3xl mb-2">🖼</div>
-                    <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
-                    <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 10MB</div>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
-                  disabled={isGenerating || isUploading}
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
-                />
-              </label>
-            </div>
-          )}
-        </section>
 
         {/* Duration */}
         <section>
@@ -1229,31 +1166,92 @@ console.log(videoTask.output[0]);
           )}
         </section>
 
-        {/* Generation mode */}
-        <div className="flex gap-2">
-          {(["image-only", "full"] as GenMode[]).map((m) => (
+        {/* Generation mode + upload escape hatch */}
+        <div className="space-y-3">
+          {/* Mode toggle — only relevant for AI path */}
+          {logoMode === "ai" && (
+            <div className="flex gap-2">
+              {(["image-only", "full"] as GenMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setGenMode(m)}
+                  disabled={isGenerating}
+                  className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
+                  style={genMode === m
+                    ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
+                    : { borderColor: "#262626", color: "#a3a3a3" }
+                  }
+                >
+                  {m === "image-only" ? "🖼 Logo only" : "🎬 Full intro (logo + video)"}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Upload your own logo — shown inline, collapsed by default */}
+          <div>
             <button
-              key={m}
-              onClick={() => setGenMode(m)}
+              onClick={() => { setLogoMode(logoMode === "upload" ? "ai" : "upload"); }}
               disabled={isGenerating}
-              className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
-              style={genMode === m
-                ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
-                : { borderColor: "#262626", color: "#a3a3a3" }
-              }
+              className="text-xs text-neutral-400 hover:text-white border border-neutral-700 hover:border-neutral-500 px-3 py-1.5 rounded transition-colors disabled:opacity-40"
             >
-              {m === "image-only" ? "🖼 Logo only" : "🎬 Full intro (logo + video)"}
+              {logoMode === "upload" ? "← Use AI-generated logo instead" : "⬆ Upload your own logo instead"}
             </button>
-          ))}
+
+            {logoMode === "upload" && (
+              <div className="mt-2">
+                <label
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all"
+                  style={{ borderColor: uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const f = e.dataTransfer.files?.[0];
+                    if (f && !isGenerating && !isUploading) handleFileUpload(f);
+                  }}
+                >
+                  {uploadPreview ? (
+                    <div className="relative w-full h-full">
+                      <Image src={uploadPreview} alt="Uploaded logo" fill className="object-contain p-3 rounded-xl" unoptimized />
+                      {isUploading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
+                          <span className="text-sm text-white animate-pulse">Uploading...</span>
+                        </div>
+                      )}
+                      {uploadedUri && !isUploading && (
+                        <div className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full" style={{ background: accentColor + "30", color: accentColor }}>
+                          Ready
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center pointer-events-none">
+                      <div className="text-2xl mb-1.5">🖼</div>
+                      <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
+                      <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 10MB</div>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    disabled={isGenerating || isUploading}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                  />
+                </label>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Generate */}
         <button
           onClick={generate}
-          disabled={isGenerating || !name.trim() || (keyLoaded && !apiKey)}
+          disabled={isGenerating || !name.trim() || (keyLoaded && !apiKey) || isUploading || (logoMode === "upload" && !uploadedUri)}
           className="w-full font-semibold py-3.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed text-base"
           style={
-            isGenerating || !name.trim() || (keyLoaded && !apiKey)
+            isGenerating || !name.trim() || (keyLoaded && !apiKey) || isUploading || (logoMode === "upload" && !uploadedUri)
               ? { background: "#fff", color: "#000" }
               : {
                   background: `linear-gradient(135deg, ${accentColor}22 0%, transparent 60%), #fff`,
@@ -1264,8 +1262,14 @@ console.log(videoTask.output[0]);
         >
           {isGenerating
             ? `Generating... ${(elapsedMs / 1000).toFixed(1)}s`
+            : isUploading
+            ? "Uploading..."
             : keyLoaded && !apiKey
             ? "Add API key to generate →"
+            : logoMode === "upload" && !uploadedUri
+            ? "Upload a logo first"
+            : logoMode === "upload"
+            ? "Animate My Logo"
             : genMode === "image-only"
             ? "Generate Logo"
             : "Generate Intro"}
