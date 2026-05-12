@@ -36,6 +36,8 @@ const STYLE_COLOR: Record<Style, string> = {
   tristar:     "#F59E0B",
   hannabarbera:"#A855F7",
   columbia:    "#F5DEB3",
+  mst3k:       "#818CF8",
+  ebs:         "#22C55E",
 };
 
 const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string }[] = [
@@ -83,6 +85,8 @@ const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageM
   tristar:      { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
   hannabarbera: { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
   columbia:     { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  mst3k:        { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 5 },
+  ebs:          { videoModel: "gen4_turbo",  imageModel: "gen4_image",        treatment: "full-bleed",  duration: 2 },
 };
 
 const STYLE_TAGLINES: Record<Style, string[]> = {
@@ -104,6 +108,8 @@ const STYLE_TAGLINES: Record<Style, string[]> = {
   cyberpunk:   ["The future is now","Neon and nightmare","Jack in and stream","The signal never sleeps","Dark city, bright screen","Interface engaged","The net is alive","Rain on glass, fire on screen","Outlaws watch this","Escape velocity streaming"],
   hbo:         ["It's not TV","Prestige, defined","The gold standard","Some things are worth it","Where television grew up","The serious watch","Excellence, delivered","Nothing compromises here","Not for casual viewers","It's HBO"],
   blockbuster:  ["Make it a Blockbuster night","Be kind, rewind","Open seven nights a week","Your entertainment destination","No streaming required","Late fees apply","Member since opening night","The original binge destination","Returns due by midnight","Where the movies lived"],
+  mst3k:        ["Keep circulating the streams","They tried to break him with bad content","In space, no one can hear you stream","Watch out for falling sequels","Brought to you by the Satellite of Love","We've got movie sign","Push the button, Frank","Not just a show. A philosophy.","Joel never left","Mike was fine too"],
+  ebs:          ["This is not a test","Please stand by","We interrupt your regularly scheduled content","Remain calm and keep streaming","An alert has been issued","Stay tuned for further updates","This message is authorized","Do not adjust your set","Signal acquired","Broadcast imminent"],
   dreamworks:   ["A new kind of story","Imagination has a home","Dreams take flight here","Where the impossible streams","Beyond the clouds","Stories that soar","The dream is streaming","From a different world","Look up","Wonder, delivered"],
   tristar:      ["Fly higher","Legendary from the start","The wings of cinema","Born to run","Soaring stories","Above and beyond","Where legends take flight","The sky is the screen","Epic from the first frame","Ride the sky"],
   hannabarbera: ["Yabba dabba do","The original cartoon magic","Fun is timeless","Classics never stop","Saturday morning forever","The golden age of cartoons","Laugh until it loops","Animation nation","The original binge","Never not funny"],
@@ -190,10 +196,20 @@ const STUDIOS: Preset[] = [
     desc: "Columbia",
     videoPromptOverride: ``,
   },
+  {
+    name: "MST3Kflix", emoji: "🛸", style: "mst3k", tagline: "We've got movie sign",
+    desc: "MST3K",
+    videoPromptOverride: `The asteroid slowly rotates in the starfield. Stars twinkle in the deep purple-blue space. The silhouetted figures in the theater seats below gesture and point upward. Campy, low-budget sci-fi energy. The text on the right side of the frame holds steady and motionless.`,
+  },
+  {
+    name: "ALERT", emoji: "📡", style: "ebs", tagline: "This is not a test",
+    desc: "Emergency Broadcast",
+    videoPromptOverride: `SMPTE color bars hold completely static on screen. A harsh single-frequency tone. The black label bar with white monospace text flashes urgently twice, then holds steady. Pure broadcast emergency energy. No camera movement. Static and tense.`,
+  },
 ];
 
 // Styles that skip Runway image generation and render the logo directly on canvas
-const CANVAS_STYLES = new Set<Style>(["adultswim", "minimal", "prestige", "dreamworks", "tristar", "hannabarbera", "columbia"]);
+const CANVAS_STYLES = new Set<Style>(["adultswim", "minimal", "prestige", "dreamworks", "tristar", "hannabarbera", "columbia", "mst3k", "ebs"]);
 
 type LogoMode = "ai" | "upload";
 type GenMode = "image-only" | "full";
@@ -655,6 +671,77 @@ console.log(videoTask.output[0]);
         ctx.fillText(tagline!.trim().toUpperCase(), W / 2, H * 0.62);
       }
 
+    } else if (style === "ebs") {
+      // SMPTE color bars — drawn entirely in canvas
+      const bars = ["#FFFFFF","#FFFF00","#00FFFF","#00FF00","#FF00FF","#FF0000","#0000FF"];
+      const bw = W / bars.length;
+      const barsH = Math.round(H * 0.60);
+      bars.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(i * bw, 0, bw, barsH); });
+
+      // PLUGE bottom section
+      const pluge = ["#0000FF","#000000","#FF00FF","#000000","#00FFFF","#000000","#BEBEBE"];
+      pluge.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(i * bw, barsH, bw, H - barsH); });
+
+      // Black label bar
+      const labelH = Math.round(H * 0.13);
+      const labelY = Math.round(H * 0.22);
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(Math.round(W * 0.12), labelY, Math.round(W * 0.76), labelH);
+
+      // Service name in monospace
+      const fontSize = fitFontSize(sz => `700 ${sz}px "Courier New",Courier,monospace`, displayName, W * 0.68, 56, 16);
+      ctx.font = `700 ${fontSize}px "Courier New",Courier,monospace`;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(displayName, W / 2, labelY + labelH / 2);
+
+      if (hasTagline) {
+        const tagFontSize = Math.max(14, Math.floor(fontSize * 0.36));
+        ctx.font = `400 ${tagFontSize}px "Courier New",Courier,monospace`;
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(Math.round(W * 0.20), labelY + labelH + 6, Math.round(W * 0.60), tagFontSize + 12);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(tagline!.trim().toUpperCase(), W / 2, labelY + labelH + 6 + (tagFontSize + 12) / 2);
+      }
+
+    } else if (style === "mst3k") {
+      // MST3K: background image + bold yellow italic text in open starfield
+      const bg = document.createElement("img");
+      bg.src = `/studios/mst3k.png`;
+      await new Promise<void>((resolve, reject) => { bg.onload = () => resolve(); bg.onerror = reject; });
+      ctx.drawImage(bg, 0, 0, W, H);
+
+      // Center of open starfield zone (right of planet): roughly x=680–1280, center ~980
+      const textX = W * 0.76;
+      const textY = H * 0.44;
+      const fontSize = fitFontSize(sz => `italic 900 ${sz}px "Arial Black",Impact,sans-serif`, displayName, W * 0.46, 120, 24);
+
+      ctx.save();
+      // Skew slightly to the right for that campy italic lean
+      ctx.transform(1, -0.06, 0.18, 1, 0, 0);
+      // Adjust x/y for skew offset so text stays visually centered in zone
+      const skewOffsetX = textY * 0.18;
+      const skewOffsetY = textX * -0.06;
+
+      ctx.font = `italic 900 ${fontSize}px "Arial Black",Impact,sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = "#FFE000";
+      ctx.fillText(displayName, textX - skewOffsetX, textY - skewOffsetY);
+
+      if (hasTagline) {
+        const tagFontSize = Math.max(14, Math.floor(fontSize * 0.30));
+        ctx.font = `italic 700 ${tagFontSize}px "Arial Black",Impact,sans-serif`;
+        ctx.fillStyle = "#FFE000";
+        ctx.globalAlpha = 0.85;
+        ctx.fillText(tagline!.trim().toUpperCase(), textX - skewOffsetX, textY - skewOffsetY + fontSize * 0.78);
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+
     } else if (style === "dreamworks" || style === "tristar" || style === "hannabarbera" || style === "columbia") {
       // Load background image
       const bg = document.createElement("img");
@@ -668,33 +755,33 @@ console.log(videoTask.output[0]);
           font: sz => `300 italic ${sz}px Georgia,"Times New Roman",serif`,
           color: "#ffffff",
           shadowColor: "rgba(0,30,80,0.6)",
-          textY: H * 0.88,
-          clearY: H * 0.78,
-          clearH: H * 0.22,
+          textY: H * 0.78,
+          clearY: H * 0.65,
+          clearH: H * 0.35,
         },
         tristar: {
           font: sz => `400 ${sz}px Georgia,"Times New Roman",serif`,
           color: "#ffffff",
           shadowColor: "rgba(0,0,0,0.7)",
-          textY: H * 0.88,
-          clearY: H * 0.75,
-          clearH: H * 0.25,
+          textY: H * 0.80,
+          clearY: H * 0.66,
+          clearH: H * 0.34,
         },
         hannabarbera: {
           font: sz => `900 ${sz}px Arial,Helvetica,sans-serif`,
           color: "#ffffff",
           shadowColor: "rgba(0,0,0,0.0)",
-          textY: H * 0.82,
-          clearY: H * 0.68,
-          clearH: H * 0.32,
+          textY: H * 0.80,
+          clearY: H * 0.65,
+          clearH: H * 0.35,
         },
         columbia: {
           font: sz => `700 ${sz}px Georgia,"Times New Roman",serif`,
           color: "#f5deb3",
-          shadowColor: "rgba(0,0,0,0.5)",
-          textY: H * 0.88,
-          clearY: H * 0.76,
-          clearH: H * 0.24,
+          shadowColor: "rgba(0,0,0,0.0)",
+          textY: H * 0.16,
+          clearY: H * 0.04,
+          clearH: H * 0.20,
         },
       };
 
@@ -719,14 +806,21 @@ console.log(videoTask.output[0]);
       ctx.fillStyle = cfg.color;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
+      if (style === "columbia") {
+        ctx.shadowColor = "rgba(0,0,0,0.75)";
+        ctx.shadowBlur = 18;
+      }
       ctx.fillText(displayName, W / 2, cfg.textY);
+      ctx.shadowBlur = 0;
 
       // Tagline
       if (hasTagline) {
         const tagFontSize = Math.max(14, Math.floor(fontSize * 0.28));
         ctx.font = cfg.font(tagFontSize).replace("300 italic", "300").replace("900", "400").replace("700", "400");
         ctx.fillStyle = style === "columbia" ? "#e8d5a3" : "rgba(255,255,255,0.75)";
-        ctx.fillText(tagline!.trim(), W / 2, cfg.textY + fontSize * 0.72);
+        // Columbia: tagline goes on the stairs at the bottom, independent of name position
+        const tagY = style === "columbia" ? H * 0.96 : cfg.textY + fontSize * 0.72;
+        ctx.fillText(tagline!.trim(), W / 2, tagY);
       }
     }
 

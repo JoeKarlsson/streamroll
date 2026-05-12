@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import RunwayML from "@runwayml/sdk";
 import { buildPrompts, type GenerationParams } from "@/lib/runway";
 
-export const maxDuration = 30;
+export const maxDuration = 90;
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -48,11 +48,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = new RunwayML({ apiKey, timeout: 25_000 });
-    const [{ creditBalance: creditsBefore }, task] = await Promise.all([
-      client.organization.retrieve(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      client.imageToVideo.create(createParams as any),
-    ]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const task = await client.imageToVideo.create(createParams as any);
+    // Balance snapshot is best-effort — don't let it block or fail the generation
+    const creditsBefore = await client.organization.retrieve().then(r => r.creditBalance).catch(() => null);
     return NextResponse.json({ taskId: task.id, creditsBefore });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Failed to start video generation";

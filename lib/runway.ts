@@ -26,7 +26,9 @@ export type Style =
   | "dreamworks"
   | "tristar"
   | "hannabarbera"
-  | "columbia";
+  | "columbia"
+  | "mst3k"
+  | "ebs";
 
 export type Duration = 2 | 4 | 5 | 6 | 8 | 10;
 export type VideoModel = "gen4_turbo" | "gen4.5" | "gen3a_turbo" | "veo3" | "veo3.1" | "veo3.1_fast";
@@ -80,6 +82,8 @@ const styleDescriptions: Record<Style, string> = {
   tristar:      "pegasus in sky, clouds, golden light, cinematic",
   hannabarbera: "rainbow swirl circle, chrome star, black background, retro broadcast",
   columbia:     "columbia figure with torch, clouds and light beams, classical cinematic",
+  mst3k:        "Mystery Science Theater 3000, asteroid with letters, silhouetted theater seats, space, starfield",
+  ebs:          "SMPTE color bars, emergency broadcast system, test pattern, monospace text",
 };
 
 // Motion descriptions use positive phrasing only — no "don't/no/never".
@@ -143,6 +147,8 @@ const styleMotion: Record<Style, string> = {
   tristar:      "The Pegasus gallops powerfully in mid-air, wings beating, clouds churning. Dynamic and epic.",
   hannabarbera: "The rainbow swirl and chrome star animate in retro broadcast style. Retro cel-animation.",
   columbia:     "Light beams sweep the sky, clouds churn. Classical cinematic logo reveal.",
+  mst3k:        "The asteroid slowly rotates in space. Stars twinkle. The silhouetted figures point and gesture. Campy sci-fi.",
+  ebs:          "Color bars hold static on screen. A harsh tone pulses. The monospace text flashes urgently.",
 };
 
 // Gen4.5 supports timestamp-based sequencing for tighter control over pacing.
@@ -205,6 +211,8 @@ const styleMotionGen45: Record<Style, string> = {
   tristar:      "[00:00] Pegasus gallops powerfully in mid-air. [00:02] Wings beat, clouds churn. [00:04] Sunlight pulses. Dynamic and epic.",
   hannabarbera: "[00:00] Rainbow swirl animates on black. [00:02] Chrome star flies along the arc. [00:04] Star settles. Retro broadcast.",
   columbia:     "[00:00] Light beams sweep the sky. [00:02] Clouds churn, torch shines. [00:04] Scene holds. Classical cinematic.",
+  mst3k:        "[00:00] Stars twinkle in deep space. [00:02] Asteroid rotates slowly. Silhouetted figures gesture and point. [00:04] Campy, low-fi sci-fi energy.",
+  ebs:          "[00:00] Color bars hold on screen. Harsh tone. [00:02] Text flashes urgently on the black bar. [00:04] Static. Alert.",
 };
 
 const styleBackground: Record<Style, string> = {
@@ -230,6 +238,8 @@ const styleBackground: Record<Style, string> = {
   tristar:      "Background: golden sky, clouds, water below.",
   hannabarbera: "Background: pure black.",
   columbia:     "Background: warm sky, clouds, light beams.",
+  mst3k:        "Background: dark purple-blue space, starfield, theater seat silhouettes.",
+  ebs:          "Background: SMPTE color bars.",
 };
 
 const treatmentImage: Record<Treatment, string> = {

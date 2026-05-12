@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import RunwayML from "@runwayml/sdk";
 
-export const maxDuration = 30;
+export const maxDuration = 90;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     const task = await client.tasks.retrieve(taskId);
 
     if (task.status === "SUCCEEDED") {
-      const { creditBalance: creditsAfter } = await client.organization.retrieve();
+      const creditsAfter = await client.organization.retrieve().then(r => r.creditBalance).catch(() => null);
       return NextResponse.json({ status: "SUCCEEDED", output: task.output[0], creditsAfter });
     }
     if (task.status === "FAILED") {
