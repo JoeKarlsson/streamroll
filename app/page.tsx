@@ -7,6 +7,7 @@ import Image from "next/image";
 import { buildPrompts, imageRatio, type Style, type Duration, type ImageModel, type VideoModel, type Treatment } from "@/lib/runway";
 import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS, BUILDER, tweetShareUrl, redditShareUrl } from "@/lib/links";
+import { track } from "@/lib/plausible";
 
 type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
 
@@ -415,6 +416,7 @@ export default function Home() {
 
   async function downloadPoster() {
     if (!imageUrl) return;
+    track("Download Poster", { style });
     try {
       const res = await fetch(imageUrl);
       const blob = await res.blob();
@@ -712,17 +714,17 @@ console.log(videoTask.output[0]);
       await new Promise<void>((resolve, reject) => { bg.onload = () => resolve(); bg.onerror = reject; });
       ctx.drawImage(bg, 0, 0, W, H);
 
-      // Center of open starfield zone (right of planet): roughly x=680–1280, center ~980
-      const textX = W * 0.76;
-      const textY = H * 0.44;
-      const fontSize = fitFontSize(sz => `italic 900 ${sz}px "Arial Black",Impact,sans-serif`, displayName, W * 0.46, 120, 24);
+      // Center of open starfield zone (right of planet): roughly x=700–1280, center ~990
+      const textX = W * 0.70;
+      const textY = H * 0.42;
+      const fontSize = fitFontSize(sz => `italic 900 ${sz}px "Arial Black",Impact,sans-serif`, displayName, W * 0.42, 90, 24);
 
       ctx.save();
-      // Skew slightly to the right for that campy italic lean
-      ctx.transform(1, -0.06, 0.18, 1, 0, 0);
+      // Skew for that campy silly italic lean
+      ctx.transform(1, -0.08, 0.22, 1, 0, 0);
       // Adjust x/y for skew offset so text stays visually centered in zone
-      const skewOffsetX = textY * 0.18;
-      const skewOffsetY = textX * -0.06;
+      const skewOffsetX = textY * 0.22;
+      const skewOffsetY = textX * -0.08;
 
       ctx.font = `italic 900 ${fontSize}px "Arial Black",Impact,sans-serif`;
       ctx.textAlign = "center";
@@ -841,6 +843,15 @@ console.log(videoTask.output[0]);
     imageTimeRef.current = 0;
     imageCreditCostRef.current = 0;
 
+    track("Generate", {
+      style,
+      mode: genMode,
+      logo_source: logoMode === "upload" ? "upload" : CANVAS_STYLES.has(style) ? "canvas" : "ai",
+      image_model: imageModel,
+      video_model: videoModel,
+      duration: String(duration),
+    });
+
     // Upload mode: image is already known — skip image generation and review entirely
     if (logoMode === "upload") {
       if (!uploadedUri) return; // upload not complete — button should be disabled, but guard anyway
@@ -895,6 +906,7 @@ console.log(videoTask.output[0]);
       stopImageProgress(true);
       setImageUrl(imageData.imageUrl);
       imageCreditCostRef.current = imageData.creditCost ?? 0;
+      track("Logo Generated", { style, image_model: imageModel });
 
       if (genMode === "image-only") {
         setTimings({ image: imageTimeRef.current, video: 0 });
@@ -907,6 +919,7 @@ console.log(videoTask.output[0]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setStep("error");
+      track("Generation Error", { stage: "image" });
     } finally {
       stopTimer();
     }
@@ -957,6 +970,7 @@ console.log(videoTask.output[0]);
     setPollStatus(null);
     startTimer();
     setStep("video");
+    track("Video Started", { style, video_model: videoModel, duration: String(duration) });
 
     try {
       // Step 1: kick off the Runway task (fast, < 5s)
@@ -1002,6 +1016,7 @@ console.log(videoTask.output[0]);
           const videoTime = Date.now() - videoStart;
           setVideoUrl(output);
           setTimings({ image: imageTimeRef.current, video: videoTime });
+          track("Video Generated", { style, video_model: videoModel, duration: String(duration) });
           if (videoCreditsBefore > 0 && typeof creditsAfter === "number") {
             setCredits({ image: imageCreditCostRef.current, video: Math.max(0, videoCreditsBefore - creditsAfter) });
           }
@@ -1022,6 +1037,7 @@ console.log(videoTask.output[0]);
       setPollProgress(null);
       setError(e instanceof Error ? e.message : "Something went wrong");
       setStep("error");
+      track("Generation Error", { stage: "video" });
     } finally {
       stopTimer();
     }
@@ -2020,6 +2036,7 @@ console.log(videoTask.output[0]);
                       href={redditShareUrl(name.trim())}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => track("Share Reddit", { style })}
                       className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"
                     >
                       Post to r/plexprerolls
@@ -2028,6 +2045,7 @@ console.log(videoTask.output[0]);
                       href={tweetShareUrl(name.trim())}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => track("Share X", { style })}
                       className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"
                     >
                       Share on X
@@ -2037,6 +2055,7 @@ console.log(videoTask.output[0]);
                       download={makeFilename(name, style)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => track("Download Video", { style, video_model: videoModel })}
                       className="text-sm text-black font-medium px-4 py-1.5 rounded transition-all"
                       style={{ background: accentColor }}
                     >
