@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Cinzel } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -71,6 +70,17 @@ export default function RootLayout({
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
+        {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`,
+          }}
+        />
+        <script
+          defer
+          data-domain="streamroll.vercel.app"
+          src="https://plausible.joekarlsson.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <a
@@ -127,11 +137,6 @@ export default function RootLayout({
           }}
         />
         {children}
-        <Script id="plausible-init">{`window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`}</Script>
-        <Script
-          src="https://plausible.joekarlsson.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
-          data-domain="streamroll.vercel.app"
-        />
       </body>
     </html>
   );
