@@ -321,6 +321,7 @@ export default function Home() {
   const activeTaskIdRef = useRef<string | null>(null);
   const cancelRequestedRef = useRef(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const activePresetRef = useRef<string>("direct");
 
   useEffect(() => () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -435,6 +436,7 @@ export default function Home() {
   }
 
   function applyInspo(i: Preset) {
+    activePresetRef.current = i.name;
     setName(i.name);
     setTagline(i.tagline);
     setStyle(i.style);
@@ -845,6 +847,7 @@ console.log(videoTask.output[0]);
 
     track("Generate", {
       style,
+      preset: activePresetRef.current,
       mode: genMode,
       logo_source: logoMode === "upload" ? "upload" : CANVAS_STYLES.has(style) ? "canvas" : "ai",
       image_model: imageModel,
@@ -1149,6 +1152,7 @@ console.log(videoTask.output[0]);
                   key={s.id}
                   aria-pressed={isActive}
                   onClick={() => {
+                    activePresetRef.current = "direct";
                     setStyle(s.id);
                     const d = STYLE_DEFAULTS[s.id];
                     setVideoModel(d.videoModel);
