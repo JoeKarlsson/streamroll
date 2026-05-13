@@ -13,6 +13,9 @@ type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
 
 const SESSION_KEY = "streamroll_gen_state";
 
+// Set to true to re-enable Runway branding (Get Runway nav link, Runway docs + Powered by Runway footer)
+const SHOW_RUNWAY_BRANDING = false;
+
 // Per-style accent colors used for selected state
 const STYLE_COLOR: Record<Style, string> = {
   cinematic:  "#F59E0B",
@@ -1067,9 +1070,11 @@ console.log(videoTask.output[0]);
         <div className="flex items-center gap-5">
           <Link href="/how-it-works" className="hover:text-white transition-colors">How it&apos;s built</Link>
           <Link href="/setup" className="hover:text-white transition-colors">API key</Link>
-          <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-            Get Runway →
-          </a>
+          {SHOW_RUNWAY_BRANDING && (
+            <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              Get Runway →
+            </a>
+          )}
         </div>
       </nav>
 
@@ -2126,7 +2131,9 @@ console.log(videoTask.output[0]);
         <div className="flex items-center gap-4">
           <Link href="/how-it-works" className="hover:text-neutral-400 transition-colors">How it&apos;s built</Link>
           <a href={LINKS.repoGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Fork on GitHub</a>
-          <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Runway docs</a>
+          {SHOW_RUNWAY_BRANDING && (
+            <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Runway docs</a>
+          )}
           <a href={LINKS.runwayCommunity} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Discord</a>
           <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Get API key</a>
         </div>
@@ -2139,10 +2146,14 @@ console.log(videoTask.output[0]);
             <span>·</span>
             <a href={BUILDER.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-500 transition-colors">LinkedIn</a>
           </div>
-          <span className="text-neutral-800">|</span>
-          <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">
-            Powered by Runway
-          </a>
+          {SHOW_RUNWAY_BRANDING && (
+            <>
+              <span className="text-neutral-800">|</span>
+              <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">
+                Powered by Runway
+              </a>
+            </>
+          )}
         </div>
       </footer>
     </main>
