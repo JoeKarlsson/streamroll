@@ -45,24 +45,24 @@ const STYLE_COLOR: Record<Style, string> = {
 };
 
 const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string; image?: string }[] = [
-  { id: "prestige",   label: "Netflix",         emoji: "🔴", desc: "Bold red on black",            tip: "Auto: Gen4.5 · Minimal · 4s",        image: "/previews/style-prestige.png" },
-  { id: "cinematic",  label: "Cinematic",       emoji: "🎬", desc: "Navy & gold, film grain",       tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-cinematic.png" },
-  { id: "retro",      label: "Retro",           emoji: "📺", desc: "80s neon synthwave",            tip: "Auto: Gen4 Turbo · Full Bleed · 5s", image: "/previews/style-retro.png" },
-  { id: "futuristic", label: "Futuristic",      emoji: "🚀", desc: "Holographic chrome",            tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-futuristic.png" },
-  { id: "minimal",    label: "Minimal",         emoji: "✦",  desc: "Clean & elegant",               tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-minimal.png" },
-  { id: "horror",     label: "Horror",          emoji: "🩸", desc: "Gothic, fog & shadow",          tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-horror.png" },
-  { id: "anime",      label: "Anime",           emoji: "⚡", desc: "Shonen energy burst",           tip: "Auto: Gen4.5 · Full Bleed · 4s",     image: "/previews/style-anime.png" },
-  { id: "adultswim",  label: "Adult Swim",      emoji: "📺", desc: "Black screen, white text",      tip: "Auto: Gen4 Turbo · Minimal · 2s",    image: "/previews/style-adultswim.png" },
-  { id: "cartoon",    label: "Cartoon Network", emoji: "🟥", desc: "Checkerboard graphic pop",      tip: "Auto: Gen4 Turbo · Full Bleed · 4s", image: "/previews/style-cartoon.png" },
-  { id: "vhs",        label: "VHS",             emoji: "📼", desc: "Tracking errors, tape decay",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-vhs.png" },
-  { id: "grindhouse", label: "Grindhouse",      emoji: "🎞️", desc: "Psychedelic cinema pre-show",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-grindhouse.png" },
-  { id: "lofi",       label: "Lo-fi",           emoji: "🎧", desc: "Cozy rain, study beats",        tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-lofi.png" },
-  { id: "vaporwave",  label: "Vaporwave",       emoji: "🌴", desc: "Pastel grid, marble busts",     tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-vaporwave.png" },
-  { id: "cyberpunk",  label: "Cyberpunk",       emoji: "🌆", desc: "Neon rain, dark mega-city",     tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-cyberpunk.png" },
-  { id: "hbo",        label: "HBO",             emoji: "⬛", desc: "3D chrome letters, star field", tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-hbo.png" },
-  { id: "epic",       label: "Epic",            emoji: "⚔️", desc: "Golden hour, dust",             tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-epic.png" },
-  { id: "nature",     label: "Nature",          emoji: "🌿", desc: "Earthy documentary",            tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-nature.png" },
-  { id: "blockbuster",label: "Blockbuster",     emoji: "🎫", desc: "Yellow on navy, video store",   tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-blockbuster.png" },
+  { id: "prestige",   label: "Netflix",         emoji: "🔴", desc: "Bold red on black",            tip: "Auto: Gen4.5 · Minimal · 4s",        image: "/previews/style-prestige.jpg" },
+  { id: "cinematic",  label: "Cinematic",       emoji: "🎬", desc: "Navy & gold, film grain",       tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-cinematic.jpg" },
+  { id: "retro",      label: "Retro",           emoji: "📺", desc: "80s neon synthwave",            tip: "Auto: Gen4 Turbo · Full Bleed · 5s", image: "/previews/style-retro.jpg" },
+  { id: "futuristic", label: "Futuristic",      emoji: "🚀", desc: "Holographic chrome",            tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-futuristic.jpg" },
+  { id: "minimal",    label: "Minimal",         emoji: "✦",  desc: "Clean & elegant",               tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-minimal.jpg" },
+  { id: "horror",     label: "Horror",          emoji: "🩸", desc: "Gothic, fog & shadow",          tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-horror.jpg" },
+  { id: "anime",      label: "Anime",           emoji: "⚡", desc: "Shonen energy burst",           tip: "Auto: Gen4.5 · Full Bleed · 4s",     image: "/previews/style-anime.jpg" },
+  { id: "adultswim",  label: "Adult Swim",      emoji: "📺", desc: "Black screen, white text",      tip: "Auto: Gen4 Turbo · Minimal · 2s",    image: "/previews/style-adultswim.jpg" },
+  { id: "cartoon",    label: "Cartoon Network", emoji: "🟥", desc: "Checkerboard graphic pop",      tip: "Auto: Gen4 Turbo · Full Bleed · 4s", image: "/previews/style-cartoon.jpg" },
+  { id: "vhs",        label: "VHS",             emoji: "📼", desc: "Tracking errors, tape decay",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-vhs.jpg" },
+  { id: "grindhouse", label: "Grindhouse",      emoji: "🎞️", desc: "Psychedelic cinema pre-show",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-grindhouse.jpg" },
+  { id: "lofi",       label: "Lo-fi",           emoji: "🎧", desc: "Cozy rain, study beats",        tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-lofi.jpg" },
+  { id: "vaporwave",  label: "Vaporwave",       emoji: "🌴", desc: "Pastel grid, marble busts",     tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-vaporwave.jpg" },
+  { id: "cyberpunk",  label: "Cyberpunk",       emoji: "🌆", desc: "Neon rain, dark mega-city",     tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-cyberpunk.jpg" },
+  { id: "hbo",        label: "HBO",             emoji: "⬛", desc: "3D chrome letters, star field", tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-hbo.jpg" },
+  { id: "epic",       label: "Epic",            emoji: "⚔️", desc: "Golden hour, dust",             tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-epic.jpg" },
+  { id: "nature",     label: "Nature",          emoji: "🌿", desc: "Earthy documentary",            tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-nature.jpg" },
+  { id: "blockbuster",label: "Blockbuster",     emoji: "🎫", desc: "Yellow on navy, video store",   tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-blockbuster.jpg" },
 ];
 
 const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageModel; treatment: Treatment; duration: Duration }> = {
@@ -150,26 +150,26 @@ const INSPO: Preset[] = [
 ];
 
 const SEASONAL: Preset[] = [
-  { name: "Fall",   emoji: "🍂", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   vibe: "Warm amber tones, golden autumn light, falling leaves",  image: "/previews/fall.png",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
-  { name: "Winter", emoji: "❄️", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", vibe: "Icy blue-white palette, clean snowfall, minimalist",      image: "/previews/winter.png", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
-  { name: "Spring", emoji: "🌸", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", vibe: "Cherry blossoms, anime pastel colors, nature awakening",  image: "/previews/spring.png", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
-  { name: "Summer", emoji: "☀️", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", vibe: "Bold bright energy, blazing golden sun, epic scale",       image: "/previews/summer.png", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
+  { name: "Fall",   emoji: "🍂", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   vibe: "Warm amber tones, golden autumn light, falling leaves",  image: "/previews/fall.jpg",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
+  { name: "Winter", emoji: "❄️", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", vibe: "Icy blue-white palette, clean snowfall, minimalist",      image: "/previews/winter.jpg", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
+  { name: "Spring", emoji: "🌸", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", vibe: "Cherry blossoms, anime pastel colors, nature awakening",  image: "/previews/spring.jpg", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
+  { name: "Summer", emoji: "☀️", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", vibe: "Bold bright energy, blazing golden sun, epic scale",       image: "/previews/summer.jpg", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
 ];
 
 const HOLIDAYS: Preset[] = [
-  { name: "Easter",         emoji: "🐣", style: "lofi",       tagline: "Where stories bloom",           desc: "Easter",           vibe: "Soft spring pastels, wildflowers, robin egg blue",         image: "/previews/easter.png",       customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
-  { name: "Mother's Day",   emoji: "💐", style: "lofi",       tagline: "With love, always",              desc: "Mother's Day",     vibe: "Garden roses, warm golden morning light",                  image: "/previews/mothers-day.png",  customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
-  { name: "Father's Day",   emoji: "👨", style: "epic",       tagline: "Dad approved content",           desc: "Father's Day",     vibe: "Golden americana, amber summer afternoon",                  image: "/previews/fathers-day.png",  customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
-  { name: "Halloween",      emoji: "🎃", style: "horror",     tagline: "Horror has a home",              desc: "Halloween",        vibe: "Jack-o-lanterns, orange & black, gothic horror",            image: "/previews/halloween.png",    customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
-  { name: "Christmas",      emoji: "🎄", style: "cinematic",  tagline: "The magic of Christmas",         desc: "Christmas",        vibe: "Holiday reds & greens, glowing ornaments, snowfall",        image: "/previews/christmas.png",    customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
-  { name: "New Year's Eve", emoji: "🎆", style: "futuristic", tagline: "The future starts tonight",      desc: "New Year's Eve",   vibe: "Gold & silver fireworks, midnight countdown",               image: "/previews/new-years.png",    customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
-  { name: "Oscar Night",    emoji: "🏆", style: "cinematic",  tagline: "And the award goes to...",       desc: "Oscar Night",      vibe: "Red carpet glamour, gleaming gold statuettes",              image: "/previews/oscars.png",       customNotes: "Hollywood red carpet, gleaming gold award statuettes, black-tie glamour, sequins and spotlights" },
-  { name: "Pride",          emoji: "🌈", style: "epic",       tagline: "Stream with pride",              desc: "Pride",            vibe: "Full ROYGBIV rainbow explosion, joyful celebration energy", image: "/previews/pride.png",        customNotes: "rainbow pride flag spectrum — vivid red orange yellow green blue violet rays bursting outward from behind the logo, full saturated ROYGBIV color explosion, joyful pride parade celebration energy, love and joy radiating in every direction" },
-  { name: "Valentine's Day",emoji: "💝", style: "retro",      tagline: "For the love of streaming",      desc: "Valentine's Day",  vibe: "Hearts & roses, romantic pink and crimson",                 image: "/previews/valentines.png",   customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
-  { name: "St. Patrick's Day",emoji:"🍀",style: "nature",     tagline: "Stream your luck tonight",       desc: "St. Patrick's Day",vibe: "Vivid Irish green, shamrocks, golden sunlight",             image: "/previews/st-patricks.png",  customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
-  { name: "Fourth of July", emoji: "🗽", style: "epic",       tagline: "Independence from bad content",  desc: "Fourth of July",   vibe: "Red, white & blue fireworks, patriotic night sky",          image: "/previews/fourth-of-july.png",customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
-  { name: "Thanksgiving",   emoji: "🦃", style: "cinematic",  tagline: "Gather and stream together",     desc: "Thanksgiving",     vibe: "Harvest warmth, cornucopia, earthy autumn tones",           image: "/previews/thanksgiving.png", customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
-  { name: "Hanukkah",       emoji: "🕎", style: "minimal",    tagline: "Eight nights of great picks",    desc: "Hanukkah",         vibe: "Blue & silver, glowing menorah, Festival of Lights",        image: "/previews/hanukkah.png",     customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
+  { name: "Easter",         emoji: "🐣", style: "lofi",       tagline: "Where stories bloom",           desc: "Easter",           vibe: "Soft spring pastels, wildflowers, robin egg blue",         image: "/previews/easter.jpg",       customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
+  { name: "Mother's Day",   emoji: "💐", style: "lofi",       tagline: "With love, always",              desc: "Mother's Day",     vibe: "Garden roses, warm golden morning light",                  image: "/previews/mothers-day.jpg",  customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
+  { name: "Father's Day",   emoji: "👨", style: "epic",       tagline: "Dad approved content",           desc: "Father's Day",     vibe: "Golden americana, amber summer afternoon",                  image: "/previews/fathers-day.jpg",  customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
+  { name: "Halloween",      emoji: "🎃", style: "horror",     tagline: "Horror has a home",              desc: "Halloween",        vibe: "Jack-o-lanterns, orange & black, gothic horror",            image: "/previews/halloween.jpg",    customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
+  { name: "Christmas",      emoji: "🎄", style: "cinematic",  tagline: "The magic of Christmas",         desc: "Christmas",        vibe: "Holiday reds & greens, glowing ornaments, snowfall",        image: "/previews/christmas.jpg",    customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
+  { name: "New Year's Eve", emoji: "🎆", style: "futuristic", tagline: "The future starts tonight",      desc: "New Year's Eve",   vibe: "Gold & silver fireworks, midnight countdown",               image: "/previews/new-years.jpg",    customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
+  { name: "Oscar Night",    emoji: "🏆", style: "cinematic",  tagline: "And the award goes to...",       desc: "Oscar Night",      vibe: "Red carpet glamour, gleaming gold statuettes",              image: "/previews/oscars.jpg",       customNotes: "Hollywood red carpet, gleaming gold award statuettes, black-tie glamour, sequins and spotlights" },
+  { name: "Pride",          emoji: "🌈", style: "epic",       tagline: "Stream with pride",              desc: "Pride",            vibe: "Full ROYGBIV rainbow explosion, joyful celebration energy", image: "/previews/pride.jpg",        customNotes: "rainbow pride flag spectrum — vivid red orange yellow green blue violet rays bursting outward from behind the logo, full saturated ROYGBIV color explosion, joyful pride parade celebration energy, love and joy radiating in every direction" },
+  { name: "Valentine's Day",emoji: "💝", style: "retro",      tagline: "For the love of streaming",      desc: "Valentine's Day",  vibe: "Hearts & roses, romantic pink and crimson",                 image: "/previews/valentines.jpg",   customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
+  { name: "St. Patrick's Day",emoji:"🍀",style: "nature",     tagline: "Stream your luck tonight",       desc: "St. Patrick's Day",vibe: "Vivid Irish green, shamrocks, golden sunlight",             image: "/previews/st-patricks.jpg",  customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
+  { name: "Fourth of July", emoji: "🗽", style: "epic",       tagline: "Independence from bad content",  desc: "Fourth of July",   vibe: "Red, white & blue fireworks, patriotic night sky",          image: "/previews/fourth-of-july.jpg",customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
+  { name: "Thanksgiving",   emoji: "🦃", style: "cinematic",  tagline: "Gather and stream together",     desc: "Thanksgiving",     vibe: "Harvest warmth, cornucopia, earthy autumn tones",           image: "/previews/thanksgiving.jpg", customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
+  { name: "Hanukkah",       emoji: "🕎", style: "minimal",    tagline: "Eight nights of great picks",    desc: "Hanukkah",         vibe: "Blue & silver, glowing menorah, Festival of Lights",        image: "/previews/hanukkah.jpg",     customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
 
 
@@ -201,7 +201,7 @@ const STUDIOS: Preset[] = [
   },
   {
     name: "Emergency Broadcast", emoji: "📡", style: "ebs", tagline: "This is not a test",
-    desc: "Emergency Broadcast", vibe: "SMPTE color bars, monospace alert text, broadcast signal", image: "/previews/ebs.png",
+    desc: "Emergency Broadcast", vibe: "SMPTE color bars, monospace alert text, broadcast signal", image: "/previews/ebs.jpg",
     videoPromptOverride: `SMPTE color bars hold completely static on screen. A harsh single-frequency tone. The black label bar with white monospace text flashes urgently twice, then holds steady. Pure broadcast emergency energy. No camera movement. Static and tense.`,
   },
 ];
@@ -1155,13 +1155,13 @@ export default function Home() {
                 <button
                   aria-pressed={isActive}
                   aria-label="Blank Slate — Cinematic base, your name and brand"
-                  onClick={() => applyInspo({ name: "My Service", style: "cinematic", tagline: "", desc: "Blank Slate", vibe: "Cinematic base — your name, your brand", image: "/previews/blank-slate.png", customNotes: "" })}
+                  onClick={() => applyInspo({ name: "My Service", style: "cinematic", tagline: "", desc: "Blank Slate", vibe: "Cinematic base — your name, your brand", image: "/previews/blank-slate.jpg", customNotes: "" })}
                   disabled={isGenerating}
                   className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-50 text-left"
                   style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#262626", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/previews/blank-slate.png" alt="Blank Slate" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src="/previews/blank-slate.jpg" alt="Blank Slate" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-2.5" style={{ background: "rgba(0,0,0,0.72)" }}>
                     <p className="text-xs text-center leading-snug text-neutral-200">Cinematic base — your name, your brand</p>
