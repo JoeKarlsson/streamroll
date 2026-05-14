@@ -168,7 +168,7 @@ export default function SetupPage() {
           <div className="flex justify-between"><span>Logo image (Gen4 Image)</span><span className="text-neutral-500">~30 cr</span></div>
           <div className="flex justify-between"><span>Logo image (Gen4 Image Turbo)</span><span className="text-neutral-500">~15 cr</span></div>
           <div className="flex justify-between"><span>Logo image (Gemini 2.5 Flash)</span><span className="text-neutral-500">~10 cr</span></div>
-          <div className="flex justify-between text-neutral-600"><span>— canvas styles (Adult Swim, Minimal, Prestige)</span><span>0 cr</span></div>
+          <div className="flex justify-between text-neutral-600"><span>canvas styles (Adult Swim, Minimal, Prestige)</span><span>0 cr</span></div>
           <div className="mt-2 flex justify-between"><span>2s video (Gen4 Turbo)</span><span className="text-neutral-500">10 cr</span></div>
           <div className="flex justify-between"><span>5s video (Gen4 Turbo)</span><span className="text-neutral-500">25 cr</span></div>
           <div className="flex justify-between"><span>5s video (Gen4.5)</span><span className="text-neutral-500">60 cr</span></div>

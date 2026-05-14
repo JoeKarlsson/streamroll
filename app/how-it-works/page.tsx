@@ -117,7 +117,7 @@ export default function HowItWorksPage() {
 
         {/* Audio tip */}
         <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-5 mb-10">
-          <div className="font-semibold mb-1 text-sm">The video is silent — add music</div>
+          <div className="font-semibold mb-1 text-sm">The video is silent: add music</div>
           <p className="text-sm text-neutral-400 leading-relaxed mb-3">
             Runway generates video only. For a full cinematic intro, generate royalty-free music with{" "}
             <a href="https://www.udio.com" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-2 hover:text-neutral-300">Udio</a>
@@ -145,10 +145,10 @@ export default function HowItWorksPage() {
             4 · Add to your media server
           </h2>
           <p className="text-sm text-neutral-500 mb-3">
-            Download the .mp4 and drop it into Plex, Jellyfin, or Emby. Each platform has a pre-roll setting — here&apos;s where to find it.
+            Download the .mp4 and drop it into Plex, Jellyfin, or Emby. Each platform has a pre-roll setting. Here&apos;s where to find it.
           </p>
           <div className="text-xs text-neutral-600 bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 mb-5">
-            <span className="text-neutral-400 font-medium">Pro tip:</span> Generate 3–5 variants with different styles and point your server at the whole folder. Plex, Jellyfin, and Emby all support random rotation — you get a different intro every session.
+            <span className="text-neutral-400 font-medium">Pro tip:</span> Generate 3–5 variants with different styles and point your server at the whole folder. Plex, Jellyfin, and Emby all support random rotation, so you get a different intro every session.
           </div>
           <div className="space-y-3">
             {[

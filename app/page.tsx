@@ -44,25 +44,25 @@ const STYLE_COLOR: Record<Style, string> = {
   ebs:         "#22C55E",
 };
 
-const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string }[] = [
-  { id: "prestige",   label: "Netflix",    emoji: "🔴", desc: "Bold red on black",       tip: "Auto: Gen4.5 · Minimal · 4s" },
-  { id: "cinematic",  label: "Cinematic",  emoji: "🎬", desc: "Navy & gold, film grain",  tip: "Auto: Gen4.5 · Full Bleed · 5s" },
-  { id: "retro",      label: "Retro",      emoji: "📺", desc: "80s neon synthwave",       tip: "Auto: Gen4 Turbo · Full Bleed · 5s" },
-  { id: "futuristic", label: "Futuristic", emoji: "🚀", desc: "Holographic chrome",       tip: "Auto: Gen4.5 · Full Bleed · 5s" },
-  { id: "minimal",    label: "Minimal",    emoji: "✦",  desc: "Clean & elegant",          tip: "Auto: Gen4 Turbo · Minimal · 4s" },
-  { id: "horror",     label: "Horror",     emoji: "🩸", desc: "Gothic, fog & shadow",     tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
-  { id: "anime",      label: "Anime",      emoji: "⚡", desc: "Shonen energy burst",      tip: "Auto: Gen4.5 · Full Bleed · 4s" },
-  { id: "adultswim",  label: "Adult Swim", emoji: "📺", desc: "Black screen, white text",   tip: "Auto: Gen4 Turbo · Minimal · 2s" },
-  { id: "cartoon",    label: "Cartoon Network", emoji: "🟥", desc: "Checkerboard graphic pop",   tip: "Auto: Gen4 Turbo · Full Bleed · 4s" },
-  { id: "vhs",        label: "VHS",             emoji: "📼", desc: "Tracking errors, tape decay", tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
-  { id: "grindhouse", label: "Grindhouse",      emoji: "🎞️", desc: "Psychedelic cinema pre-show", tip: "Auto: Gen4 Turbo · Theatrical · 5s" },
-  { id: "lofi",       label: "Lo-fi",           emoji: "🎧", desc: "Cozy rain, study beats",      tip: "Auto: Gen4 Turbo · Minimal · 4s" },
-  { id: "vaporwave",  label: "Vaporwave",       emoji: "🌴", desc: "Pastel grid, marble busts",    tip: "Auto: Gen4.5 · Full Bleed · 5s" },
-  { id: "cyberpunk",  label: "Cyberpunk",       emoji: "🌆", desc: "Neon rain, dark mega-city",    tip: "Auto: Gen4.5 · Theatrical · 5s" },
-  { id: "hbo",        label: "HBO",             emoji: "⬛", desc: "3D chrome letters, star field", tip: "Auto: Gen4.5 · Theatrical · 5s" },
-  { id: "epic",        label: "Epic",        emoji: "⚔️", desc: "Golden hour, dust",          tip: "Auto: Gen4.5 · Theatrical · 5s" },
-  { id: "nature",      label: "Nature",      emoji: "🌿", desc: "Earthy documentary",         tip: "Auto: Gen4 Turbo · Minimal · 4s" },
-  { id: "blockbuster", label: "Blockbuster", emoji: "🎫", desc: "Yellow on navy, video store", tip: "Auto: Gen4.5 · Theatrical · 5s" },
+const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string; image?: string }[] = [
+  { id: "prestige",   label: "Netflix",         emoji: "🔴", desc: "Bold red on black",            tip: "Auto: Gen4.5 · Minimal · 4s",        image: "/previews/style-prestige.png" },
+  { id: "cinematic",  label: "Cinematic",       emoji: "🎬", desc: "Navy & gold, film grain",       tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-cinematic.png" },
+  { id: "retro",      label: "Retro",           emoji: "📺", desc: "80s neon synthwave",            tip: "Auto: Gen4 Turbo · Full Bleed · 5s", image: "/previews/style-retro.png" },
+  { id: "futuristic", label: "Futuristic",      emoji: "🚀", desc: "Holographic chrome",            tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-futuristic.png" },
+  { id: "minimal",    label: "Minimal",         emoji: "✦",  desc: "Clean & elegant",               tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-minimal.png" },
+  { id: "horror",     label: "Horror",          emoji: "🩸", desc: "Gothic, fog & shadow",          tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-horror.png" },
+  { id: "anime",      label: "Anime",           emoji: "⚡", desc: "Shonen energy burst",           tip: "Auto: Gen4.5 · Full Bleed · 4s",     image: "/previews/style-anime.png" },
+  { id: "adultswim",  label: "Adult Swim",      emoji: "📺", desc: "Black screen, white text",      tip: "Auto: Gen4 Turbo · Minimal · 2s",    image: "/previews/style-adultswim.png" },
+  { id: "cartoon",    label: "Cartoon Network", emoji: "🟥", desc: "Checkerboard graphic pop",      tip: "Auto: Gen4 Turbo · Full Bleed · 4s", image: "/previews/style-cartoon.png" },
+  { id: "vhs",        label: "VHS",             emoji: "📼", desc: "Tracking errors, tape decay",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-vhs.png" },
+  { id: "grindhouse", label: "Grindhouse",      emoji: "🎞️", desc: "Psychedelic cinema pre-show",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-grindhouse.png" },
+  { id: "lofi",       label: "Lo-fi",           emoji: "🎧", desc: "Cozy rain, study beats",        tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-lofi.png" },
+  { id: "vaporwave",  label: "Vaporwave",       emoji: "🌴", desc: "Pastel grid, marble busts",     tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-vaporwave.png" },
+  { id: "cyberpunk",  label: "Cyberpunk",       emoji: "🌆", desc: "Neon rain, dark mega-city",     tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-cyberpunk.png" },
+  { id: "hbo",        label: "HBO",             emoji: "⬛", desc: "3D chrome letters, star field", tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-hbo.png" },
+  { id: "epic",       label: "Epic",            emoji: "⚔️", desc: "Golden hour, dust",             tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-epic.png" },
+  { id: "nature",     label: "Nature",          emoji: "🌿", desc: "Earthy documentary",            tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-nature.png" },
+  { id: "blockbuster",label: "Blockbuster",     emoji: "🎫", desc: "Yellow on navy, video store",   tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-blockbuster.png" },
 ];
 
 const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageModel; treatment: Treatment; duration: Duration }> = {
@@ -127,87 +127,81 @@ const DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 10, label: "10s", est: "~60 sec" },
 ];
 
-type Preset = { name: string; style: Style; tagline: string; desc: string; emoji?: string; customNotes?: string; videoPromptOverride?: string };
+type Preset = { name: string; style: Style; tagline: string; desc: string; vibe: string; emoji?: string; customNotes?: string; videoPromptOverride?: string; image?: string };
 
 const INSPO: Preset[] = [
-  { name: "Joeflix",   style: "prestige",   tagline: "Where stories come alive",  desc: "Example · your name here" },
-  { name: "NightOwl",  style: "horror",     tagline: "Streaming after dark",       desc: "Late-night horror hub" },
-  { name: "SkyBox",    style: "futuristic", tagline: "Beyond the horizon",         desc: "Sci-fi & space content" },
-  { name: "VibeTube",  style: "retro",      tagline: "Totally tubular",            desc: "80s & 90s nostalgia" },
-  { name: "SakuraTV",  style: "anime",      tagline: "Stories bloom here",         desc: "Anime & animation" },
-  { name: "EpicQuest", style: "epic",       tagline: "Every story is legendary",   desc: "Action & adventure" },
-  { name: "TerraDoc",  style: "nature",     tagline: "The world, unfiltered",      desc: "Nature documentaries" },
-  { name: "WhiteRoom", style: "minimal",    tagline: "Less is more",               desc: "Arthouse & indie film" },
-  { name: "LateNight",   style: "adultswim",  tagline: "on after dark",               desc: "Adult Swim bumper" },
-  { name: "CheckerBox", style: "cartoon",    tagline: "Serious about fun",           desc: "Cartoon Network style" },
-  { name: "RewindFlix", style: "vhs",        tagline: "Be kind, rewind",             desc: "90s home video" },
-  { name: "DriveInFlix",style: "grindhouse", tagline: "NOW SHOWING",                 desc: "Drive-in theater" },
-  { name: "ChillFlix",  style: "lofi",       tagline: "beats to stream to",          desc: "Lo-fi study beats" },
-  { name: "VaporFlix",  style: "vaporwave",  tagline: "aesthetic dreams",             desc: "Vaporwave" },
-  { name: "NeonCity",   style: "cyberpunk",  tagline: "The future is now",            desc: "Cyberpunk night city" },
-  { name: "StaticFlix",  style: "hbo",         tagline: "It's not TV",                  desc: "HBO prestige style" },
-  { name: "VideoVault",  style: "blockbuster", tagline: "Make it a Blockbuster night",   desc: "Video store nostalgia" },
+  { name: "Joeflix",    style: "prestige",    tagline: "Where stories come alive",         desc: "Example · your name here", vibe: "Bold crimson wordmark, premium streaming identity" },
+  { name: "NightOwl",   style: "horror",      tagline: "Streaming after dark",             desc: "Late-night horror hub",    vibe: "Blood red & black, gothic fog, candlelit" },
+  { name: "SkyBox",     style: "futuristic",  tagline: "Beyond the horizon",               desc: "Sci-fi & space content",   vibe: "Holographic chrome, electric cyan, sci-fi glitch" },
+  { name: "VibeTube",   style: "retro",       tagline: "Totally tubular",                  desc: "80s & 90s nostalgia",      vibe: "Neon synthwave, hot pink & electric blue, CRT glow" },
+  { name: "SakuraTV",   style: "anime",       tagline: "Stories bloom here",               desc: "Anime & animation",        vibe: "Shonen energy burst, speed lines, electric aura" },
+  { name: "EpicQuest",  style: "epic",        tagline: "Every story is legendary",         desc: "Action & adventure",       vibe: "Golden hour dust, monumental scale, bronze & amber" },
+  { name: "TerraDoc",   style: "nature",      tagline: "The world, unfiltered",            desc: "Nature documentaries",     vibe: "Lush green, earthy organic tones, soft natural light" },
+  { name: "WhiteRoom",  style: "minimal",     tagline: "Less is more",                     desc: "Arthouse & indie film",    vibe: "Clean white type, soft gradient, understated" },
+  { name: "LateNight",  style: "adultswim",   tagline: "on after dark",                    desc: "Adult Swim bumper",        vibe: "Pure black, deadpan white Helvetica text" },
+  { name: "CheckerBox", style: "cartoon",     tagline: "Serious about fun",                desc: "Cartoon Network style",    vibe: "Black & white checkerboard tiles, flat primary colors" },
+  { name: "RewindFlix", style: "vhs",         tagline: "Be kind, rewind",                  desc: "90s home video",           vibe: "VHS tracking errors, washed-out colors, scan lines" },
+  { name: "DriveInFlix",style: "grindhouse",  tagline: "NOW SHOWING",                      desc: "Drive-in theater",         vibe: "Kaleidoscopic rings, max-saturation, film grain" },
+  { name: "ChillFlix",  style: "lofi",        tagline: "beats to stream to",               desc: "Lo-fi study beats",        vibe: "Cozy anime interior, rain on window, warm lamp glow" },
+  { name: "VaporFlix",  style: "vaporwave",   tagline: "aesthetic dreams",                 desc: "Vaporwave",                vibe: "Marble bust, magenta/cyan grid, chromatic aberration" },
+  { name: "NeonCity",   style: "cyberpunk",   tagline: "The future is now",                desc: "Cyberpunk night city",     vibe: "Rain-soaked megacity, neon signs, Blade Runner mood" },
+  { name: "StaticFlix", style: "hbo",         tagline: "It's not TV",                      desc: "HBO prestige style",       vibe: "3D chrome letters, fiber optic light disc, star field" },
+  { name: "VideoVault", style: "blockbuster", tagline: "Make it a Blockbuster night",      desc: "Video store nostalgia",    vibe: "Gold on navy blue, bold block lettering, late 80s" },
 ];
 
 const SEASONAL: Preset[] = [
-  { name: "AutumnFlix",  emoji: "🍂", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
-  { name: "WinterFlix",  emoji: "❄️", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
-  { name: "SpringFlix",  emoji: "🌸", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
-  { name: "SummerFlix",  emoji: "☀️", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
+  { name: "Fall",   emoji: "🍂", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   vibe: "Warm amber tones, golden autumn light, falling leaves",  image: "/previews/fall.png",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
+  { name: "Winter", emoji: "❄️", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", vibe: "Icy blue-white palette, clean snowfall, minimalist",      image: "/previews/winter.png", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
+  { name: "Spring", emoji: "🌸", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", vibe: "Cherry blossoms, anime pastel colors, nature awakening",  image: "/previews/spring.png", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
+  { name: "Summer", emoji: "☀️", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", vibe: "Bold bright energy, blazing golden sun, epic scale",       image: "/previews/summer.png", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
 ];
 
 const HOLIDAYS: Preset[] = [
-  { name: "SpringBloom",  emoji: "🐣", style: "lofi",      tagline: "Where stories bloom",           desc: "Easter",          customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
-  { name: "MomFlix",      emoji: "💐", style: "lofi",      tagline: "With love, always",              desc: "Mother's Day",    customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
-  { name: "DadFlix",      emoji: "👨", style: "epic",      tagline: "Dad approved content",           desc: "Father's Day",    customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
-  { name: "SpookFlix",    emoji: "🎃", style: "horror",    tagline: "Horror has a home",             desc: "Halloween",       customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
-  { name: "ChristmasFlix",emoji: "🎄", style: "cinematic", tagline: "The magic of Christmas",        desc: "Christmas",       customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
-  { name: "NightStream",  emoji: "🎆", style: "futuristic",tagline: "The future starts tonight",     desc: "New Year's Eve",  customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
-  { name: "AwardsFlix",   emoji: "🏆", style: "cinematic", tagline: "And the award goes to...",      desc: "Oscar Night",     customNotes: "Hollywood red carpet, gleaming gold award statuettes, black-tie glamour, sequins and spotlights" },
-  { name: "PrideFlix",    emoji: "🌈", style: "epic",        tagline: "Stream with pride",             desc: "Pride",           customNotes: "rainbow pride flag spectrum — vivid red orange yellow green blue violet rays bursting outward from behind the logo, full saturated ROYGBIV color explosion, joyful pride parade celebration energy, love and joy radiating in every direction" },
-  { name: "LoveBox",      emoji: "💝", style: "retro",     tagline: "For the love of streaming",     desc: "Valentine's Day", customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
-  { name: "LuckyStream",  emoji: "🍀", style: "nature",    tagline: "Stream your luck tonight",      desc: "St. Patrick's Day",customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
-  { name: "FreedomFlix",  emoji: "🗽", style: "epic",      tagline: "Independence from bad content", desc: "Fourth of July",  customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
-  { name: "HarvestFlix",  emoji: "🦃", style: "cinematic", tagline: "Gather and stream together",    desc: "Thanksgiving",    customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
-  { name: "LuminaryFlix", emoji: "🕎", style: "minimal",   tagline: "Eight nights of great picks",   desc: "Hanukkah",        customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
+  { name: "Easter",         emoji: "🐣", style: "lofi",       tagline: "Where stories bloom",           desc: "Easter",           vibe: "Soft spring pastels, wildflowers, robin egg blue",         image: "/previews/easter.png",       customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
+  { name: "Mother's Day",   emoji: "💐", style: "lofi",       tagline: "With love, always",              desc: "Mother's Day",     vibe: "Garden roses, warm golden morning light",                  image: "/previews/mothers-day.png",  customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
+  { name: "Father's Day",   emoji: "👨", style: "epic",       tagline: "Dad approved content",           desc: "Father's Day",     vibe: "Golden americana, amber summer afternoon",                  image: "/previews/fathers-day.png",  customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
+  { name: "Halloween",      emoji: "🎃", style: "horror",     tagline: "Horror has a home",              desc: "Halloween",        vibe: "Jack-o-lanterns, orange & black, gothic horror",            image: "/previews/halloween.png",    customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
+  { name: "Christmas",      emoji: "🎄", style: "cinematic",  tagline: "The magic of Christmas",         desc: "Christmas",        vibe: "Holiday reds & greens, glowing ornaments, snowfall",        image: "/previews/christmas.png",    customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
+  { name: "New Year's Eve", emoji: "🎆", style: "futuristic", tagline: "The future starts tonight",      desc: "New Year's Eve",   vibe: "Gold & silver fireworks, midnight countdown",               image: "/previews/new-years.png",    customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
+  { name: "Oscar Night",    emoji: "🏆", style: "cinematic",  tagline: "And the award goes to...",       desc: "Oscar Night",      vibe: "Red carpet glamour, gleaming gold statuettes",              image: "/previews/oscars.png",       customNotes: "Hollywood red carpet, gleaming gold award statuettes, black-tie glamour, sequins and spotlights" },
+  { name: "Pride",          emoji: "🌈", style: "epic",       tagline: "Stream with pride",              desc: "Pride",            vibe: "Full ROYGBIV rainbow explosion, joyful celebration energy", image: "/previews/pride.png",        customNotes: "rainbow pride flag spectrum — vivid red orange yellow green blue violet rays bursting outward from behind the logo, full saturated ROYGBIV color explosion, joyful pride parade celebration energy, love and joy radiating in every direction" },
+  { name: "Valentine's Day",emoji: "💝", style: "retro",      tagline: "For the love of streaming",      desc: "Valentine's Day",  vibe: "Hearts & roses, romantic pink and crimson",                 image: "/previews/valentines.png",   customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
+  { name: "St. Patrick's Day",emoji:"🍀",style: "nature",     tagline: "Stream your luck tonight",       desc: "St. Patrick's Day",vibe: "Vivid Irish green, shamrocks, golden sunlight",             image: "/previews/st-patricks.png",  customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
+  { name: "Fourth of July", emoji: "🗽", style: "epic",       tagline: "Independence from bad content",  desc: "Fourth of July",   vibe: "Red, white & blue fireworks, patriotic night sky",          image: "/previews/fourth-of-july.png",customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
+  { name: "Thanksgiving",   emoji: "🦃", style: "cinematic",  tagline: "Gather and stream together",     desc: "Thanksgiving",     vibe: "Harvest warmth, cornucopia, earthy autumn tones",           image: "/previews/thanksgiving.png", customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
+  { name: "Hanukkah",       emoji: "🕎", style: "minimal",    tagline: "Eight nights of great picks",    desc: "Hanukkah",         vibe: "Blue & silver, glowing menorah, Festival of Lights",        image: "/previews/hanukkah.png",     customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
 
-const CUSTOM_TEMPLATES: Preset[] = [
-  { name: "MyFlix",      emoji: "✨", style: "cinematic", tagline: "", desc: "Blank slate",  customNotes: "" },
-  { name: "SciFlix",     emoji: "🚀", style: "futuristic",tagline: "The future of entertainment", desc: "Sci-Fi",     customNotes: "" },
-  { name: "ChillStream", emoji: "🎵", style: "lofi",      tagline: "Slow down and stream",         desc: "Lo-Fi vibes",customNotes: "" },
-  { name: "NatureView",  emoji: "🌿", style: "nature",    tagline: "Stories from the wild",         desc: "Nature",     customNotes: "" },
-];
 
 const STUDIOS: Preset[] = [
   {
-    name: "DreamFlix", emoji: "🌙", style: "dreamworks", tagline: "Where dreams take flight",
-    desc: "DreamWorks",
+    name: "DreamWorks", emoji: "🌙", style: "dreamworks", tagline: "Where dreams take flight",
+    desc: "DreamWorks", vibe: "Boy fishing on a crescent moon above the clouds", image: "/studios/dreamworks.png",
     videoPromptOverride: `The camera drifts slowly upward through the clouds. Billowing white cumulus clouds roll and churn around the edges of the frame, their soft puffy shapes shifting and morphing as they pass. The boy sits on the crescent moon holding his fishing rod, the fishing line sways and dangles in the breeze. The crescent moon glows faintly. Sunlight filters through the clouds with shifting highlights. The text at the bottom of the frame remains steady and stable, completely motionless, no warping or movement. Cinematic, dreamy atmosphere.`,
   },
   {
-    name: "TriFlix", emoji: "🐴", style: "tristar", tagline: "Soar above the rest",
-    desc: "TriStar",
+    name: "TriStar", emoji: "🐴", style: "tristar", tagline: "Soar above the rest",
+    desc: "TriStar", vibe: "Pegasus galloping through golden clouds", image: "/studios/tristar.png",
     videoPromptOverride: `The Pegasus gallops in place mid-air, its front legs reaching forward and rear legs kicking back in a powerful running motion, hooves cycling through the air as if charging across the sky. Its massive wings flap up and down with strong, powerful strokes, feathers flexing with each beat. Its mane whips wildly in the wind and its tail streams behind it. The clouds churn and roll across the sky, moving from right to left. Sunlight pulses and flares behind the horse. The water below ripples and shimmers with bright reflections. Dynamic, dramatic motion throughout the entire frame.`,
   },
   {
-    name: "HannaFlix", emoji: "⭐", style: "hannabarbera", tagline: "The original cartoon magic",
-    desc: "Hanna-Barbera",
+    name: "Hanna-Barbera", emoji: "⭐", style: "hannabarbera", tagline: "The original cartoon magic",
+    desc: "Hanna-Barbera", vibe: "Chrome star trailing rainbow swirl, retro broadcast", image: "/studios/hannabarbera.png",
     videoPromptOverride: `A 1980s broadcast logo animation on a pure black background. A bright chrome five-pointed star flies through the air in a swooping circular motion, looping around in a full ring, then at the end of its path it swoops upward in a final flourish and comes to rest at the top of the circle. As the star flies, it leaves behind a thick glowing ribbon of rainbow light in its wake — purple, magenta, pink, green, and blue streaks layered like a long-exposure light painting. The rainbow trail persists and remains fully visible after the star finishes its motion, forming a complete glowing circular swirl with an upward tail at the end, with the star resting at the top. Once the star settles into place, the chunky white wordmark fades in below. Retro cel-animation-meets-early-CGI aesthetic, soft neon glow, slight film grain.`,
   },
   {
-    name: "ColumbiaFlix", emoji: "🏛️", style: "columbia", tagline: "A torch for great stories",
-    desc: "Columbia",
+    name: "Columbia", emoji: "🏛️", style: "columbia", tagline: "A torch for great stories",
+    desc: "Columbia", vibe: "Torch bearer, classical light beams, cinematic", image: "/studios/columbia.png",
     videoPromptOverride: ``,
   },
   {
-    name: "MST3Kflix", emoji: "🛸", style: "mst3k", tagline: "We've got movie sign",
-    desc: "MST3K",
+    name: "MST3K", emoji: "🛸", style: "mst3k", tagline: "We've got movie sign",
+    desc: "MST3K", vibe: "Silhouetted theater seats, asteroid, deep space", image: "/studios/mst3k.png",
     videoPromptOverride: `The asteroid slowly rotates in the starfield. Stars twinkle in the deep purple-blue space. The silhouetted figures in the theater seats below gesture and point upward. Campy, low-budget sci-fi energy. The text on the right side of the frame holds steady and motionless.`,
   },
   {
-    name: "ALERT", emoji: "📡", style: "ebs", tagline: "This is not a test",
-    desc: "Emergency Broadcast",
+    name: "Emergency Broadcast", emoji: "📡", style: "ebs", tagline: "This is not a test",
+    desc: "Emergency Broadcast", vibe: "SMPTE color bars, monospace alert text, broadcast signal", image: "/previews/ebs.png",
     videoPromptOverride: `SMPTE color bars hold completely static on screen. A harsh single-frequency tone. The black label bar with white monospace text flashes urgently twice, then holds steady. Pure broadcast emergency energy. No camera movement. Static and tense.`,
   },
 ];
@@ -301,7 +295,6 @@ export default function Home() {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [timings, setTimings] = useState<{ image: number; video: number } | null>(null);
   const [credits, setCredits] = useState<{ image: number; video: number } | null>(null);
-  const [copied, setCopied] = useState(false);
   const [audio, setAudio] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [genMode, setGenMode] = useState<GenMode>("full");
@@ -384,7 +377,10 @@ export default function Home() {
   // Move focus to result when generation completes so keyboard/screen-reader users
   // don't have to discover the change by tabbing.
   useEffect(() => {
-    if (step === "done") resultRef.current?.focus();
+    if (step === "done" || step === "review") {
+      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      resultRef.current?.focus();
+    }
   }, [step]);
 
   const { key: apiKey, loaded: keyLoaded } = useApiKey();
@@ -503,41 +499,6 @@ export default function Home() {
     const veo = m === "veo3" || m === "veo3.1" || m === "veo3.1_fast";
     if (veo && ![4, 6, 8].includes(duration)) setDuration(4 as Duration);
     else if (!veo && m !== "gen4.5" && ![2, 5, 10].includes(duration)) setDuration(5 as Duration);
-  }
-
-  function copyScript() {
-    const durationLine = `    duration: ${duration},\n`;
-    const audioLine = isVeoModel && audio ? `    audio: true,\n` : "";
-    const script = `import RunwayML from "@runwayml/sdk";
-
-const runway = new RunwayML({ apiKey: process.env.RUNWAYML_API_SECRET });
-
-// Step 1: Generate logo image
-const imageTask = await runway.textToImage
-  .create({
-    model: "${imageModel}",
-    promptText: \`${preview.imagePrompt}\`,
-    ratio: "${imageRatio(imageModel)}",
-  })
-  .waitForTaskOutput();
-
-const logoUrl = imageTask.output[0];
-
-// Step 2: Animate into a ${duration}s intro
-const videoTask = await runway.imageToVideo
-  .create({
-    model: "${videoModel}",
-    promptImage: logoUrl,
-    promptText: \`${preview.videoPrompt}\`,
-    ratio: "1280:720",
-${durationLine}${audioLine}  })
-  .waitForTaskOutput();
-
-console.log(videoTask.output[0]);
-`;
-    navigator.clipboard.writeText(script);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
   }
 
   async function handleFileUpload(file: File) {
@@ -1068,7 +1029,6 @@ console.log(videoTask.output[0]);
       <nav aria-label="Site navigation" className="w-full max-w-2xl px-4 flex justify-between items-center pt-6 pb-3 text-sm text-neutral-500">
         <span className="font-bold text-white tracking-tight text-lg">StreamRoll</span>
         <div className="flex items-center gap-5">
-          <Link href="/how-it-works" className="hover:text-white transition-colors">How it&apos;s built</Link>
           <Link href="/setup" className="hover:text-white transition-colors">API key</Link>
           {SHOW_RUNWAY_BRANDING && (
             <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
@@ -1115,6 +1075,8 @@ console.log(videoTask.output[0]);
           <a href={LINKS.plexForums} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">Plex Forums</a>
         </div>
 
+        <p className="text-xs text-neutral-600">Runs entirely in your browser, no install, no account required</p>
+
         {keyLoaded && (
           <div>
             {apiKey ? (
@@ -1156,6 +1118,7 @@ console.log(videoTask.output[0]);
                 <button
                   key={s.id}
                   aria-pressed={isActive}
+                  aria-label={`${s.label} — ${s.desc}`}
                   onClick={() => {
                     activePresetRef.current = "direct";
                     setStyle(s.id);
@@ -1166,18 +1129,49 @@ console.log(videoTask.output[0]);
                     setDuration(d.duration);
                   }}
                   disabled={isGenerating}
-                  className="flex flex-col items-start p-3 rounded-lg border transition-all disabled:opacity-50"
-                  style={isActive
-                    ? { borderColor: color + "70", backgroundColor: color + "15" }
-                    : { borderColor: "#262626" }
-                  }
+                  className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-50 text-left"
+                  style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#262626", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
                 >
-                  <span className="text-lg mb-1">{s.emoji}</span>
-                  <div className="font-medium text-xs" style={isActive ? { color } : { color: "#e5e7eb" }}>{s.label}</div>
-                  <div className="text-xs leading-tight mt-0.5 text-neutral-500">{s.desc}</div>
+                  {s.image && (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={s.image} alt={s.label} className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
+                    </>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-2.5" style={{ background: "rgba(0,0,0,0.72)" }}>
+                    <p className="text-xs text-center leading-snug text-neutral-200">{s.desc}</p>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
+                    <div className="font-semibold text-sm text-white leading-tight drop-shadow">{s.label}</div>
+                  </div>
                 </button>
               );
             })}
+            {(() => {
+              const isActive = name === "My Service" && style === "cinematic";
+              const color = STYLE_COLOR["cinematic"];
+              return (
+                <button
+                  aria-pressed={isActive}
+                  aria-label="Blank Slate — Cinematic base, your name and brand"
+                  onClick={() => applyInspo({ name: "My Service", style: "cinematic", tagline: "", desc: "Blank Slate", vibe: "Cinematic base — your name, your brand", image: "/previews/blank-slate.png", customNotes: "" })}
+                  disabled={isGenerating}
+                  className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-50 text-left"
+                  style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#262626", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/previews/blank-slate.png" alt="Blank Slate" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-2.5" style={{ background: "rgba(0,0,0,0.72)" }}>
+                    <p className="text-xs text-center leading-snug text-neutral-200">Cinematic base — your name, your brand</p>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
+                    <div className="font-semibold text-sm text-white leading-tight drop-shadow">Blank Slate</div>
+                  </div>
+                </button>
+              );
+            })()}
           </div>
           {STYLES.find(s => s.id === style)?.tip && (
             <p className="mt-2 text-xs text-neutral-600">
@@ -1191,24 +1185,40 @@ console.log(videoTask.output[0]);
               <span style={{ color: "#166534" }}>✦</span>
               <span className="text-neutral-600">Seasonal</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SEASONAL.map((i) => {
                 const isActive = name === i.name && style === i.style;
                 const color = STYLE_COLOR[i.style];
-                return (
+                return i.image ? (
                   <button
                     key={i.name}
                     onClick={() => applyInspo(i)}
                     disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
-                    style={isActive
-                      ? { borderColor: color + "60", backgroundColor: color + "12" }
-                      : { borderColor: "#1c2a1c" }
-                    }
+                    aria-label={`${i.desc} — ${i.vibe}`}
+                    className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-40 text-left"
+                    style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#1c2a1c", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={i.image} alt={i.desc} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-3" style={{ background: "rgba(0,0,0,0.65)" }}>
+                      <p className="text-xs text-center leading-snug text-neutral-200">{i.vibe}</p>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
+                      <div className="font-semibold text-sm text-white leading-tight drop-shadow">{i.desc}</div>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40 text-left"
+                    style={isActive ? { borderColor: color + "60", backgroundColor: color + "12" } : { borderColor: "#1c2a1c" }}
                   >
                     <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#7aaa7a" }}>{i.desc}</div>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.desc}</div>
+                    <div className="text-xs mt-0.5 leading-tight" style={{ color: "#7aaa7a" }}>{i.vibe}</div>
                   </button>
                 );
               })}
@@ -1220,24 +1230,40 @@ console.log(videoTask.output[0]);
               <span style={{ color: "#92400e" }}>✦</span>
               <span className="text-neutral-600">Holidays</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {HOLIDAYS.map((i) => {
                 const isActive = name === i.name && style === i.style;
                 const color = STYLE_COLOR[i.style];
-                return (
+                return i.image ? (
                   <button
                     key={i.name}
                     onClick={() => applyInspo(i)}
                     disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
-                    style={isActive
-                      ? { borderColor: color + "60", backgroundColor: color + "12" }
-                      : { borderColor: "#2a1e0e" }
-                    }
+                    aria-label={`${i.desc} — ${i.vibe}`}
+                    className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-40 text-left"
+                    style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#2a1e0e", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={i.image} alt={i.desc} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-3" style={{ background: "rgba(0,0,0,0.65)" }}>
+                      <p className="text-xs text-center leading-snug text-neutral-200">{i.vibe}</p>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
+                      <div className="font-semibold text-sm text-white leading-tight drop-shadow">{i.desc}</div>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40 text-left"
+                    style={isActive ? { borderColor: color + "60", backgroundColor: color + "12" } : { borderColor: "#2a1e0e" }}
                   >
                     <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#b8895a" }}>{i.desc}</div>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.desc}</div>
+                    <div className="text-xs mt-0.5 leading-tight" style={{ color: "#b8895a" }}>{i.vibe}</div>
                   </button>
                 );
               })}
@@ -1249,58 +1275,53 @@ console.log(videoTask.output[0]);
               <span style={{ color: "#b45309" }}>✦</span>
               <span className="text-neutral-600">Classic Studios</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {STUDIOS.map((i) => {
                 const isActive = name === i.name && style === i.style;
                 const color = STYLE_COLOR[i.style];
-                return (
+                return i.image ? (
                   <button
                     key={i.name}
                     onClick={() => applyInspo(i)}
                     disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
+                    aria-label={`${i.desc} — ${i.vibe}`}
+                    className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-40 text-left"
+                    style={{
+                      aspectRatio: "16/9",
+                      borderColor: isActive ? color + "80" : "#1e1a0e",
+                      boxShadow: isActive ? `0 0 16px ${color}30` : undefined,
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={i.image} alt={i.desc} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 30%, rgba(0,0,0,0.1) 60%, transparent 100%)" }} />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-3" style={{ background: "rgba(0,0,0,0.65)" }}>
+                      <p className="text-xs text-center leading-snug text-neutral-200">{i.vibe}</p>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
+                      <div className="font-semibold text-sm text-white leading-tight" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>{i.desc}</div>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    key={i.name}
+                    onClick={() => applyInspo(i)}
+                    disabled={isGenerating}
+                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40 text-left"
                     style={isActive
                       ? { borderColor: color + "60", backgroundColor: color + "12" }
                       : { borderColor: "#1e1a0e" }
                     }
                   >
                     <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#a16207" }}>{i.desc}</div>
+                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.desc}</div>
+                    <div className="text-xs mt-0.5 leading-tight" style={{ color: "#a16207" }}>{i.vibe}</div>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
-              <span style={{ color: "#4f46e5" }}>✦</span>
-              <span className="text-neutral-600">Custom</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {CUSTOM_TEMPLATES.map((i) => {
-                const isActive = name === i.name && style === i.style;
-                const color = STYLE_COLOR[i.style];
-                return (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40"
-                    style={isActive
-                      ? { borderColor: color + "60", backgroundColor: color + "12" }
-                      : { borderColor: "#1a1a2e" }
-                    }
-                  >
-                    <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.name}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#818cf8" }}>{i.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </section>
 
         {/* Name & tagline */}
@@ -1574,24 +1595,14 @@ console.log(videoTask.output[0]);
 
         {/* Prompt preview */}
         <section>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center mb-3">
             <button
               onClick={() => setShowPrompt((v) => !v)}
               className="flex items-center gap-2 text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
             >
               <span>{showPrompt ? "▾" : "▸"}</span>
               <span className="font-medium text-neutral-300">Prompt preview</span>
-              <span className="text-neutral-500">· see what gets sent to the API</span>
-            </button>
-            <button
-              onClick={copyScript}
-              className="text-xs border px-3 py-1 rounded transition-colors"
-              style={copied
-                ? { borderColor: accentColor + "60", color: accentColor }
-                : { borderColor: "#2a2a2a", color: "#737373" }
-              }
-            >
-              {copied ? "Copied!" : "{ } Copy as script"}
+              <span className="text-neutral-500">· see what gets sent to the AI</span>
             </button>
           </div>
           {showPrompt && (
@@ -1610,7 +1621,7 @@ console.log(videoTask.output[0]);
               />
               {gen3aTurboPromptTooLong && (
                 <p className="text-xs text-amber-500 flex items-center gap-1.5">
-                  <span>⚠</span> Gen3a Turbo has a 768-character prompt limit — this video prompt is {(videoPromptOverride ?? preview.videoPrompt).length} chars. Switch to Gen4 Turbo or shorten custom notes to avoid an API error.
+                  <span>⚠</span> Gen3a Turbo has a 768-character prompt limit. This video prompt is {(videoPromptOverride ?? preview.videoPrompt).length} chars. Switch to Gen4 Turbo or shorten custom notes to avoid an API error.
                 </p>
               )}
             </div>
@@ -1699,13 +1710,18 @@ console.log(videoTask.output[0]);
                 aria-pressed={genMode === m}
                 onClick={() => setGenMode(m)}
                 disabled={isGenerating}
-                className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
+                className="flex-1 py-3 px-3 rounded-lg border text-left transition-all disabled:opacity-50"
                 style={genMode === m
                   ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
                   : { borderColor: "#262626", color: "#a3a3a3" }
                 }
               >
-                {m === "image-only" ? "🖼 Logo only" : "🎬 Full intro (logo + video)"}
+                <div className="text-sm font-medium">{m === "image-only" ? "🖼 Logo only" : "🎬 Full intro"}</div>
+                <div className="text-xs mt-0.5" style={{ color: genMode === m ? accentColor + "aa" : "#525252" }}>
+                  {m === "image-only"
+                    ? "Generate the logo, then choose what to do next"
+                    : "Logo image + animated video, start to finish"}
+                </div>
               </button>
             ))}
           </div>
@@ -1768,7 +1784,7 @@ console.log(videoTask.output[0]);
             {!isGenerating && (
               confirmingReset ? (
                 <div className="ml-2 flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs text-neutral-500">Video will be lost —</span>
+                  <span className="text-xs text-neutral-500">Video will be lost:</span>
                   <button onClick={reset} className="text-xs text-red-400 hover:text-red-300 transition-colors">Confirm</button>
                   <button onClick={() => setConfirmingReset(false)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Cancel</button>
                 </div>
@@ -1825,17 +1841,23 @@ console.log(videoTask.output[0]);
 
             {/* Logo-only done — offer to continue to video */}
             {step === "done" && genMode === "image-only" && imageUrl && (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 flex items-center justify-between gap-4">
+              <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: accentColor + "50", background: accentColor + "0a", boxShadow: `0 0 32px ${accentColor}18` }}>
                 <div>
-                  <p className="text-sm font-medium text-neutral-200">Happy with the logo?</p>
-                  <p className="text-xs text-neutral-500 mt-0.5">You can generate the full intro video from it.</p>
+                  <p className="text-base font-semibold text-white">Happy with the logo?</p>
+                  <p className="text-sm text-neutral-400 mt-1">Animate it into a full streaming intro, or download the poster above.</p>
                 </div>
                 <button
                   onClick={() => { setGenMode("full"); proceedToVideo(); }}
-                  className="py-2.5 px-5 rounded-lg text-sm font-semibold text-black shrink-0 transition-all"
+                  className="w-full py-3.5 rounded-lg text-sm font-semibold text-black transition-all"
                   style={{ background: accentColor }}
                 >
-                  Generate video →
+                  Animate into a video intro →
+                </button>
+                <button
+                  onClick={reset}
+                  className="w-full py-2 rounded-lg text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+                >
+                  Start over with a new style
                 </button>
               </div>
             )}
@@ -1892,9 +1914,9 @@ console.log(videoTask.output[0]);
                   {pollStatus && (
                     <span className="text-xs shrink-0" style={{ color: pollStatus === "RUNNING" ? "#22C55E" : pollStatus === "THROTTLED" ? "#F59E0B" : "#6B7280" }}>
                       {pollStatus === "STARTING"  && "Submitting task…"}
-                      {pollStatus === "PENDING"   && "Queued — waiting to start"}
+                      {pollStatus === "PENDING"   && "Queued, waiting to start"}
                       {pollStatus === "RUNNING"   && `⚙ Generating frames…${pollProgress !== null ? ` ${pollProgress}%` : ""}`}
-                      {pollStatus === "THROTTLED" && "⏳ Throttled — concurrent task limit reached"}
+                      {pollStatus === "THROTTLED" && "⏳ Throttled, concurrent task limit reached"}
                     </span>
                   )}
                 </div>
@@ -1944,7 +1966,7 @@ console.log(videoTask.output[0]);
                             if (apiKey) h["x-runway-key"] = apiKey;
                             const res = await fetch(`/api/video/cancel?id=${encodeURIComponent(id)}`, { method: "DELETE", headers: h });
                             const data = await res.json();
-                            if (res.ok) { setCancelMsg("Cancelled ✓ — polling will resume shortly."); setCancelTaskId(""); }
+                            if (res.ok) { setCancelMsg("Cancelled ✓. Polling will resume shortly."); setCancelTaskId(""); }
                             else setCancelMsg(`Error: ${data.error ?? "cancel failed"}`);
                           }}
                           className="text-xs px-3 py-1.5 rounded border border-amber-700 text-amber-400 hover:bg-amber-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
@@ -2016,7 +2038,7 @@ console.log(videoTask.output[0]);
                   <div className="flex items-center gap-2">
                     {confirmingReset ? (
                       <>
-                        <span className="text-xs text-neutral-400 shrink-0">Video will be lost —</span>
+                        <span className="text-xs text-neutral-400 shrink-0">Video will be lost:</span>
                         <button onClick={reset} className="text-sm text-red-400 border border-red-900 hover:border-red-700 px-4 py-1.5 rounded transition-colors shrink-0">
                           Confirm
                         </button>
@@ -2034,12 +2056,6 @@ console.log(videoTask.output[0]);
                       className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0"
                     >
                       Redo video
-                    </button>
-                    <button
-                      onClick={copyScript}
-                      className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"
-                    >
-                      {copied ? "Copied!" : "{ } Copy as script"}
                     </button>
                     <a
                       href={redditShareUrl(name.trim())}
@@ -2254,8 +2270,16 @@ function EditablePromptBlock({
   onChange: (v: string | null) => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const active = override ?? generated;
   const isEdited = override !== null && override !== generated;
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }, [active]);
 
   function copy() {
     navigator.clipboard.writeText(active);
@@ -2268,7 +2292,10 @@ function EditablePromptBlock({
       <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ backgroundColor: isEdited ? "#1a1a00" : "#171717", borderColor: isEdited ? "#3f3f00" : "#262626" }}>
         <div className="flex items-center gap-2">
           <span className="text-xs text-neutral-500">{label}</span>
-          {isEdited && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#3f3f00", color: "#facc15" }}>edited</span>}
+          {isEdited
+            ? <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#3f3f00", color: "#facc15" }}>edited</span>
+            : <span className="text-xs text-neutral-700">· click to edit</span>
+          }
         </div>
         <div className="flex items-center gap-3">
           {isEdited && (
@@ -2282,11 +2309,11 @@ function EditablePromptBlock({
         </div>
       </div>
       <textarea
+        ref={textareaRef}
         value={active}
         onChange={e => onChange(e.target.value === generated ? null : e.target.value)}
-        rows={4}
-        className="w-full px-3 py-2.5 text-xs font-mono leading-relaxed bg-neutral-950 text-neutral-400 resize-y focus:outline-none focus:text-neutral-200 transition-colors"
-        style={{ minHeight: "5rem" }}
+        className="w-full px-3 py-2.5 text-xs font-mono leading-relaxed bg-neutral-950 text-neutral-400 resize-none focus:outline-none focus:text-neutral-200 transition-colors"
+        style={{ overflow: "hidden", minHeight: "4rem" }}
         spellCheck={false}
       />
     </div>
