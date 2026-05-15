@@ -1651,7 +1651,7 @@ export default function Home() {
             >
               <span>{showPrompt ? "▾" : "▸"}</span>
               <span className="font-medium text-neutral-300">Prompt preview</span>
-              <span className="text-neutral-500">· see what gets sent to the AI</span>
+              <span className="text-neutral-500">· see &amp; edit what gets sent to the AI</span>
             </button>
           </div>
           {showPrompt && (
@@ -2549,13 +2549,13 @@ function EditablePromptBlock({
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden" style={{ borderColor: isEdited ? "#3f3f00" : "#262626" }}>
+    <div className="rounded-lg border overflow-hidden group/prompt transition-colors" style={{ borderColor: isEdited ? "#3f3f00" : "#262626" }}>
       <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ backgroundColor: isEdited ? "#1a1a00" : "#171717", borderColor: isEdited ? "#3f3f00" : "#262626" }}>
         <div className="flex items-center gap-2">
           <span className="text-xs text-neutral-500">{label}</span>
           {isEdited
             ? <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#3f3f00", color: "#facc15" }}>edited</span>
-            : <span className="text-xs text-neutral-700">· click to edit</span>
+            : <span className="text-xs text-neutral-500 flex items-center gap-1">· ✏ click to edit</span>
           }
         </div>
         <div className="flex items-center gap-3">
@@ -2573,7 +2573,7 @@ function EditablePromptBlock({
         ref={textareaRef}
         value={active}
         onChange={e => onChange(e.target.value === generated ? null : e.target.value)}
-        className="w-full px-3 py-2.5 text-xs font-mono leading-relaxed bg-neutral-950 text-neutral-400 resize-none focus:outline-none focus:text-neutral-200 transition-colors"
+        className="w-full px-3 py-2.5 text-xs font-mono leading-relaxed bg-neutral-950 text-neutral-400 resize-none focus:outline-none focus:text-neutral-200 hover:text-neutral-300 hover:bg-neutral-900 transition-colors cursor-text"
         style={{ overflow: "hidden", minHeight: "4rem" }}
         spellCheck={false}
       />
