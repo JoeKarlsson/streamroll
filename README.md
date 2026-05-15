@@ -126,6 +126,19 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
+## Development
+
+```bash
+npm test              # run all 145 tests
+npm run test:coverage # tests + coverage report
+npm run lint          # ESLint across the whole project
+npm run lint:fix      # auto-fix lint issues
+```
+
+Tests live in `__tests__/` and cover all API routes, library utilities, and custom hooks. The UI components (`page.tsx`, `AudioMixer.tsx`) require browser APIs and are best covered by E2E tests.
+
+---
+
 ## Tech stack
 
 - [Next.js](https://nextjs.org) App Router
