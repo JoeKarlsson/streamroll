@@ -1101,6 +1101,35 @@ export default function Home() {
         )}
       </div>
 
+      {/* How it works strip */}
+      <div className="w-full max-w-2xl px-4 mb-2">
+        <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-5 py-4">
+          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-4">How it works</p>
+          <div className="grid grid-cols-4 gap-2">
+            {([
+              { n: "1", title: "Pick a style", desc: "Choose a look and enter your service name" },
+              { n: "2", title: "Get an API key", desc: "Free Runway account — key lives only in your browser" },
+              { n: "3", title: "Generate", desc: "AI builds a title card and a 5-second animated intro" },
+              { n: "4", title: "Add to your server", desc: "Drop the MP4 into Plex, Jellyfin, or Emby" },
+            ] as const).map((step, i, arr) => (
+              <div key={step.n} className="relative flex flex-col gap-2">
+                {/* connector line */}
+                {i < arr.length - 1 && (
+                  <div className="absolute top-3 left-[calc(50%+10px)] right-[-8px] h-px bg-neutral-800 z-0" />
+                )}
+                <div className="relative z-10 w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-400 shrink-0">
+                  {step.n}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-neutral-300 leading-snug">{step.title}</div>
+                  <div className="text-xs text-neutral-600 leading-snug mt-0.5">{step.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="w-full max-w-2xl px-4 space-y-8">
 
         {/* Style */}
