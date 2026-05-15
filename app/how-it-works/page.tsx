@@ -54,7 +54,7 @@ export default function HowItWorksPage() {
         <div className="mb-10">
           <h1 className="text-3xl font-bold tracking-tight mb-3">How it&apos;s built</h1>
           <p className="text-neutral-400 leading-relaxed">
-            StreamRoll chains two Runway API calls: one to generate a logo image,
+            StreamRoll chains two Runway API calls: one to generate a title card,
             one to animate it into video. The whole thing is{" "}
             <span className="text-white font-medium">about 20 lines of TypeScript</span>.
             Here&apos;s exactly how it works so you can build something similar.
@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
         {/* Image generation */}
         <section className="mb-10">
           <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-1">
-            2 · Generate the logo image
+            2 · Generate the title card
           </h2>
           <p className="text-sm text-neutral-500 mb-4">
             <code className="text-neutral-400">gen4_image</code> turns a text prompt into a sharp 1920×1080 title card.
@@ -133,7 +133,7 @@ export default function HowItWorksPage() {
           <div className="font-semibold mb-1">That&apos;s it.</div>
           <p className="text-sm text-neutral-400 leading-relaxed">
             No ML infrastructure, no model hosting, no GPU management.
-            Two API calls and you have a broadcast-quality animated logo.
+            Two API calls and you have a broadcast-quality animated intro.
             The same pattern works for product demo videos, social content,
             e-commerce clips, social content, anything where you need to turn a static image into motion.
           </p>

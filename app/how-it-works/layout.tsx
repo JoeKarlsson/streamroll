@@ -47,7 +47,7 @@ const howToSchema = {
     {
       "@type": "HowToStep",
       position: 2,
-      name: "Generate a logo image",
+      name: "Generate a title card",
       text: "Call runway.textToImage.create() with your service name and a style prompt to produce a 1920×1080 title card.",
     },
     {

@@ -61,7 +61,7 @@ See the [How it's built](https://streamroll.vercel.app/how-it-works) page for a 
 - **Real-time progress bar** — live percentage during video generation, no blind waiting
 - **Editable prompts** — see and modify exactly what gets sent to the API before running
 - **Redo video** — regenerate the video from the same logo without starting over
-- **Upload your own logo** instead of generating one
+- **Upload your own title card** instead of generating one
 - **5 image models** — Gen4 Image, Gen4 Turbo, GPT Image 2, Gemini Image 3 Pro, Gemini 2.5 Flash
 - **6 video models** — Gen4 Turbo, Gen4.5, Gen3a Turbo, Veo 3, Veo 3.1, Veo 3.1 Fast (with generated audio)
 - **Copy as script** — exports the exact Node.js code that produced your video

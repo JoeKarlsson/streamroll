@@ -15,7 +15,7 @@ type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
 const SESSION_KEY = "streamroll_gen_state";
 
 // Set to true to re-enable Runway branding (Get Runway nav link, Runway docs + Powered by Runway footer)
-const SHOW_RUNWAY_BRANDING = false;
+const SHOW_RUNWAY_BRANDING = true;
 
 // Per-style accent colors used for selected state
 const STYLE_COLOR: Record<Style, string> = {
@@ -1632,7 +1632,7 @@ export default function Home() {
 
         {/* Logo source */}
         <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Logo source</label>
+          <label className="block text-sm font-medium text-neutral-300 mb-3">Title card</label>
           <div className="flex gap-2">
             {(["ai", "upload"] as LogoMode[]).map((m) => (
               <button
@@ -1654,7 +1654,7 @@ export default function Home() {
           {logoMode === "upload" && (
             <div className="mt-4">
               <label
-                aria-label={uploadedUri ? "Replace uploaded logo" : "Upload your logo image"}
+                aria-label={uploadedUri ? "Replace uploaded title card" : "Upload your title card image"}
                 className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
                 style={{ borderColor: uploadError ? "#ef4444" : uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -1682,7 +1682,7 @@ export default function Home() {
                 ) : (
                   <div className="text-center pointer-events-none">
                     <div className="text-3xl mb-2">🖼</div>
-                    <div className="text-sm text-neutral-400">Drop your logo here or click to browse</div>
+                    <div className="text-sm text-neutral-400">Drop your title card image here or click to browse</div>
                     <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP up to 3 MB</div>
                   </div>
                 )}
@@ -1718,11 +1718,11 @@ export default function Home() {
                   : { borderColor: "#262626", color: "#a3a3a3" }
                 }
               >
-                <div className="text-sm font-medium">{m === "image-only" ? "🖼 Logo only" : "🎬 Full intro"}</div>
+                <div className="text-sm font-medium">{m === "image-only" ? "🖼 Title card only" : "🎬 Full intro"}</div>
                 <div className="text-xs mt-0.5" style={{ color: genMode === m ? accentColor + "aa" : "#525252" }}>
                   {m === "image-only"
-                    ? "Generate the logo, then choose what to do next"
-                    : "Logo image + animated video, start to finish"}
+                    ? "Generate the title card, then choose what to do next"
+                    : "Title card + animated video, start to finish"}
                 </div>
               </button>
             ))}
@@ -1751,11 +1751,11 @@ export default function Home() {
             : keyLoaded && !apiKey
             ? "Add API key to generate →"
             : logoMode === "upload" && !uploadedUri
-            ? "Upload a logo first"
+            ? "Upload a title card first"
             : logoMode === "upload"
-            ? "Animate My Logo"
+            ? "Animate My Title Card"
             : genMode === "image-only"
-            ? "Generate Logo"
+            ? "Generate Title Card"
             : "Generate Intro"}
         </button>
       </div>
