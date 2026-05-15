@@ -1109,7 +1109,7 @@ export default function Home() {
             {([
               { n: "1", title: "Pick a style", desc: "Choose a look and enter your service name" },
               { n: "2", title: "Get an API key", desc: "Free Runway account — key lives only in your browser" },
-              { n: "3", title: "Generate", desc: "AI builds a title card and a 5-second animated intro" },
+              { n: "3", title: "Generate", desc: "AI builds a title card and an animated intro" },
               { n: "4", title: "Add to your server", desc: "Drop the MP4 into Plex, Jellyfin, or Emby" },
             ] as const).map((step, i, arr) => (
               <div key={step.n} className="relative flex flex-col gap-2">
