@@ -71,7 +71,6 @@ export default function RootLayout({
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
-        {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`,

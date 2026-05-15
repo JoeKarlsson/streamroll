@@ -5,14 +5,27 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "coverage/**",
+    // Vendored FFmpeg WASM bundles — not our code
+    "public/ffmpeg/**",
+    // Build/utility scripts are Node scripts, not app code
+    "scripts/**",
+    // Git worktrees managed by Claude Code
+    ".claude/**",
   ]),
+  {
+    rules: {
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "prefer-const": "error",
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;
