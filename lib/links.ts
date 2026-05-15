@@ -18,7 +18,7 @@ export const LINKS = {
 // Personal branding
 export const BUILDER = {
   name:     "Joe Karlsson",
-  website:  "https://joekarlsson.com",
+  website:  "https://www.joekarlsson.com",
   twitter:  "https://twitter.com/joekarlsson1",
   github:   "https://github.com/joekarlsson",
   linkedin: "https://linkedin.com/in/joekarlsson",
