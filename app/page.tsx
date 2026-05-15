@@ -1837,6 +1837,8 @@ export default function Home() {
                     placeholder="key_••••••••••••••••••••••"
                     aria-label="Runway API key"
                     autoComplete="off"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
                     className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2.5 text-white font-mono text-sm placeholder:text-neutral-700 focus:outline-none focus:border-neutral-500 transition-colors"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && apiKeyInput.trim()) {
@@ -2133,6 +2135,13 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Video generation error — show when video failed but we still have an image */}
+            {step === "error" && !videoUrl && error && (
+              <div role="alert" className="rounded-lg border border-red-800 bg-red-950 px-4 py-3 text-sm text-red-300">
+                {error}
               </div>
             )}
 
