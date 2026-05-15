@@ -19,9 +19,9 @@ export const LINKS = {
 export const BUILDER = {
   name:     "Joe Karlsson",
   website:  "https://www.joekarlsson.com",
-  twitter:  "https://twitter.com/joekarlsson1",
-  github:   "https://github.com/joekarlsson",
-  linkedin: "https://linkedin.com/in/joekarlsson",
+  twitter:  "https://www.twitter.com/joekarlsson1",
+  github:   "https://www.github.com/joekarlsson",
+  linkedin: "https://www.linkedin.com/in/joekarlsson",
 } as const;
 
 export function tweetShareUrl(serviceName: string, appUrl = "https://streamroll.vercel.app") {
