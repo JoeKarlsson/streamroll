@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/plausible";
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   style: string;
   accentColor: string;
   duration: number;
+  initialFile?: File;
 }
 
 type MixState = "idle" | "working" | "done" | "error";
@@ -168,7 +169,7 @@ const PIPELINE_STEPS = [
   { id: "package", label: "Package",             detail: "building output file" },
 ];
 
-export function AudioMixer({ videoUrl, name, style, accentColor, duration }: Props) {
+export function AudioMixer({ videoUrl, name, style, accentColor, duration, initialFile }: Props) {
   const [open, setOpen]                     = useState(false);
   const [audioFile, setAudioFile]           = useState<File | null>(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
@@ -184,6 +185,16 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration }: Pro
   const prevOutputRef                       = useRef<string | null>(null);
   const prevPreviewRef                      = useRef<string | null>(null);
   const activeStepRef                       = useRef<string | null>(null);
+  const initialFileApplied                  = useRef(false);
+
+  useEffect(() => {
+    if (initialFile && !initialFileApplied.current) {
+      initialFileApplied.current = true;
+      setFile(initialFile);
+      setOpen(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
 
   // Browser compat — SharedArrayBuffer is required by FFmpeg WASM
   const supportsWasm = typeof SharedArrayBuffer !== "undefined";

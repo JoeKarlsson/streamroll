@@ -298,6 +298,11 @@ export default function Home() {
   const [credits, setCredits] = useState<{ image: number; video: number } | null>(null);
   const [primaryColor, setPrimaryColor] = useState<string | null>(null);
   const [audio, setAudio] = useState(false);
+  const [pendingAudioFile, setPendingAudioFile] = useState<File | null>(null);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [apiKeySaved, setApiKeySaved] = useState(false);
+  const [pendingAudioPreviewUrl, setPendingAudioPreviewUrl] = useState<string | null>(null);
+  const pendingAudioInputRef = useRef<HTMLInputElement>(null);
   const [showAdvanced, setShowAdvanced] = useState(true);
   const [genMode, setGenMode] = useState<GenMode>("full");
   const [reviewNotes, setReviewNotes] = useState("");
@@ -385,7 +390,7 @@ export default function Home() {
     }
   }, [step]);
 
-  const { key: apiKey, loaded: keyLoaded } = useApiKey();
+  const { key: apiKey, loaded: keyLoaded, saveKey } = useApiKey();
   const preview = buildPrompts({ name, style, tagline, duration, treatment, videoModel, primaryColor: primaryColor ?? undefined, customNotes: customNotes || undefined });
   const isGenerating = step === "image" || step === "video";
   const accentColor = STYLE_COLOR[style];
@@ -1729,6 +1734,143 @@ export default function Home() {
           </div>
         )}
 
+        {/* Audio track — queue before generating, mixed in after video is done */}
+        {(genMode === "full" || logoMode === "upload") && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-medium text-neutral-300">
+                Audio track <span className="text-neutral-500 text-xs font-normal">(optional)</span>
+              </label>
+              {pendingAudioFile && (
+                <button
+                  onClick={() => {
+                    if (pendingAudioPreviewUrl) URL.revokeObjectURL(pendingAudioPreviewUrl);
+                    setPendingAudioFile(null);
+                    setPendingAudioPreviewUrl(null);
+                  }}
+                  className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {!pendingAudioFile ? (
+              <label
+                className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-neutral-600"
+                style={{ borderColor: "#404040" }}
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const f = e.dataTransfer.files?.[0];
+                  if (f && f.type.startsWith("audio/")) {
+                    setPendingAudioFile(f);
+                    setPendingAudioPreviewUrl(URL.createObjectURL(f));
+                  }
+                }}
+              >
+                <div className="text-center pointer-events-none">
+                  <div className="text-2xl mb-1">♪</div>
+                  <div className="text-sm text-neutral-400">Drop audio file or click to browse</div>
+                  <div className="text-xs text-neutral-600 mt-0.5">MP3, WAV, AAC, OGG, FLAC, M4A · will be mixed in after the video generates</div>
+                </div>
+                <input
+                  ref={pendingAudioInputRef}
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  disabled={isGenerating}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setPendingAudioFile(f);
+                      setPendingAudioPreviewUrl(URL.createObjectURL(f));
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            ) : (
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800">
+                <span className="text-lg shrink-0">♪</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-neutral-300 truncate">{pendingAudioFile.name}</div>
+                  <div className="text-xs text-neutral-600 mt-0.5">
+                    {pendingAudioFile.size < 1048576
+                      ? `${Math.round(pendingAudioFile.size / 1024)} KB`
+                      : `${(pendingAudioFile.size / 1048576).toFixed(1)} MB`}
+                    {" · ready to mix after video generates"}
+                  </div>
+                </div>
+                {pendingAudioPreviewUrl && (
+                  <audio
+                    src={pendingAudioPreviewUrl}
+                    controls
+                    className="h-7 w-32 shrink-0"
+                    style={{ colorScheme: "dark" }}
+                  />
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Inline API key entry */}
+        {keyLoaded && (
+          <section>
+            {apiKey ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border" style={{ borderColor: "#14532d40", backgroundColor: "#052e1620" }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
+                <span className="text-xs text-green-400 flex-1">Runway API key active</span>
+                <Link href="/setup" className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0">Change</Link>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-neutral-300">
+                  Runway API key <span className="text-neutral-500 text-xs font-normal">· required to generate</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={apiKeyInput}
+                    onChange={(e) => { setApiKeyInput(e.target.value); setApiKeySaved(false); }}
+                    placeholder="key_••••••••••••••••••••••"
+                    aria-label="Runway API key"
+                    autoComplete="off"
+                    className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2.5 text-white font-mono text-sm placeholder:text-neutral-700 focus:outline-none focus:border-neutral-500 transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && apiKeyInput.trim()) {
+                        saveKey(apiKeyInput.trim());
+                        setApiKeyInput("");
+                        setApiKeySaved(true);
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (!apiKeyInput.trim()) return;
+                      saveKey(apiKeyInput.trim());
+                      setApiKeyInput("");
+                      setApiKeySaved(true);
+                    }}
+                    disabled={!apiKeyInput.trim()}
+                    className="px-4 py-2.5 rounded-lg text-sm font-semibold bg-white text-black hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
+                {apiKeySaved && (
+                  <p className="text-xs text-green-400">Key saved — you&apos;re ready to generate.</p>
+                )}
+                <p className="text-xs text-neutral-600">
+                  Stored only in your browser. Never sent to our servers.{" "}
+                  <Link href="/setup" className="underline underline-offset-2 hover:text-neutral-400 transition-colors">Setup guide →</Link>
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Generate */}
         <button
           onClick={generate}
@@ -2101,6 +2243,7 @@ export default function Home() {
                 style={style}
                 accentColor={accentColor}
                 duration={duration}
+                initialFile={pendingAudioFile ?? undefined}
               />
             )}
 
