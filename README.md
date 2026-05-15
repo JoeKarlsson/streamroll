@@ -52,6 +52,7 @@ See the [How it's built](https://streamroll.vercel.app/how-it-works) page for a 
 
 ## Features
 
+- **In-browser audio mixing** — upload an audio file (MP3, WAV, AAC, OGG, FLAC, M4A) and mix it into your generated video entirely client-side via FFmpeg.wasm; nothing leaves your device. Includes loop and fade-out options with a live 5-step progress UI.
 - **9 visual styles** — Prestige, Cinematic, Retro, Futuristic, Minimal, Horror, Anime, Epic, Nature
 - **Seasonal presets** — Fall, Winter, Spring, Summer with atmospheric custom notes
 - **Holiday presets** — Halloween, Christmas, New Year's Eve, Valentine's Day, St. Patrick's Day, Fourth of July, Thanksgiving, Hanukkah
@@ -129,6 +130,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - [Next.js](https://nextjs.org) App Router
 - [`@runwayml/sdk`](https://github.com/runwayml/sdk-node) — official Runway Node.js SDK
+- [`@ffmpeg/ffmpeg` + `@ffmpeg/core`](https://github.com/ffmpegwasm/ffmpeg.wasm) — in-browser video/audio muxing via WebAssembly; served from the same origin via a classic blob worker for cross-browser compatibility
 - [Tailwind CSS](https://tailwindcss.com)
 - Deployed on [Vercel](https://vercel.com) — free Hobby tier, no env vars needed
 

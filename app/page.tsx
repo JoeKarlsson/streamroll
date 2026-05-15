@@ -8,6 +8,7 @@ import { buildPrompts, imageRatio, type Style, type Duration, type ImageModel, t
 import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS, BUILDER, tweetShareUrl, redditShareUrl } from "@/lib/links";
 import { track } from "@/lib/plausible";
+import { AudioMixer } from "./AudioMixer";
 
 type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
 
@@ -212,6 +213,7 @@ const CANVAS_STYLES = new Set<Style>(["adultswim", "minimal", "prestige", "dream
 type LogoMode = "ai" | "upload";
 type GenMode = "image-only" | "full";
 
+
 const COLOR_SWATCHES = [
   { label: "Gold",    value: "#F59E0B" },
   { label: "Crimson", value: "#EF4444" },
@@ -286,8 +288,7 @@ export default function Home() {
   const [imageModel, setImageModel] = useState<ImageModel>("gen4_image");
   const [videoModel, setVideoModel] = useState<VideoModel>(STYLE_DEFAULTS["cinematic"].videoModel);
   const [treatment, setTreatment] = useState<Treatment>(STYLE_DEFAULTS["cinematic"].treatment);
-  const [primaryColor, setPrimaryColor] = useState<string | null>(null);
-  const [customNotes, setCustomNotes] = useState("");
+    const [customNotes, setCustomNotes] = useState("");
   const [uploadedUri, setUploadedUri] = useState<string | null>(null);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -295,8 +296,9 @@ export default function Home() {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [timings, setTimings] = useState<{ image: number; video: number } | null>(null);
   const [credits, setCredits] = useState<{ image: number; video: number } | null>(null);
+  const [primaryColor, setPrimaryColor] = useState<string | null>(null);
   const [audio, setAudio] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(true);
   const [genMode, setGenMode] = useState<GenMode>("full");
   const [reviewNotes, setReviewNotes] = useState("");
   const [videoRegenNotes, setVideoRegenNotes] = useState("");
@@ -2089,6 +2091,17 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Audio mixer */}
+            {videoUrl && (
+              <AudioMixer
+                videoUrl={videoUrl}
+                name={name}
+                style={style}
+                accentColor={accentColor}
+                duration={duration}
+              />
             )}
 
             {/* Install guide */}

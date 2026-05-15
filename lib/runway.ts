@@ -63,7 +63,7 @@ const styleDescriptions: Record<Style, string> = {
   grindhouse:
     "1968 National Screen Service psychedelic feature presentation bumper, frame entirely filled with pulsing kaleidoscopic concentric rings radiating outward from center — maximum saturation of ALL colors simultaneously: electric red, acid orange, lime green, cobalt blue, hot magenta, gold-yellow — rings animate outward continuously, glowing central orb in warm amber-pink, bold all-caps condensed gothic sans-serif logo typography in white or yellow at center, heavy film grain over entire frame, the text reads as if cut from cardstock with hard edges",
   lofi:
-    "lo-fi hip hop study beats anime aesthetic, cozy warm interior, rain streaking slowly down a window in the background, soft warm amber lamp light glowing, vinyl record player or cassette tape in scene, logo text sitting quietly centered, hand-drawn anime illustration style, muted warm amber and soft cool blue palette, ChilledCow lofi girl energy, peaceful and nostalgic",
+    "hand-drawn anime illustration style, cozy bedroom study scene, anime girl with headphones reading at a wooden desk, sleepy cat curled on the desk, rain streaking down a window behind her, soft warm amber desk lamp, stacked books and stationery, vinyl record player in background, logo text quietly centered, Studio Ghibli warmth, muted amber and cool blue palette, peaceful late-night atmosphere",
   vaporwave:
     "vaporwave aesthetic, white marble Hellenistic Apollo bust floating in a digital void, flat magenta (#FF71CE) and cyan (#01CDFE) perspective-grid floor receding to horizon, semi-circle sun with gradient from deep magenta (#F52E97) through violet to indigo, Japanese katakana ＡＥＳＴＨＥＴＩＣ in wide geometric sans-serif, RGB chromatic aberration with prismatic fringing on all edges, VHS scan lines, deep purple background (#300350), soft bloom glow on neon elements, logo in wide-spaced geometric sans-serif",
   cyberpunk:
@@ -277,7 +277,7 @@ export function buildPrompts(params: GenerationParams): PromptPreview {
   const upper = name.toUpperCase();
   const taglinePart = tagline?.trim()
     ? `, subtitle text "${tagline.trim().toUpperCase()}" below`
-    : "";
+    : ", no subtitle text, no secondary text lines";
   const colorPart = primaryColor ? `, key accent color: ${primaryColor}` : "";
   const notesPart = customNotes?.trim() ? `. ${customNotes.trim()}` : "";
 

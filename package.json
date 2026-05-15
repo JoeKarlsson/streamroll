@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/copy-ffmpeg.js && next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.9",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "@runwayml/sdk": "^3.21.0",
     "next": "16.2.6",
     "react": "19.2.4",
