@@ -1934,6 +1934,22 @@ export default function Home() {
                   <button onClick={reset} className="text-xs text-red-400 hover:text-red-300 transition-colors">Confirm</button>
                   <button onClick={() => setConfirmingReset(false)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Cancel</button>
                 </div>
+              ) : step === "error" && imageUrl && !videoUrl ? (
+                <div className="ml-2 flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => proceedToVideo()}
+                    className="text-xs text-white hover:text-neutral-300 transition-colors"
+                  >
+                    ↺ Try again
+                  </button>
+                  <span className="text-neutral-700">·</span>
+                  <button
+                    onClick={safeReset}
+                    className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+                  >
+                    ✕ Start over
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={safeReset}
@@ -2140,8 +2156,22 @@ export default function Home() {
 
             {/* Video generation error — show when video failed but we still have an image */}
             {step === "error" && !videoUrl && error && (
-              <div role="alert" className="rounded-lg border border-red-800 bg-red-950 px-4 py-3 text-sm text-red-300">
-                {error}
+              <div role="alert" className="rounded-lg border border-red-800 bg-red-950 px-4 py-4 space-y-3">
+                <p className="text-sm text-red-300">{error}</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => proceedToVideo()}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold text-black bg-white hover:bg-neutral-200 transition-colors"
+                  >
+                    Try again
+                  </button>
+                  <button
+                    onClick={safeReset}
+                    className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Start over
+                  </button>
+                </div>
               </div>
             )}
 
