@@ -303,7 +303,7 @@ export default function Home() {
   const [apiKeySaved, setApiKeySaved] = useState(false);
   const [pendingAudioPreviewUrl, setPendingAudioPreviewUrl] = useState<string | null>(null);
   const pendingAudioInputRef = useRef<HTMLInputElement>(null);
-  const [showAdvanced, setShowAdvanced] = useState(true);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [genMode, setGenMode] = useState<GenMode>("full");
   const [reviewNotes, setReviewNotes] = useState("");
   const [videoRegenNotes, setVideoRegenNotes] = useState("");
@@ -1108,12 +1108,11 @@ export default function Home() {
           <div className="grid grid-cols-4 gap-2">
             {([
               { n: "1", title: "Pick a style", desc: "Choose a look and enter your service name" },
-              { n: "2", title: "Get an API key", desc: "Free Runway account — key lives only in your browser" },
+              { n: "2", title: "Get an API key", desc: "Free Runway account — key lives only in your browser", href: "/setup" },
               { n: "3", title: "Generate", desc: "AI builds a title card and an animated intro" },
               { n: "4", title: "Add to your server", desc: "Drop the MP4 into Plex, Jellyfin, or Emby" },
-            ] as const).map((step, i, arr) => (
+            ]).map((step, i, arr) => (
               <div key={step.n} className="relative flex flex-col gap-2">
-                {/* connector line */}
                 {i < arr.length - 1 && (
                   <div className="absolute top-3 left-[calc(50%+10px)] right-[-8px] h-px bg-neutral-800 z-0" />
                 )}
@@ -1121,7 +1120,13 @@ export default function Home() {
                   {step.n}
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-neutral-300 leading-snug">{step.title}</div>
+                  {"href" in step ? (
+                    <Link href={step.href as string} className="text-xs font-semibold text-neutral-300 leading-snug hover:text-white transition-colors underline underline-offset-2 decoration-neutral-700">
+                      {step.title} →
+                    </Link>
+                  ) : (
+                    <div className="text-xs font-semibold text-neutral-300 leading-snug">{step.title}</div>
+                  )}
                   <div className="text-xs text-neutral-600 leading-snug mt-0.5">{step.desc}</div>
                 </div>
               </div>
@@ -1369,7 +1374,7 @@ export default function Home() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Joeflix"
+              placeholder="e.g. Joeflix, Cinema Corner, The Movie Vault"
               maxLength={30}
               disabled={isGenerating}
               className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors"
@@ -1440,7 +1445,7 @@ export default function Home() {
             className="w-full flex items-center justify-between text-sm font-medium text-neutral-400 hover:text-white transition-colors mb-3"
           >
             <span>Advanced Settings</span>
-            <span className="text-neutral-600 text-xs">{showAdvanced ? "▾ collapse" : "▸ expand"}</span>
+            <span className="text-neutral-600 text-xs">{showAdvanced ? "▾ collapse" : "▸ expand · using recommended defaults"}</span>
           </button>
 
           {showAdvanced && (
@@ -1488,24 +1493,32 @@ export default function Home() {
                 <div className="space-y-1.5">
                   <div className="text-xs text-neutral-500 mb-2">Runway</div>
                   <div className="grid grid-cols-3 gap-2">
-                    {VIDEO_MODELS.filter((m) => m.group === "Runway").map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => handleModelChange(m.id)}
-                        disabled={isGenerating}
-                        className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
-                        style={videoModel === m.id
-                          ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                          : { borderColor: "#262626" }
-                        }
-                      >
-                        <div className="flex items-center justify-between w-full mb-1">
-                          <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                          <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
-                        </div>
-                        <span className="text-neutral-500 leading-tight">{m.desc}</span>
-                      </button>
-                    ))}
+                    {VIDEO_MODELS.filter((m) => m.group === "Runway").map((m) => {
+                      const isRecommended = STYLE_DEFAULTS[style].videoModel === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => handleModelChange(m.id)}
+                          disabled={isGenerating}
+                          className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
+                          style={videoModel === m.id
+                            ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
+                            : { borderColor: "#262626" }
+                          }
+                        >
+                          <div className="flex items-center justify-between w-full mb-1">
+                            <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
+                            <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
+                          </div>
+                          <span className="text-neutral-500 leading-tight">{m.desc}</span>
+                          {isRecommended && (
+                            <span className="mt-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: accentColor + "20", color: accentColor }}>
+                              Recommended
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                   <div className="text-xs text-neutral-500 mt-3 mb-2">Google via Runway</div>
                   <div className="grid grid-cols-3 gap-2">
@@ -1902,6 +1915,17 @@ export default function Home() {
           </section>
         )}
 
+        {/* Credit cost estimate */}
+        {!isGenerating && name.trim() && apiKey && (
+          <p className="text-xs text-neutral-600 text-center -mb-4">
+            {logoMode === "upload"
+              ? `~${crPerSec * duration} Runway credits for the animated video`
+              : genMode === "image-only"
+              ? `~${imageCrCost} Runway credits for the title card`
+              : `~${imageCrCost + crPerSec * duration} Runway credits total`}
+          </p>
+        )}
+
         {/* Generate */}
         <button
           onClick={generate}
@@ -1931,6 +1955,19 @@ export default function Home() {
             ? "Generate Title Card"
             : "Generate Intro"}
         </button>
+
+        {/* Disabled reason hint */}
+        {keyLoaded && !isGenerating && (
+          <p className="text-xs text-center text-neutral-600 -mt-5">
+            {!name.trim()
+              ? "Enter a service name above to continue"
+              : !apiKey
+              ? <>Need an API key? <Link href="/setup" className="underline underline-offset-2 hover:text-neutral-400 transition-colors">Get one free →</Link></>
+              : logoMode === "upload" && !uploadedUri
+              ? "Upload a title card image above to continue"
+              : null}
+          </p>
+        )}
       </div>
 
       {/* Progress + results */}
