@@ -8,8 +8,8 @@ import { LINKS } from "@/lib/links";
 const STEPS = [
   {
     n: 1,
-    title: "Create a free Runway account",
-    body: "Head to the Runway developer portal and sign up. The free tier gives you credits to start experimenting right away.",
+    title: "Create a Runway account",
+    body: "Head to the Runway developer portal and sign up. Note: Runway no longer offers free trial credits — you will need to purchase credits or add a payment method before generating.",
     cta: { label: "Sign up at dev.runwayml.com →", href: LINKS.runwaySignup },
   },
   {

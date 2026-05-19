@@ -105,7 +105,7 @@ npm install
 
 **2. Get a Runway API key**
 
-Sign up at [dev.runwayml.com](https://dev.runwayml.com) — the free tier includes enough credits to generate several videos.
+Sign up at [dev.runwayml.com](https://dev.runwayml.com). Note: Runway no longer offers free trial credits — you will need to purchase credits or add a payment method before generating.
 
 **3. Add your key**
 
