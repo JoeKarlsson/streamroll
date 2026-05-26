@@ -232,9 +232,8 @@ const TREATMENTS: { id: Treatment; label: string; desc: string }[] = [
 ];
 
 const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
-  { value: 4, label: "4s", est: "~45 sec" },
-  { value: 6, label: "6s", est: "~60 sec" },
-  { value: 8, label: "8s", est: "~75 sec" },
+  { value: 5, label: "5s", est: "~65 sec" },
+  { value: 8, label: "8s", est: "~100 sec" },
 ];
 
 const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; crInfo: string; crCost: number; desc: string }[] = [
@@ -504,8 +503,8 @@ export default function Home() {
   function handleModelChange(m: VideoModel) {
     setVideoModel(m);
     const veo = m === "veo3" || m === "veo3.1" || m === "veo3.1_fast";
-    if (veo && ![4, 6, 8].includes(duration)) setDuration(4 as Duration);
-    else if (!veo && m !== "gen4.5" && ![2, 5, 10].includes(duration)) setDuration(5 as Duration);
+    if (veo && ![5, 8].includes(duration)) setDuration(5 as Duration);
+    else if (!veo && ![2, 4, 5, 10].includes(duration)) setDuration(5 as Duration);
   }
 
   async function handleFileUpload(file: File) {
