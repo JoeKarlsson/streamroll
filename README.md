@@ -4,23 +4,16 @@
 [![CI](https://github.com/JoeKarlsson/streamroll/actions/workflows/ci.yml/badge.svg)](https://github.com/JoeKarlsson/streamroll/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Streamroll makes a Netflix-style pre-roll intro for your Plex, Jellyfin or Emby
-server from its name. This repo is the Next.js app live at
-[streamroll.vercel.app](https://streamroll.vercel.app). It chains two
-[Runway API](https://dev.runwayml.com) calls: text to image for the title card,
-then image to video to animate it.
-
 ![A Streamroll intro in the neon outrun style: STREAMROLL in glowing pink and blue chrome letters over a dark neon grid, with smoke drifting behind it](.github/readme/2026-11-recording.gif)
 
-## Artist statement
+Netflix plays its sting before every show, and Plex, Jellyfin and Emby will play
+a short video before every movie too. Streamroll makes yours from your server's
+name: type a name like Joeflix, pick a style, and about 30 seconds later you
+have an animated intro to drop in. It runs on your own Runway API key, so
+there's no account and nothing to pay me.
 
-Plex, Jellyfin and Emby will all play a short video before every movie, the way
-Netflix plays its sting, but most people who run their own server skip it or
-spend hours finding one. It runs on your own Runway API key, so there's no
-account and nothing to pay me. `Copy as script` gives you the Node.js code that
-made your clip, so you can make the next one without my site.
-
-[Read the full statement](https://www.joekarlsson.com/work/streamroll/).
+[Try it at streamroll.vercel.app](https://streamroll.vercel.app) ·
+[Read the full statement](https://www.joekarlsson.com/work/streamroll/)
 
 ## Quick start
 
