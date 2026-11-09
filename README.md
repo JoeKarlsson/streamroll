@@ -12,6 +12,18 @@ Type a name like "Joeflix", pick a visual style, and get a downloadable `.mp4` r
 
 ---
 
+## Recording (November 2026)
+
+![A Streamroll intro in the neon outrun style: STREAMROLL in glowing pink and blue chrome letters over a dark neon grid, with smoke drifting behind it](.github/readme/2026-11-recording.gif)
+
+What Streamroll looked like in November 2026, recorded for [its page on joekarlsson.com](https://www.joekarlsson.com/work/streamroll/). The full-quality video is [2026-11-recording.mp4](.github/readme/2026-11-recording.mp4).
+
+## Artist statement
+
+Plex, Jellyfin and Emby will all play a short video before every movie, the way Netflix plays its sting, but most people who run their own server skip it or spend hours finding one. It runs on your own Runway API key, so there's no account and nothing to pay me. `Copy as script` gives you the Node.js code that made your clip, so you can make the next one without my site.
+
+[Read the full statement](https://www.joekarlsson.com/work/streamroll/). It's also on the site's [about page](https://streamroll.vercel.app/about).
+
 ## How it works
 
 Two Runway API calls, chained:
@@ -109,12 +121,7 @@ Sign up at [dev.runwayml.com](https://dev.runwayml.com). Note: Runway no longer 
 
 **3. Add your key**
 
-```bash
-cp .env.example .env.local
-# edit .env.local and set RUNWAYML_API_SECRET=your_key_here
-```
-
-Or skip this and enter your key directly in the app at `/setup` — it's stored in your browser only, never sent to a server.
+Enter your key in the app at `/setup`. It's kept in your browser and goes along with each request to the app's own API routes, which pass it to Runway. The server never stores it.
 
 **4. Start the dev server**
 

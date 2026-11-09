@@ -2425,6 +2425,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="mt-16 w-full max-w-2xl px-4 border-t border-neutral-900 pt-8 pb-12 flex flex-col items-center gap-4 text-xs text-neutral-600">
         <div className="flex items-center gap-4">
+          <Link href="/about" className="hover:text-neutral-400 transition-colors">About</Link>
           <Link href="/how-it-works" className="hover:text-neutral-400 transition-colors">How it&apos;s built</Link>
           <a href={LINKS.repoGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Fork on GitHub</a>
           {SHOW_RUNWAY_BRANDING && (

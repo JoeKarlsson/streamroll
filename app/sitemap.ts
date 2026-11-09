@@ -15,6 +15,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: "https://streamroll.vercel.app/about",
+      lastModified: new Date("2026-11-08"),
+      changeFrequency: "yearly",
+      priority: 0.5,
+    },
+    {
       url: "https://streamroll.vercel.app/setup",
       lastModified: new Date("2026-05-12"),
       changeFrequency: "monthly",
