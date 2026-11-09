@@ -8,9 +8,8 @@
 
 Netflix plays its sting before every show, and Plex, Jellyfin and Emby will play
 a short video before every movie too. Streamroll makes yours from your server's
-name: type a name like Joeflix, pick a style, and about 30 seconds later you
-have an animated intro to drop in. It runs on your own Runway API key, so
-there's no account and nothing to pay me.
+name. There's no account and nothing to pay me, and it hands you the code that
+made your clip, so you can make the next one without my site.
 
 [Try it at streamroll.vercel.app](https://streamroll.vercel.app) ·
 [Read the full statement](https://www.joekarlsson.com/work/streamroll/)
