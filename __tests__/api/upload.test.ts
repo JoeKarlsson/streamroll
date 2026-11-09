@@ -7,9 +7,9 @@ const { mockCreateEphemeral, mockToFile } = vi.hoisted(() => ({
 }));
 
 vi.mock("@runwayml/sdk", () => ({
-  default: vi.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(function () { return ({
     uploads: { createEphemeral: mockCreateEphemeral },
-  })),
+  }); }),
   toFile: mockToFile,
 }));
 

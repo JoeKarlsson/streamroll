@@ -4,9 +4,9 @@ import { NextRequest } from "next/server";
 const mockTasksDelete = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@runwayml/sdk", () => ({
-  default: vi.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(function () { return ({
     tasks: { delete: mockTasksDelete },
-  })),
+  }); }),
 }));
 
 import { DELETE } from "@/app/api/video/cancel/route";

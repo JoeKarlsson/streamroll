@@ -5,10 +5,10 @@ const mockImageToVideoCreate = vi.fn().mockResolvedValue({ id: "task_xyz" });
 const mockOrgRetrieve = vi.fn().mockResolvedValue({ creditBalance: 500 });
 
 vi.mock("@runwayml/sdk", () => ({
-  default: vi.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(function () { return ({
     imageToVideo: { create: mockImageToVideoCreate },
     organization: { retrieve: mockOrgRetrieve },
-  })),
+  }); }),
 }));
 
 import { POST } from "@/app/api/video/start/route";

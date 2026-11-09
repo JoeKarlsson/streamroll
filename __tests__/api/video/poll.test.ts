@@ -5,10 +5,10 @@ const mockTasksRetrieve = vi.fn();
 const mockOrgRetrieve = vi.fn();
 
 vi.mock("@runwayml/sdk", () => {
-  const MockRunwayML = vi.fn().mockImplementation(() => ({
+  const MockRunwayML = vi.fn().mockImplementation(function () { return ({
     tasks: { retrieve: mockTasksRetrieve },
     organization: { retrieve: mockOrgRetrieve },
-  }));
+  }); });
   return { default: MockRunwayML };
 });
 

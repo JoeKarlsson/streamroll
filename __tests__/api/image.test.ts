@@ -5,7 +5,7 @@ vi.mock("@runwayml/sdk", () => {
   const mockOrganization = {
     retrieve: vi.fn().mockResolvedValue({ creditBalance: 100 }),
   };
-  const MockRunwayML = vi.fn().mockImplementation(() => ({ organization: mockOrganization }));
+  const MockRunwayML = vi.fn().mockImplementation(function () { return ({ organization: mockOrganization }); });
   return { default: MockRunwayML };
 });
 
@@ -29,7 +29,7 @@ describe("POST /api/image", () => {
   beforeEach(() => {
     vi.mocked(generateLogoImage).mockResolvedValue("https://cdn.example.com/image.png");
     const mockInstance = { organization: { retrieve: vi.fn().mockResolvedValue({ creditBalance: 100 }) } };
-    vi.mocked(RunwayML).mockImplementation(() => mockInstance as never);
+    vi.mocked(RunwayML).mockImplementation(function () { return mockInstance as never; });
   });
 
   it("returns 400 when name is missing", async () => {
@@ -53,7 +53,7 @@ describe("POST /api/image", () => {
 
   it("returns 200 with imageUrl and creditCost on success", async () => {
     const mockOrg = { retrieve: vi.fn().mockResolvedValueOnce({ creditBalance: 100 }).mockResolvedValueOnce({ creditBalance: 85 }) };
-    vi.mocked(RunwayML).mockImplementation(() => ({ organization: mockOrg }) as never);
+    vi.mocked(RunwayML).mockImplementation(function () { return ({ organization: mockOrg }) as never; });
 
     const res = await POST(makeRequest({ name: "Netflix", style: "cinematic" }, { "x-runway-key": "key123" }));
     expect(res.status).toBe(200);
@@ -64,7 +64,7 @@ describe("POST /api/image", () => {
 
   it("passes imagePromptOverride through to generateLogoImage", async () => {
     const mockOrg = { retrieve: vi.fn().mockResolvedValue({ creditBalance: 100 }) };
-    vi.mocked(RunwayML).mockImplementation(() => ({ organization: mockOrg }) as never);
+    vi.mocked(RunwayML).mockImplementation(function () { return ({ organization: mockOrg }) as never; });
 
     await POST(makeRequest(
       { name: "Netflix", imagePromptOverride: "custom prompt here" },
@@ -81,7 +81,7 @@ describe("POST /api/image", () => {
   it("returns 500 when generateLogoImage throws", async () => {
     vi.mocked(generateLogoImage).mockRejectedValueOnce(new Error("Runway API error"));
     const mockOrg = { retrieve: vi.fn().mockResolvedValue({ creditBalance: 100 }) };
-    vi.mocked(RunwayML).mockImplementation(() => ({ organization: mockOrg }) as never);
+    vi.mocked(RunwayML).mockImplementation(function () { return ({ organization: mockOrg }) as never; });
 
     const res = await POST(makeRequest({ name: "Netflix" }, { "x-runway-key": "key123" }));
     expect(res.status).toBe(500);
@@ -91,7 +91,7 @@ describe("POST /api/image", () => {
 
   it("creditCost is at least 0 even if credits went up", async () => {
     const mockOrg = { retrieve: vi.fn().mockResolvedValueOnce({ creditBalance: 50 }).mockResolvedValueOnce({ creditBalance: 100 }) };
-    vi.mocked(RunwayML).mockImplementation(() => ({ organization: mockOrg }) as never);
+    vi.mocked(RunwayML).mockImplementation(function () { return ({ organization: mockOrg }) as never; });
 
     const res = await POST(makeRequest({ name: "Netflix" }, { "x-runway-key": "key123" }));
     const json = await res.json();

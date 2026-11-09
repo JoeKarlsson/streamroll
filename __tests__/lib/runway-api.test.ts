@@ -5,10 +5,10 @@ const mockTextToImageCreate = vi.fn().mockReturnValue({ waitForTaskOutput: mockW
 const mockImageToVideoCreate = vi.fn().mockReturnValue({ waitForTaskOutput: mockWaitForTaskOutput });
 
 vi.mock("@runwayml/sdk", () => ({
-  default: vi.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(function () { return ({
     textToImage: { create: mockTextToImageCreate },
     imageToVideo: { create: mockImageToVideoCreate },
-  })),
+  }); }),
 }));
 
 import { generateLogoImage, generateIntroVideo } from "@/lib/runway";
