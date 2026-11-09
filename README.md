@@ -1,168 +1,63 @@
-# StreamRoll
+# Streamroll
 
-**StreamRoll generates custom animated pre-roll intros for home media servers — the same idea as Netflix's "Tudum" logo sting, but for your personal Plex, Jellyfin, or Emby setup.**
+[![Website](https://img.shields.io/badge/website-streamroll.vercel.app-ff4fd8)](https://streamroll.vercel.app)
+[![CI](https://github.com/JoeKarlsson/streamroll/actions/workflows/ci.yml/badge.svg)](https://github.com/JoeKarlsson/streamroll/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-![StreamRoll — three styles playing simultaneously](public/examples/montage.gif)
-
-A pre-roll is a short video that plays before every movie in your library. Plex, Jellyfin, and Emby all support them natively — most people either skip the feature entirely or spend hours sourcing one. StreamRoll generates one from your service name and a text prompt in about 30 seconds.
-
-Type a name like "Joeflix", pick a visual style, and get a downloadable `.mp4` ready to drop straight into your media server. Built on the [Runway API](https://dev.runwayml.com) as a demonstration of chaining image and video generation.
-
-**[Live demo →](https://streamroll.vercel.app)**
-
----
-
-## Recording (November 2026)
+Streamroll makes a Netflix-style pre-roll intro for your Plex, Jellyfin or Emby
+server from its name. This repo is the Next.js app live at
+[streamroll.vercel.app](https://streamroll.vercel.app). It chains two
+[Runway API](https://dev.runwayml.com) calls: text to image for the title card,
+then image to video to animate it.
 
 ![A Streamroll intro in the neon outrun style: STREAMROLL in glowing pink and blue chrome letters over a dark neon grid, with smoke drifting behind it](.github/readme/2026-11-recording.gif)
 
-What Streamroll looked like in November 2026, recorded for [its page on joekarlsson.com](https://www.joekarlsson.com/work/streamroll/). The full-quality video is [2026-11-recording.mp4](.github/readme/2026-11-recording.mp4).
-
 ## Artist statement
 
-Plex, Jellyfin and Emby will all play a short video before every movie, the way Netflix plays its sting, but most people who run their own server skip it or spend hours finding one. It runs on your own Runway API key, so there's no account and nothing to pay me. `Copy as script` gives you the Node.js code that made your clip, so you can make the next one without my site.
+Plex, Jellyfin and Emby will all play a short video before every movie, the way
+Netflix plays its sting, but most people who run their own server skip it or
+spend hours finding one. It runs on your own Runway API key, so there's no
+account and nothing to pay me. `Copy as script` gives you the Node.js code that
+made your clip, so you can make the next one without my site.
 
-[Read the full statement](https://www.joekarlsson.com/work/streamroll/). It's also on the site's [about page](https://streamroll.vercel.app/about).
+[Read the full statement](https://www.joekarlsson.com/work/streamroll/).
 
-## How it works
+## Quick start
 
-Two Runway API calls, chained:
-
-1. **Image generation** — a style-tuned text prompt produces a 1920×1080 title card. Model is selected per style: `gen4_image`, `gen4_image_turbo`, `gemini_image3_pro`, or `gpt_image_2`.
-2. **Image-to-video** — that still frame animates into a 4–5 second intro. Model options: `gen4_turbo`, `gen4.5` (with timestamp-sequenced prompts), or Veo 3.1 (with generated audio).
-
-The output URL from step 1 is the input to step 2. That's the whole pattern.
-
-```ts
-// Step 1: generate the logo
-const imageTask = await runway.textToImage.create({
-  model: "gen4_image",
-  promptText: `Streaming service logo for "JOEFLIX", deep navy and gold,
-    dramatic god rays, bold typography, professional logo design`,
-  ratio: "1920:1080",
-}).waitForTaskOutput();
-
-// Step 2: animate it
-const videoTask = await runway.imageToVideo.create({
-  model: "gen4.5",
-  promptImage: imageTask.output[0],
-  promptText: `[00:00] Logo pulses with a slow golden breath. [00:01] Golden
-    particles drift upward. [00:02] Lens flare blooms from the right.
-    [00:04] Scene settles. Cinematic, dramatic.`,
-  ratio: "1280:720",
-  duration: 5,
-}).waitForTaskOutput();
-
-console.log(videoTask.output[0]); // → your .mp4 URL
-```
-
-The `Copy as script` button in the UI outputs this exact code for whatever you just generated.
-
-See the [How it's built](https://streamroll.vercel.app/how-it-works) page for a full walkthrough.
-
----
-
-## Features
-
-- **In-browser audio mixing** — upload an audio file (MP3, WAV, AAC, OGG, FLAC, M4A) and mix it into your generated video entirely client-side via FFmpeg.wasm; nothing leaves your device. Includes loop and fade-out options with a live 5-step progress UI.
-- **9 visual styles** — Prestige, Cinematic, Retro, Futuristic, Minimal, Horror, Anime, Epic, Nature
-- **Seasonal presets** — Fall, Winter, Spring, Summer with atmospheric custom notes
-- **Holiday presets** — Halloween, Christmas, New Year's Eve, Valentine's Day, St. Patrick's Day, Fourth of July, Thanksgiving, Hanukkah
-- **Style auto-selects the best model** — each style maps to the image model, video model, treatment, and duration that produce the best result
-- **Logo review step** — approve the generated image before spending video credits
-- **Real-time progress bar** — live percentage during video generation, no blind waiting
-- **Editable prompts** — see and modify exactly what gets sent to the API before running
-- **Redo video** — regenerate the video from the same logo without starting over
-- **Upload your own title card** instead of generating one
-- **5 image models** — Gen4 Image, Gen4 Turbo, GPT Image 2, Gemini Image 3 Pro, Gemini 2.5 Flash
-- **6 video models** — Gen4 Turbo, Gen4.5, Gen3a Turbo, Veo 3, Veo 3.1, Veo 3.1 Fast (with generated audio)
-- **Copy as script** — exports the exact Node.js code that produced your video
-- **Named downloads** — files save as `joeflix-cinematic-2026-05-11-1430.mp4`
-- **One-click share** to r/plexprerolls and X
-- **Install instructions** for Plex, Jellyfin, and Emby built in
-
----
-
-## Deploy to Vercel
-
-The easiest way to run StreamRoll for others to use. Each visitor brings their own Runway API key — no server-side credentials needed.
-
-**1. Install the Vercel CLI**
+You need a Runway API key from [dev.runwayml.com](https://dev.runwayml.com).
+Runway no longer gives free trial credits, so add credits or a payment method
+first.
 
 ```bash
-npm i -g vercel
-```
-
-**2. Deploy**
-
-```bash
-vercel
-```
-
-The CLI will prompt you to log in and link the project on first run. No environment variables are required — the app is BYOK (users enter their own Runway API key in the browser).
-
-That's it. Vercel's Hobby plan (free) is sufficient for a personal or demo deployment.
-
----
-
-## Running locally
-
-**1. Clone and install**
-
-```bash
-git clone https://github.com/JoeKarlsson/streamroll
+git clone https://github.com/JoeKarlsson/streamroll.git
 cd streamroll
 npm install
+npm run dev     # http://localhost:3000
 ```
 
-**2. Get a Runway API key**
-
-Sign up at [dev.runwayml.com](https://dev.runwayml.com). Note: Runway no longer offers free trial credits — you will need to purchase credits or add a payment method before generating.
-
-**3. Add your key**
-
-Enter your key in the app at `/setup`. It's kept in your browser and goes along with each request to the app's own API routes, which pass it to Runway. The server never stores it.
-
-**4. Start the dev server**
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
----
+Enter your key at `/setup`. It stays in your browser and rides along with each
+request to the app's API routes, which pass it to Runway. The server never
+stores it. `RUNWAYML_API_SECRET` (see `.env.example`) is optional: the video
+route falls back to it, and the scripts in `scripts/` need it.
 
 ## Development
 
 ```bash
-npm test              # run all 145 tests
-npm run test:coverage # tests + coverage report
-npm run lint          # ESLint across the whole project
-npm run lint:fix      # auto-fix lint issues
+npm test              # Vitest
+npm run test:coverage
+npm run lint
+npm run build
 ```
 
-Tests live in `__tests__/` and cover all API routes, library utilities, and custom hooks. The UI components (`page.tsx`, `AudioMixer.tsx`) require browser APIs and are best covered by E2E tests.
+Tests live in `__tests__/` and cover the API routes, `lib/` and `hooks/`. The
+page and `app/AudioMixer.tsx` need browser APIs and aren't unit tested. Audio
+mixing runs client-side with FFmpeg.wasm, served from the gitignored
+`public/ffmpeg/`. `npm run build` fills it; under `npm run dev`, run
+`node scripts/copy-ffmpeg.js` once first or the mixer has nothing to load.
 
----
+It deploys to Vercel with `vercel`. No environment variables are needed there,
+since every visitor brings their own key.
 
-## Tech stack
+## License
 
-- [Next.js](https://nextjs.org) App Router
-- [`@runwayml/sdk`](https://github.com/runwayml/sdk-node) — official Runway Node.js SDK
-- [`@ffmpeg/ffmpeg` + `@ffmpeg/core`](https://github.com/ffmpegwasm/ffmpeg.wasm) — in-browser video/audio muxing via WebAssembly; served from the same origin via a classic blob worker for cross-browser compatibility
-- [Tailwind CSS](https://tailwindcss.com)
-- Deployed on [Vercel](https://vercel.com) — free Hobby tier, no env vars needed
-
----
-
-## Runway API resources
-
-- [SDK docs](https://docs.dev.runwayml.com/api-details/sdks/)
-- [Image-to-video reference](https://docs.dev.runwayml.com)
-- [Pricing](https://docs.dev.runwayml.com/guides/pricing/)
-- [Developer community on Discord](https://discord.gg/runwayml)
-
----
-
-Built by [Joe Karlsson](https://joekarlsson.com)
+MIT. See [LICENSE](LICENSE).
