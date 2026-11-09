@@ -40,18 +40,16 @@ export default function AboutPage() {
 
         <div className="space-y-5 text-neutral-300 leading-relaxed">
           <p>
-            Plex, Jellyfin and Emby will all play a short video before every movie, the way Netflix plays its sting,
-            but most people who run their own server skip it or spend hours finding one.
+            Netflix plays its sting before every show. Plex, Jellyfin and Emby will play a short video before every movie
+            too, but you hit play on a home server and it could be anyone&apos;s.
           </p>
           <p>
-            Streamroll makes one from your server&apos;s name. You type a name like Joeflix, pick a style, and about 30
-            seconds later you have a title card that moves, ready to drop in. You approve the still before it turns into
-            video, and you can mix in your own audio right in the browser.
+            Streamroll makes one from your server&apos;s name. You type a name like Joeflix, pick a style, and get back a
+            title card that moves, ready to play before every movie.
           </p>
           <p>
-            It runs on your own Runway API key, so there&apos;s no account and nothing to pay me.{" "}
-            <code className="text-white">Copy as script</code> gives you the Node.js code that made your clip, so you can
-            make the next one without my site.
+            There&apos;s no account and nothing to pay me, and it hands you the code that made your clip, so you can make
+            the next one without my site.
           </p>
         </div>
 
