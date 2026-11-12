@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ status: "SUCCEEDED", output: task.output[0], creditsAfter });
     }
     if (task.status === "FAILED") {
-      return NextResponse.json({ status: "FAILED", failure: task.failure });
+      return NextResponse.json({ status: "FAILED", failure: task.failure, failureCode: task.failureCode ?? null });
     }
     if (task.status === "RUNNING") {
       return NextResponse.json({ status: "RUNNING", progress: task.progress ?? null });

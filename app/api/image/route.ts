@@ -32,14 +32,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = new RunwayML({ apiKey, timeout: 25_000 });
-    const [{ creditBalance: before }, imageUrl] = await Promise.all([
-      client.organization.retrieve(),
+    // Balance snapshots are best-effort: a failed lookup must not throw away an image already paid for
+    const balance = () => client.organization.retrieve().then(r => r.creditBalance).catch(() => null);
+    const [before, imageUrl] = await Promise.all([
+      balance(),
       generateLogoImage(params, apiKey, body.imagePromptOverride ?? undefined),
     ]);
-    const { creditBalance: after } = await client.organization.retrieve();
-    return NextResponse.json({ imageUrl, creditCost: Math.max(0, before - after) });
+    const after = await balance();
+    const creditCost = before !== null && after !== null ? Math.max(0, before - after) : 0;
+    return NextResponse.json({ imageUrl, creditCost });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Image generation failed";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    // TaskFailedError carries Runway's failureCode (e.g. SAFETY.INPUT.TEXT for a moderation rejection)
+    const code = (e as { taskDetails?: { failureCode?: string } })?.taskDetails?.failureCode;
+    return NextResponse.json({ error: code ? `${msg} (${code})` : msg }, { status: 500 });
   }
 }

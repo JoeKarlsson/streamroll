@@ -89,6 +89,27 @@ describe("POST /api/image", () => {
     expect(json.error).toContain("Runway API error");
   });
 
+  it("returns the image when the credit-balance lookup fails", async () => {
+    const mockOrg = { retrieve: vi.fn().mockRejectedValue(new Error("timeout")) };
+    vi.mocked(RunwayML).mockImplementation(function () { return ({ organization: mockOrg }) as never; });
+
+    const res = await POST(makeRequest({ name: "Netflix" }, { "x-runway-key": "key123" }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.imageUrl).toBe("https://cdn.example.com/image.png");
+    expect(json.creditCost).toBe(0);
+  });
+
+  it("adds Runway's failure code to the error", async () => {
+    vi.mocked(generateLogoImage).mockRejectedValueOnce(
+      Object.assign(new Error("Prompt was rejected"), { taskDetails: { failureCode: "SAFETY.INPUT.TEXT" } })
+    );
+
+    const res = await POST(makeRequest({ name: "Netflix" }, { "x-runway-key": "key123" }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe("Prompt was rejected (SAFETY.INPUT.TEXT)");
+  });
+
   it("creditCost is at least 0 even if credits went up", async () => {
     const mockOrg = { retrieve: vi.fn().mockResolvedValueOnce({ creditBalance: 50 }).mockResolvedValueOnce({ creditBalance: 100 }) };
     vi.mocked(RunwayML).mockImplementation(function () { return ({ organization: mockOrg }) as never; });

@@ -910,9 +910,10 @@ export default function Home() {
 
       setStep("review");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setError(message);
       setStep("error");
-      track("Generation Error", { stage: "image" });
+      track("Generation Error", { stage: "image", message: message.slice(0, 200) });
     } finally {
       stopTimer();
     }
@@ -944,8 +945,10 @@ export default function Home() {
       imageCreditCostRef.current = imageData.creditCost ?? 0;
       setStep("review");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setError(message);
       setStep("error");
+      track("Generation Error", { stage: "regenerate", message: message.slice(0, 200) });
     } finally {
       stopTimer();
     }
@@ -999,7 +1002,7 @@ export default function Home() {
         const pollData = await pollRes.json();
         if (!pollRes.ok) throw new Error(pollData.error ?? "Status check failed");
 
-        const { status, output, failure, progress, creditsAfter } = pollData;
+        const { status, output, failure, failureCode, progress, creditsAfter } = pollData;
         setPollStatus(status);
         if (typeof progress === "number") setPollProgress(Math.round(progress * 100));
         else if (status !== "RUNNING") setPollProgress(null);
@@ -1018,7 +1021,7 @@ export default function Home() {
           setStep("done");
           return;
         }
-        if (status === "FAILED")    throw new Error(failure ?? "Video generation failed");
+        if (status === "FAILED")    throw new Error(`${failure ?? "Video generation failed"}${failureCode ? ` (${failureCode})` : ""}`);
         if (status === "CANCELLED") throw new Error("Video generation was cancelled");
         // PENDING / THROTTLED / RUNNING → keep polling
       }
@@ -1028,9 +1031,10 @@ export default function Home() {
       activeTaskIdRef.current = null;
       setPollStatus(null);
       setPollProgress(null);
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setError(message);
       setStep("error");
-      track("Generation Error", { stage: "video" });
+      track("Generation Error", { stage: "video", message: message.slice(0, 200) });
     } finally {
       stopTimer();
     }

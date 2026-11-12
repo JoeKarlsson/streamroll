@@ -522,6 +522,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
                 <a
                   href={outputUrl}
                   download={outputFilename}
+                  onClick={() => track("Download Video", { style, audio: "mixed" })}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-black text-center transition-all"
                   style={{ background: accentColor }}
                 >
