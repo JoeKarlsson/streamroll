@@ -4,6 +4,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # @types/node tracks the Node runtime (22 in CI), not the newest Node.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # typescript-eslint (via eslint-config-next) refuses TypeScript 7; lift once it supports 7.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
