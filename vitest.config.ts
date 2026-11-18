@@ -13,16 +13,7 @@ export default defineConfig({
     },
     coverage: {
       provider: "v8",
-      exclude: [
-        "public/**",
-        "scripts/**",
-        ".claude/**",
-        ".next/**",
-        "vitest.setup.ts",
-        "vitest.config.ts",
-        "next.config.ts",
-        "postcss.config.mjs",
-      ],
+      include: ["app/**", "lib/**", "hooks/**"],
     },
   },
   resolve: {

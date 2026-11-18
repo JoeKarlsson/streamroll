@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { baseOpenGraph, baseTwitter } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Get started — StreamRoll",
@@ -7,26 +8,17 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://streamroll.vercel.app/setup",
   },
+  robots: { index: false, follow: true },
   openGraph: {
+    ...baseOpenGraph,
     title: "Get started — StreamRoll",
     description:
       "Add your Runway API key to start generating custom animated pre-roll intros for your media server.",
     url: "https://streamroll.vercel.app/setup",
-    locale: "en_US",
-    images: [{
-      url: "/opengraph-image.png",
-      width: 1376,
-      height: 768,
-      type: "image/png",
-      alt: "StreamRoll — AI-generated streaming intros",
-    }],
   },
   twitter: {
-    card: "summary_large_image",
+    ...baseTwitter,
     title: "Get started — StreamRoll",
-    site: "@joekarlsson1",
-    creator: "@joekarlsson1",
-    images: ["/opengraph-image.png"],
   },
 };
 

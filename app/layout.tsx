@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Cinzel } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
+import { baseOpenGraph, baseTwitter } from "@/lib/metadata";
+import { JsErrorTracker } from "./JsErrorTracker";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -7,54 +9,43 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Only code samples use it, below the fold, so it isn't preloaded.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const cinzel = Cinzel({
-  variable: "--font-cinzel",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap",
+  preload: false,
 });
 
 export const viewport: Viewport = {
   themeColor: "#080808",
 };
 
+const description =
+  "Make an animated pre-roll intro for your Plex, Jellyfin or Emby server with Runway AI. Type its name, pick a style and download the MP4.";
+
 export const metadata: Metadata = {
   title: "StreamRoll — AI Streaming Intros",
-  description:
-    "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI. Type your service name, pick a style, get a downloadable MP4 in 30 seconds.",
+  description,
   metadataBase: new URL("https://streamroll.vercel.app"),
   alternates: {
     canonical: "https://streamroll.vercel.app",
   },
+  authors: [{ name: "Joe Karlsson", url: "https://joekarlsson.com" }],
   openGraph: {
+    ...baseOpenGraph,
     title: "StreamRoll — AI Streaming Intros",
-    description:
-      "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI. Type your service name, pick a style, get a downloadable MP4 in 30 seconds.",
+    description,
     url: "https://streamroll.vercel.app",
-    siteName: "StreamRoll",
-    type: "website",
-    locale: "en_US",
-    images: [{
-      url: "/opengraph-image.png",
-      width: 1376,
-      height: 768,
-      type: "image/png",
-      alt: "StreamRoll — AI-generated streaming intros for Plex, Jellyfin & Emby",
-    }],
   },
   twitter: {
-    card: "summary_large_image",
+    ...baseTwitter,
     title: "StreamRoll — AI Streaming Intros",
-    description:
-      "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI.",
-    site: "@joekarlsson1",
-    creator: "@joekarlsson1",
-    images: ["/opengraph-image.png"],
+    description,
+  },
+  // The site is dark-only. Viewport's colorScheme type has no "only dark", and darkreader-lock stops Dark Reader re-theming it.
+  other: {
+    "color-scheme": "only dark",
+    "darkreader-lock": "true",
   },
 };
 
@@ -66,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
@@ -76,10 +67,12 @@ export default function RootLayout({
             __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`,
           }}
         />
+        {/* Served from this origin through the /js and /api/event rewrites in next.config.ts */}
         <script
           defer
           data-domain="streamroll.vercel.app"
-          src="https://plausible.joekarlsson.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
+          data-api="/api/event"
+          src="/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
         />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
@@ -89,6 +82,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        {/* Home-page-only schema: belongs in app/page.tsx (Agent C's file); move it there at merge. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -97,8 +91,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               name: "StreamRoll",
               url: "https://streamroll.vercel.app",
-              description:
-                "Generate custom animated pre-roll intros for Plex, Jellyfin, and Emby using Runway AI.",
+              description,
               applicationCategory: "UtilityApplication",
               operatingSystem: "Web",
               author: {
@@ -110,32 +103,7 @@ export default function RootLayout({
             }),
           }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              mainEntity: [
-                {
-                  "@type": "Question",
-                  name: "How do I add a pre-roll intro to Plex?",
-                  acceptedAnswer: { "@type": "Answer", text: "Go to Settings → Extras → Cinema Trailers → enable pre-roll, then place the .mp4 in your designated Extras folder." },
-                },
-                {
-                  "@type": "Question",
-                  name: "How do I add a pre-roll video to Jellyfin?",
-                  acceptedAnswer: { "@type": "Answer", text: "Go to Dashboard → Administration → Pre-Roll Video → browse and upload your .mp4 file." },
-                },
-                {
-                  "@type": "Question",
-                  name: "How do I add a pre-roll intro to Emby?",
-                  acceptedAnswer: { "@type": "Answer", text: "Go to Server Settings → Cinema Mode → Pre-Roll Videos → add the .mp4 file path, then enable Cinema Mode for playback sessions." },
-                },
-              ],
-            }),
-          }}
-        />
+        <JsErrorTracker />
         {children}
       </body>
     </html>
