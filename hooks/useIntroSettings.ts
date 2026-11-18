@@ -68,7 +68,8 @@ export function useIntroSettings() {
     if (saved.videoModel)  setVideoModel(saved.videoModel);
     if (saved.imageModel)  setImageModel(saved.imageModel);
     if (saved.treatment)   setTreatment(saved.treatment);
-    if (saved.duration)    setDuration(saved.duration);
+    // A dropped model leaves the current one in place, which may not offer the saved length (Veo's 6s on a Runway model).
+    if (saved.duration)    setDuration(durationForModel(saved.videoModel ?? videoModel, saved.duration));
   }
 
   return {

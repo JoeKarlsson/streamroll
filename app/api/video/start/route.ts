@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import RunwayML from "@runwayml/sdk";
 import type { ImageToVideoCreateParams } from "@runwayml/sdk/resources";
 import { buildPrompts, type GenerationParams } from "@/lib/runway";
+import { isVeoModel } from "@/lib/models";
 
 export const maxDuration = 90;
 
@@ -35,17 +36,16 @@ export async function POST(req: NextRequest) {
   const { videoPrompt: generatedVideoPrompt } = buildPrompts(params);
   const videoPrompt = body.videoPromptOverride ?? generatedVideoPrompt;
   const model = params.videoModel ?? "gen4_turbo";
-  const isVeoModel = model === "veo3" || model === "veo3.1" || model === "veo3.1_fast";
-
-  // A cast, not a typed literal: SDK 4 dropped gen3a_turbo and veo3 from its types, but this app still offers them.
-  const createParams = {
-    model,
-    promptImage: body.imageUrl,
-    promptText: videoPrompt,
-    ratio: "1280:720",
-    duration: params.duration,
-    ...(isVeoModel && params.audio ? { audio: true } : {}),
-  } as ImageToVideoCreateParams;
+  const { duration } = params;
+  let createParams: ImageToVideoCreateParams;
+  if (isVeoModel(model)) {
+    if (duration !== 4 && duration !== 6 && duration !== 8) {
+      return NextResponse.json({ error: `${model} makes 4, 6 or 8 second clips, not ${duration}` }, { status: 400 });
+    }
+    createParams = { model, promptImage: body.imageUrl, promptText: videoPrompt, ratio: "1280:720", duration, ...(params.audio ? { audio: true } : {}) };
+  } else {
+    createParams = { model, promptImage: body.imageUrl, promptText: videoPrompt, ratio: "1280:720", duration };
+  }
 
   try {
     const client = new RunwayML({ apiKey, timeout: 25_000 });

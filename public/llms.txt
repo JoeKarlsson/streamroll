@@ -23,10 +23,8 @@ The output URL from step 1 is the input to step 2. The app exposes the generated
 
 - Runway Gen4 Turbo — fast, great quality (5 cr/s)
 - Runway Gen4.5 — highest quality, supports timestamp-based motion scripting (12 cr/s)
-- Runway Gen3a Turbo — previous generation (5 cr/s)
-- Google Veo 3 (via Runway) — Google video model, supports audio generation (~25 cr/s)
-- Google Veo 3.1 (via Runway) — Google latest (~25 cr/s)
-- Google Veo 3.1 Fast (via Runway) — fast Google model (~15 cr/s)
+- Google Veo 3.1 (via Runway) — Google latest, supports audio generation (20 cr/s, 40 cr/s with audio)
+- Google Veo 3.1 Fast (via Runway) — fast Google model, supports audio generation (10 cr/s, 15 cr/s with audio)
 
 ## Visual styles (18 total)
 

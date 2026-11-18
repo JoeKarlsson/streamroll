@@ -32,7 +32,7 @@ export type Style =
   | "ebs";
 
 export type Duration = 2 | 4 | 5 | 6 | 8 | 10;
-export type VideoModel = "gen4_turbo" | "gen4.5" | "gen3a_turbo" | "veo3" | "veo3.1" | "veo3.1_fast";
+export type VideoModel = "gen4_turbo" | "gen4.5" | "veo3.1" | "veo3.1_fast";
 export type ImageModel = "gen4_image" | "gen4_image_turbo" | "gpt_image_2" | "gemini_image3_pro" | "gemini_2.5_flash";
 export type Treatment = "full-bleed" | "theatrical" | "minimal";
 

@@ -5,7 +5,7 @@ describe("durationForModel", () => {
   it("keeps a length the new model offers", () => {
     expect(durationForModel("veo3.1", 8)).toBe(8);
     expect(durationForModel("gen4_turbo", 10)).toBe(10);
-    expect(durationForModel("veo3", 4)).toBe(4);
+    expect(durationForModel("veo3.1_fast", 4)).toBe(4);
   });
 
   it("falls back to 4s on Veo and 5s on Runway models", () => {
@@ -14,17 +14,23 @@ describe("durationForModel", () => {
   });
 
   it("offers Veo and Runway lengths", () => {
-    expect(durationsFor("veo3").map((d) => d.value)).toEqual([4, 6, 8]);
-    expect(durationsFor("gen3a_turbo").map((d) => d.value)).toEqual([2, 4, 5, 10]);
+    expect(durationsFor("veo3.1").map((d) => d.value)).toEqual([4, 6, 8]);
+    expect(durationsFor("gen4_turbo").map((d) => d.value)).toEqual([2, 4, 5, 10]);
   });
 });
 
 describe("credit costs", () => {
   it("prices video per second by model", () => {
-    expect(videoCreditsPerSecond("gen4_turbo")).toBe(5);
-    expect(videoCreditsPerSecond("gen4.5")).toBe(12);
-    expect(videoCreditsPerSecond("veo3.1")).toBe(25);
-    expect(videoCreditsPerSecond("veo3.1_fast")).toBe(15);
+    expect(videoCreditsPerSecond("gen4_turbo", false)).toBe(5);
+    expect(videoCreditsPerSecond("gen4.5", false)).toBe(12);
+    expect(videoCreditsPerSecond("veo3.1", false)).toBe(20);
+    expect(videoCreditsPerSecond("veo3.1_fast", false)).toBe(10);
+  });
+
+  it("charges Veo more when it also generates audio, and ignores audio on models without it", () => {
+    expect(videoCreditsPerSecond("veo3.1", true)).toBe(40);
+    expect(videoCreditsPerSecond("veo3.1_fast", true)).toBe(15);
+    expect(videoCreditsPerSecond("gen4_turbo", true)).toBe(5);
   });
 
   it("charges nothing for canvas-drawn title cards", () => {
@@ -32,7 +38,7 @@ describe("credit costs", () => {
   });
 
   it("charges the image model's price otherwise", () => {
-    expect(imageCreditCost("cinematic", "gen4_image")).toBe(30);
-    expect(imageCreditCost("retro", "gemini_2.5_flash")).toBe(10);
+    expect(imageCreditCost("cinematic", "gen4_image")).toBe(8);
+    expect(imageCreditCost("retro", "gemini_2.5_flash")).toBe(5);
   });
 });

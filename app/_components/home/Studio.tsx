@@ -24,7 +24,7 @@ import { PRESS } from "./classes";
 /** The intro builder: the settings form, the generate button and the result. */
 export function Studio() {
   const settings = useIntroSettings();
-  const { name, style, duration, imageModel, videoModel, logoMode, genMode, customNotes, primaryColor, tagline, treatment } = settings;
+  const { name, style, duration, imageModel, videoModel, audio, logoMode, genMode, customNotes, primaryColor, tagline, treatment } = settings;
   const { key: apiKey, loaded: keyLoaded } = useApiKey();
   const upload = useTitleCardUpload();
   const { uploadedUri, isUploading } = upload;
@@ -39,7 +39,7 @@ export function Studio() {
   const preview = buildPrompts({ name, style, tagline, duration, treatment, videoModel, primaryColor: primaryColor ?? undefined, customNotes: customNotes || undefined });
   const accentColor = STYLE_COLOR[style];
   const imageCrCost = imageCreditCost(style, imageModel);
-  const crPerSec = videoCreditsPerSecond(videoModel);
+  const crPerSec = videoCreditsPerSecond(videoModel, audio);
   const generateBlocked = isGenerating || !name.trim() || isUploading || (logoMode === "upload" && !uploadedUri);
   const statusMessage =
     step === "image" ? "Generating the poster"

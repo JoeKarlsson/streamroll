@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS } from "@/lib/links";
+import { IMAGE_MODELS, VIDEO_MODELS, isVeoModel, videoCreditsPerSecond } from "@/lib/models";
+import type { VideoModel } from "@/lib/runway";
 
 const STEPS = [
   {
@@ -29,18 +31,23 @@ const STEPS = [
 // Every style drawn on a canvas skips Runway image generation (CANVAS_STYLES in lib/styles.ts).
 const CANVAS_STYLE_NAMES = "Netflix, Minimal, Adult Swim, DreamWorks, TriStar, Hanna-Barbera, Columbia, MST3K, Emergency Broadcast";
 
-// Mirrors IMAGE_MODELS and VIDEO_MODELS in lib/models.ts.
+function videoCostRow(seconds: number, model: VideoModel) {
+  const label = VIDEO_MODELS.find((m) => m.id === model)?.label ?? model;
+  const cost = isVeoModel(model)
+    ? `${seconds * videoCreditsPerSecond(model, false)} cr, ${seconds * videoCreditsPerSecond(model, true)} cr with audio`
+    : `${seconds * videoCreditsPerSecond(model, false)} cr`;
+  return { item: `${seconds}s video, ${label}`, cost };
+}
+
 const CREDIT_COSTS = [
-  { item: "Title card, Gen4 Image", cost: "~30 cr" },
-  { item: "Title card, Gen4 Turbo", cost: "~15 cr" },
-  { item: "Title card, GPT Image 2", cost: "~40 cr" },
-  { item: "Title card, Gemini Image 3 Pro", cost: "~20 cr" },
-  { item: "Title card, Gemini 2.5 Flash", cost: "~10 cr" },
+  ...IMAGE_MODELS.map((m) => ({ item: `Title card, ${m.label}`, cost: `${m.crCost} cr` })),
   { item: `Title card, canvas styles (${CANVAS_STYLE_NAMES})`, cost: "0 cr" },
-  { item: "2s video, Gen4 Turbo", cost: "10 cr" },
-  { item: "5s video, Gen4 Turbo", cost: "25 cr" },
-  { item: "5s video, Gen4.5", cost: "60 cr" },
-  { item: "10s video, Gen4 Turbo", cost: "50 cr" },
+  videoCostRow(2, "gen4_turbo"),
+  videoCostRow(5, "gen4_turbo"),
+  videoCostRow(5, "gen4.5"),
+  videoCostRow(10, "gen4_turbo"),
+  videoCostRow(4, "veo3.1"),
+  videoCostRow(4, "veo3.1_fast"),
 ];
 
 export default function SetupPage() {
@@ -187,7 +194,7 @@ export default function SetupPage() {
         )}
 
         <section aria-labelledby="credit-costs-heading" className="mt-12">
-          <h2 id="credit-costs-heading" className="font-semibold mb-3">Estimated credit costs</h2>
+          <h2 id="credit-costs-heading" className="font-semibold mb-3">Credit costs</h2>
           <dl className="grid grid-cols-[1fr_auto] gap-x-6 gap-y-2 text-sm text-neutral-400">
             {CREDIT_COSTS.map((row) => (
               <div key={row.item} className="contents">

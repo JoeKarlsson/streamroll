@@ -12,7 +12,7 @@ Official SDKs for Node.js, Python, and more: [SDK docs](https://docs.dev.runwaym
 
 ## 2. Generate the title card
 
-`gen4_image` turns a text prompt into a sharp 1920×1080 title card. Cost: ~30 credits.
+`gen4_image` turns a text prompt into a sharp 1920×1080 title card. Cost: 8 credits.
 
 ```typescript
 import RunwayML from "@runwayml/sdk";

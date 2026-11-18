@@ -14,7 +14,7 @@ test("R01 key copy is true on every page", async ({ page }) => {
   }
 });
 
-test("R22 no 'free' next to Runway credit/account CTAs; gen4_image cost is ~30 everywhere", async ({ page }) => {
+test("R22 no 'free' next to Runway credit/account CTAs; gen4_image cost is 8 everywhere", async ({ page }) => {
   for (const path of ROUTES) {
     await gotoQuiet(page, path);
     const text = await page.locator("body").innerText();
@@ -22,16 +22,16 @@ test("R22 no 'free' next to Runway credit/account CTAs; gen4_image cost is ~30 e
   }
   // gen4_image's title-card cost, wherever a page states it
   for (const [path, pattern] of [
-    ["/setup", /Gen4 Image\D+~?(\d+)\s*cr/],
-    ["/how-it-works", /gen4_image[^.]*\.\s*Cost: about (\d+) credits/i],
+    ["/setup", /Gen4 Image\D+(\d+)\s*cr/],
+    ["/how-it-works", /gen4_image[^.]*\.\s*Cost: (\d+) credits/i],
   ] as const) {
     await gotoQuiet(page, path);
     const match = (await page.locator("main").innerText()).match(pattern);
-    expect(match?.[1], path).toBe("30");
+    expect(match?.[1], path).toBe("8");
   }
   await gotoQuiet(page, "/");
   await page.getByRole("button", { name: "Advanced settings" }).click();
-  await expect(page.getByRole("group", { name: "Image model" }).getByRole("button", { name: /Gen4 Image/ }).first()).toContainText("30");
+  await expect(page.getByRole("group", { name: "Image model" }).getByRole("button", { name: /Gen4 Image/ }).first()).toContainText("8 cr");
 });
 
 for (const path of ROUTES) {

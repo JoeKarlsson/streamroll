@@ -74,12 +74,22 @@ describe("POST /api/video/start", () => {
 
   it("enables audio param for veo models when audio=true", async () => {
     await POST(makeRequest(
-      { imageUrl: "https://cdn.example.com/image.png", videoModel: "veo3", audio: true },
+      { imageUrl: "https://cdn.example.com/image.png", videoModel: "veo3.1", duration: 8, audio: true },
       { "x-runway-key": "key123" }
     ));
     expect(mockImageToVideoCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ audio: true, model: "veo3" })
+      expect.objectContaining({ audio: true, model: "veo3.1", duration: 8 })
     );
+  });
+
+  it("rejects a clip length Veo doesn't make without calling Runway", async () => {
+    const res = await POST(makeRequest(
+      { imageUrl: "https://cdn.example.com/image.png", videoModel: "veo3.1_fast", duration: 5 },
+      { "x-runway-key": "key123" }
+    ));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/4, 6 or 8 second/);
+    expect(mockImageToVideoCreate).not.toHaveBeenCalled();
   });
 
   it("does not set audio param for non-veo models", async () => {

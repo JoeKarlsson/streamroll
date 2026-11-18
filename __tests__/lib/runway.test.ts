@@ -121,8 +121,8 @@ describe("buildPrompts", () => {
       expect(videoPrompt).toMatch(/\[00:\d\d\]/);
     });
 
-    it("does not use timestamp motion for gen3a_turbo", () => {
-      const { videoPrompt } = buildPrompts({ ...baseParams, videoModel: "gen3a_turbo" });
+    it("does not use timestamp motion for Veo", () => {
+      const { videoPrompt } = buildPrompts({ ...baseParams, videoModel: "veo3.1" });
       expect(videoPrompt).not.toMatch(/\[00:\d\d\]/);
     });
 

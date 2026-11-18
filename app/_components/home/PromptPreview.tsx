@@ -9,7 +9,6 @@ export function PromptPreview({ settings, preview }: { settings: IntroSettings; 
   const { imageModel, videoModel, audio, imagePromptOverride, setImagePromptOverride, videoPromptOverride, setVideoPromptOverride } = settings;
   const [showPrompt, setShowPrompt] = useState(false);
   const ratioLabel = imageRatio(imageModel).replace(":", "×");
-  const gen3aTurboPromptTooLong = videoModel === "gen3a_turbo" && (videoPromptOverride ?? preview.videoPrompt).length > 768;
   return (
     <section aria-labelledby="prompt-heading">
       <h2 id="prompt-heading">
@@ -41,11 +40,6 @@ export function PromptPreview({ settings, preview }: { settings: IntroSettings; 
             override={videoPromptOverride}
             onChange={setVideoPromptOverride}
           />
-          {gen3aTurboPromptTooLong && (
-            <p className="text-sm text-amber-500">
-              Gen3a Turbo has a 768-character prompt limit. This video prompt is {(videoPromptOverride ?? preview.videoPrompt).length} characters. Switch to Gen4 Turbo or shorten custom notes to avoid an API error.
-            </p>
-          )}
         </div>
       </Collapsible>
     </section>

@@ -1,7 +1,7 @@
 import type { IntroSettings } from "@/hooks/useIntroSettings";
 import { useState } from "react";
 import { STYLE_DEFAULTS } from "@/lib/styles";
-import { COLOR_SWATCHES, IMAGE_MODELS, TREATMENTS, VIDEO_MODELS, isVeoModel } from "@/lib/models";
+import { COLOR_SWATCHES, IMAGE_MODELS, TREATMENTS, VIDEO_MODELS, isVeoModel, videoCreditsPerSecond } from "@/lib/models";
 import { Collapsible } from "../Collapsible";
 import { ModelOption } from "./ModelOption";
 import { INPUT_CLASS } from "./classes";
@@ -43,7 +43,7 @@ export function AdvancedSettings({ settings, isGenerating, accentColor }: { sett
                     <div className="text-sm text-neutral-400 mb-2">{group === "OpenAI" ? "OpenAI via Runway" : group === "Google" ? "Google via Runway" : "Runway"}</div>
                     <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
                       {models.map((m) => (
-                        <ModelOption key={m.id} label={m.label} cost={m.crInfo} desc={m.desc} active={imageModel === m.id} accentColor={accentColor} disabled={isGenerating} onClick={() => setImageModel(m.id)} />
+                        <ModelOption key={m.id} label={m.label} cost={`${m.crCost} cr`} desc={m.desc} active={imageModel === m.id} accentColor={accentColor} disabled={isGenerating} onClick={() => setImageModel(m.id)} />
                       ))}
                     </div>
                   </div>
@@ -64,7 +64,7 @@ export function AdvancedSettings({ settings, isGenerating, accentColor }: { sett
                       <ModelOption
                         key={m.id}
                         label={m.label}
-                        cost={`${m.estimate ? "~" : ""}${m.crPerSec} cr/s`}
+                        cost={`${videoCreditsPerSecond(m.id, audio)} cr/s`}
                         desc={m.desc}
                         note={STYLE_DEFAULTS[style].videoModel === m.id ? "Recommended" : undefined}
                         active={videoModel === m.id}

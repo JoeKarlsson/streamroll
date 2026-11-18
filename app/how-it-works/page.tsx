@@ -89,7 +89,7 @@ export default function HowItWorksPage() {
             <h2 className={H2_CLASS}>Generate the title card</h2>
             <p className={`${BODY_CLASS} mb-4`}>
               <code className="text-neutral-300">gen4_image</code> turns a text prompt into a sharp 1920×1080 title
-              card. Cost: about 30 credits.
+              card. Cost: 8 credits.
             </p>
             <CodeBlock code={IMAGE_CODE} lang="typescript" />
           </li>

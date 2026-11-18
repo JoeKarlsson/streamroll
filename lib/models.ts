@@ -14,21 +14,22 @@ const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 8, label: "8s", est: "~75 sec" },
 ];
 
-export const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; crInfo: string; crCost: number; desc: string }[] = [
-  { id: "gen4_image",        label: "Gen4 Image",         group: "Runway",  crInfo: "~30 cr",  crCost: 30, desc: "Creative, artistic style" },
-  { id: "gen4_image_turbo",  label: "Gen4 Turbo",         group: "Runway",  crInfo: "~15 cr",  crCost: 15, desc: "Faster, great quality" },
-  { id: "gpt_image_2",       label: "GPT Image 2",        group: "OpenAI",  crInfo: "~40 cr",  crCost: 40, desc: "Precise instruction-following" },
-  { id: "gemini_image3_pro", label: "Gemini Image 3 Pro", group: "Google",  crInfo: "~20 cr",  crCost: 20, desc: "Vivid, instruction-aware" },
-  { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  crInfo: "~10 cr",  crCost: 10, desc: "Fast, Google quality" },
+// Credit prices from https://docs.dev.runwayml.com/guides/pricing/ at the size and quality this app requests
+// (lib/runway.ts imageRatio): gen4_image at 1080p, gpt_image_2 at its default high quality and 1K/2K size, gemini_image3_pro at 1K.
+export const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "OpenAI" | "Google"; crCost: number; desc: string }[] = [
+  { id: "gen4_image",        label: "Gen4 Image",         group: "Runway",  crCost: 8,  desc: "Creative, artistic style" },
+  { id: "gen4_image_turbo",  label: "Gen4 Turbo",         group: "Runway",  crCost: 2,  desc: "Faster, great quality" },
+  { id: "gpt_image_2",       label: "GPT Image 2",        group: "OpenAI",  crCost: 20, desc: "Precise instruction-following" },
+  { id: "gemini_image3_pro", label: "Gemini Image 3 Pro", group: "Google",  crCost: 20, desc: "Vivid, instruction-aware" },
+  { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  crCost: 5,  desc: "Fast, Google quality" },
 ];
 
-export const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crPerSec: number; estimate?: true; desc: string }[] = [
-  { id: "gen4_turbo",  label: "Gen4 Turbo",  group: "Runway", crPerSec: 5, desc: "Fast, great quality" },
+// Credits per second from https://docs.dev.runwayml.com/guides/pricing/. Veo charges more when it also generates audio.
+export const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crPerSec: number; crPerSecWithAudio?: number; desc: string }[] = [
+  { id: "gen4_turbo",  label: "Gen4 Turbo",  group: "Runway", crPerSec: 5,  desc: "Fast, great quality" },
   { id: "gen4.5",      label: "Gen4.5",       group: "Runway", crPerSec: 12, desc: "Highest quality" },
-  { id: "gen3a_turbo", label: "Gen3a Turbo",  group: "Runway", crPerSec: 5, desc: "Previous generation" },
-  { id: "veo3",        label: "Veo 3",        group: "Google", crPerSec: 25, estimate: true, desc: "Google video model" },
-  { id: "veo3.1",      label: "Veo 3.1",      group: "Google", crPerSec: 25, estimate: true, desc: "Google latest" },
-  { id: "veo3.1_fast", label: "Veo 3.1 Fast", group: "Google", crPerSec: 15, estimate: true, desc: "Fast Google model" },
+  { id: "veo3.1",      label: "Veo 3.1",      group: "Google", crPerSec: 20, crPerSecWithAudio: 40, desc: "Google latest" },
+  { id: "veo3.1_fast", label: "Veo 3.1 Fast", group: "Google", crPerSec: 10, crPerSecWithAudio: 15, desc: "Fast Google model" },
 ];
 
 export const TREATMENTS: { id: Treatment; label: string; desc: string }[] = [
@@ -48,8 +49,8 @@ export const COLOR_SWATCHES = [
   { label: "White",   value: "#F9FAFB" },
 ];
 
-export function isVeoModel(model: VideoModel): boolean {
-  return model === "veo3" || model === "veo3.1" || model === "veo3.1_fast";
+export function isVeoModel(model: VideoModel): model is "veo3.1" | "veo3.1_fast" {
+  return model === "veo3.1" || model === "veo3.1_fast";
 }
 
 /** The clip lengths a video model offers. */
@@ -63,10 +64,11 @@ export function durationForModel(model: VideoModel, current: Duration): Duration
   return isVeoModel(model) ? 4 : 5;
 }
 
-export function videoCreditsPerSecond(model: VideoModel): number {
+/** Credits per second of video; `audio` only changes the price on models that can generate it (Veo). */
+export function videoCreditsPerSecond(model: VideoModel, audio: boolean): number {
   const row = VIDEO_MODELS.find((m) => m.id === model);
   if (!row) throw new Error(`Unknown video model: ${model}`);
-  return row.crPerSec;
+  return audio ? (row.crPerSecWithAudio ?? row.crPerSec) : row.crPerSec;
 }
 
 /** Credits for the title card: canvas styles are drawn in the browser and cost nothing. */
