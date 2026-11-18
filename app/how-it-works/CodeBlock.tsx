@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type CopyState = "idle" | "copied" | "failed";
 
@@ -9,6 +9,7 @@ const ANNOUNCEMENTS: Record<CopyState, string> = { idle: "", copied: "Copied to 
 
 export function CodeBlock({ code, lang }: { code: string; lang: string }) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
+  const resetTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   async function copy() {
     try {
@@ -18,7 +19,9 @@ export function CodeBlock({ code, lang }: { code: string; lang: string }) {
       // The clipboard can be blocked by permissions or an insecure context; say so instead of claiming success.
       setCopyState("failed");
     }
-    setTimeout(() => setCopyState("idle"), 2000);
+    // A second click restarts the 2s window instead of being cut short by the first click's timer.
+    clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setCopyState("idle"), 2000);
   }
 
   return (
