@@ -1189,7 +1189,7 @@ export default function Home() {
           {PLATFORMS.map((p) => (
             <div key={p.name} className="flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/logos/${p.slug}.svg`} alt="" aria-hidden="true" width={16} height={16} />
+              <img src={`/logos/${p.slug}.svg`} alt="" aria-hidden="true" width={16} height={16} loading="lazy" />
               <span className="text-sm font-medium" style={{ color: p.color }}>{p.name}</span>
             </div>
           ))}
@@ -1310,13 +1310,12 @@ export default function Home() {
             </button>
           </div>
           <div role="group" aria-labelledby="style-heading" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {STYLES.map((s, i) => (
+            {STYLES.map((s) => (
               <ThemeTile
                 key={s.id}
                 label={s.label}
                 desc={s.desc}
                 image={s.image!}
-                eager={i < 4}
                 active={style === s.id && name !== "My Service"}
                 color={STYLE_COLOR[s.id]}
                 disabled={isGenerating}
@@ -2496,8 +2495,8 @@ function ElapsedSeconds({ since }: { since: number }) {
   return <>{(Math.max(0, now - since) / 1000).toFixed(1)}s</>;
 }
 
-function ThemeTile({ label, desc, image, active, color, disabled, eager = false, onClick }: {
-  label: string; desc: string; image: string; active: boolean; color: string; disabled: boolean; eager?: boolean; onClick: () => void;
+function ThemeTile({ label, desc, image, active, color, disabled, onClick }: {
+  label: string; desc: string; image: string; active: boolean; color: string; disabled: boolean; onClick: () => void;
 }) {
   return (
     <button
@@ -2516,7 +2515,7 @@ function ThemeTile({ label, desc, image, active, color, disabled, eager = false,
           alt=""
           width={640}
           height={360}
-          loading={eager ? "eager" : "lazy"}
+          loading="lazy"
           decoding="async"
           className="absolute inset-0 w-full h-full object-cover"
         />

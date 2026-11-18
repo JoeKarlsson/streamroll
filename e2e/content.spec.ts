@@ -90,20 +90,17 @@ async function homeResources(page: Page) {
 }
 
 test("R02 home transfers under 2 MB on load", async ({ page }) => {
-  test.fixme(true, "app bug: the closed More themes panel stays in the DOM, so all its tile images load with the page (about 2.8 MB)");
   const entries = await homeResources(page);
   expect(entries.reduce((sum, e) => sum + e.bytes, 0)).toBeLessThan(2 * 1024 * 1024);
 });
 
 test("R02 no tile image loaded on home is over 100 KB", async ({ page }) => {
-  test.fixme(true, "app bug: public/previews/fourth-of-july.jpg is 103,455 bytes");
   const tiles = (await homeResources(page)).filter((e) => /\/(previews|studios)\//.test(e.url));
   expect(tiles.length).toBeGreaterThan(0);
   expect(tiles.filter((e) => e.body > 100 * 1024)).toEqual([]);
 });
 
 test("R02 home has at most 6 image preloads", async ({ page }) => {
-  test.fixme(true, "app bug: home emits 8 image preloads (hero poster, 3 platform logos, 4 eager style tiles), over the cap of 6");
   await gotoQuiet(page, "/");
   expect(await page.locator('link[rel="preload"][as="image"]').count()).toBeLessThanOrEqual(6);
 });
