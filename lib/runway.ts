@@ -323,32 +323,3 @@ export async function generateLogoImage(params: GenerationParams, apiKey: string
   if (!task.output?.[0]) throw new Error("Image generation produced no output");
   return task.output[0];
 }
-
-export async function generateIntroVideo(
-  imageUrl: string,
-  params: GenerationParams,
-  apiKey: string
-): Promise<string> {
-  const { videoPrompt } = buildPrompts(params);
-  const model = params.videoModel ?? "gen4_turbo";
-
-  const isVeoModel = model === "veo3" || model === "veo3.1" || model === "veo3.1_fast";
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const createParams: Record<string, any> = {
-    model,
-    promptImage: imageUrl,
-    promptText: videoPrompt,
-    ratio: "1280:720",
-    duration: params.duration,
-  };
-  if (isVeoModel && params.audio) createParams.audio = true;
-
-  const task = await getClient(apiKey).imageToVideo
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .create(createParams as any)
-    .waitForTaskOutput({ timeout: 270_000 });
-
-  if (!task.output?.[0]) throw new Error("Video generation produced no output");
-  return task.output[0];
-}
