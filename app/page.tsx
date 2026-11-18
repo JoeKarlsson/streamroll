@@ -260,7 +260,7 @@ const PLATFORMS = [
   },
   {
     name: "Jellyfin", slug: "jellyfin", color: "#00A4DC",
-    howTo: "Dashboard → Admin → Pre-Roll Video → upload the .mp4 file.",
+    howTo: "Jellyfin has no built-in pre-roll; install an intros plugin from Dashboard → Plugins → Catalog.",
     docs: "https://jellyfin.org/docs/general/server/plugins/",
   },
   {
