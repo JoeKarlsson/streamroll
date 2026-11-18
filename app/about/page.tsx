@@ -1,29 +1,5 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { LINKS } from "@/lib/links";
-
-export const metadata: Metadata = {
-  title: "About — StreamRoll",
-  description:
-    "Artist statement for StreamRoll, which makes a Netflix-style intro for your own Plex, Jellyfin or Emby server from its name.",
-  alternates: {
-    canonical: "https://streamroll.vercel.app/about",
-  },
-  openGraph: {
-    title: "About — StreamRoll",
-    description: "Artist statement for StreamRoll, Netflix-style intros for your own media server.",
-    url: "https://streamroll.vercel.app/about",
-    type: "article",
-    locale: "en_US",
-    images: [{
-      url: "/opengraph-image.png",
-      width: 1376,
-      height: 768,
-      type: "image/png",
-      alt: "StreamRoll — AI-generated streaming intros",
-    }],
-  },
-};
 
 export default function AboutPage() {
   return (
