@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS } from "@/lib/links";
+import { track } from "@/lib/plausible";
 import { INPUT_CLASS, PRESS } from "./classes";
 
 /** Inline API key entry, or the saved key's status with a way to remove it. */
@@ -23,6 +24,7 @@ export function ApiKeyForm({ apiKeyInputRef }: { apiKeyInputRef: RefObject<HTMLI
     if (!apiKeyInput.trim()) return;
     keyFocusAfterChangeRef.current = true;
     saveKey(apiKeyInput, { remember: rememberKey });
+    track("Key Saved", { page: "home" });
     setApiKeyInput("");
     setApiKeySaved(true);
   }

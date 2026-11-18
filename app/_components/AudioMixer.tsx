@@ -10,6 +10,7 @@ interface Props {
   videoUrl: string;
   name: string;
   style: string;
+  videoModel: string;
   accentColor: string;
   duration: number;
   initialFile?: File | undefined;
@@ -172,7 +173,7 @@ const PIPELINE_STEPS = [
   { id: "package", label: "Package",             detail: "building output file" },
 ];
 
-export function AudioMixer({ videoUrl, name, style, accentColor, duration, initialFile }: Props) {
+export function AudioMixer({ videoUrl, name, style, videoModel, accentColor, duration, initialFile }: Props) {
   const [open, setOpen]                     = useState(false);
   const [audioFile, setAudioFile]           = useState<File | null>(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
@@ -523,7 +524,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
                 <a
                   href={outputUrl}
                   download={outputFilename}
-                  onClick={() => track("Download Video", { style, audio: "mixed" })}
+                  onClick={() => track("Download Video", { style, video_model: videoModel, audio: "mixed" })}
                   className="flex-1 min-h-11 py-2.5 rounded-lg text-sm font-semibold text-black text-center transition-[color,background-color,scale] duration-75 ease-out active:scale-[0.97]"
                   style={{ background: accentColor }}
                 >

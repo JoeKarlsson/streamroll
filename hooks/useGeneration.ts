@@ -7,6 +7,7 @@ import { isVeoModel } from "@/lib/models";
 import { renderCanvasLogo } from "@/lib/canvasLogo";
 import { introFilename } from "@/lib/filename";
 import { GEN_SESSION_KEY, isSavedStep, parseSavedGeneration, type GenStep } from "@/lib/genSession";
+import { GenerationError, generationErrorProps, kindForFailureCode, readApiJson, type ErrorKind, type GenerationStage } from "@/lib/generationError";
 import { track } from "@/lib/plausible";
 import { sleepUnlessAborted } from "@/lib/sleepUnlessAborted";
 import type { IntroSettings } from "./useIntroSettings";
@@ -150,7 +151,7 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
 
   async function downloadVideo() {
     if (!videoUrl) return;
-    track("Download Video", { style, video_model: videoModel });
+    track("Download Video", { style, video_model: videoModel, audio: "original" });
     setDownloadError(null);
     try {
       // Runway's CDN sends Access-Control-Allow-Origin: *, so the MP4 can be saved under our filename.
@@ -255,10 +256,18 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
       img.src = url;
       await img.decode();
     } catch (e) {
-      throw new Error(`The poster was generated but couldn’t be loaded (${e instanceof Error ? e.message : String(e)})`);
+      throw new GenerationError(
+        `The poster was generated but couldn’t be loaded (${e instanceof Error ? e.message : String(e)})`,
+        { kind: "other", stage: "poster" },
+      );
     } finally {
       setImageUrl(url);
     }
+  }
+
+  // Kind, status and Runway's code only: the message can quote the prompt.
+  function trackGenerationError(e: unknown, stage: GenerationStage) {
+    track("Generation Error", generationErrorProps(e, stage, { imageModel, videoModel }));
   }
 
   function startTimer() {
@@ -267,7 +276,11 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
 
   async function generate() {
     if (!name.trim()) return;
-    if (keyLoaded && !apiKey) { onMissingKey(); return; }
+    if (keyLoaded && !apiKey) {
+      track("Key Missing", { page: "home" });
+      onMissingKey();
+      return;
+    }
 
     setImageUrl(null);
     setVideoUrl(null);
@@ -318,6 +331,7 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
       } catch (e) {
         setError(e instanceof Error ? e.message : "Canvas render failed");
         setStep("error");
+        trackGenerationError(e, "canvas");
       }
       return;
     }
@@ -331,8 +345,7 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
       setStep("image");
       const imageStart = Date.now();
       const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody()) });
-      const imageData = await imageRes.json();
-      if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
+      const imageData = await readApiJson<{ imageUrl: string; creditCost?: number }>(imageRes, "Image generation failed");
       imageTimeRef.current = Date.now() - imageStart;
       await showGeneratedPoster(imageData.imageUrl);
       imageCreditCostRef.current = imageData.creditCost ?? 0;
@@ -350,7 +363,7 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
       const message = e instanceof Error ? e.message : "Something went wrong";
       setError(message);
       setStep("error");
-      track("Generation Error", { stage: "image", message: message.slice(0, 200) });
+      trackGenerationError(e, "image");
     }
   }
 
@@ -371,8 +384,7 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
     try {
       const imageStart = Date.now();
       const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody(combined || undefined)) });
-      const imageData = await imageRes.json();
-      if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
+      const imageData = await readApiJson<{ imageUrl: string; creditCost?: number }>(imageRes, "Image generation failed");
       imageTimeRef.current = Date.now() - imageStart;
       await showGeneratedPoster(imageData.imageUrl);
       imageCreditCostRef.current = imageData.creditCost ?? 0;
@@ -381,7 +393,7 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
       const message = e instanceof Error ? e.message : "Something went wrong";
       setError(message);
       setStep("error");
-      track("Generation Error", { stage: "regenerate", message: message.slice(0, 200) });
+      trackGenerationError(e, "regenerate");
     }
   }
 
@@ -428,10 +440,9 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
         headers: jsonHeaders,
         body: JSON.stringify({ ...buildBody(videoCombinedNotes || undefined), imageUrl: effectiveImageUrl }),
       });
-      const startData = await startRes.json();
-      if (!startRes.ok) throw new Error(startData.error ?? "Failed to start video generation");
+      const startData = await readApiJson<{ taskId: string; creditsBefore?: number | null }>(startRes, "Failed to start video generation");
 
-      const taskId: string = startData.taskId;
+      const taskId = startData.taskId;
       const videoCreditsBefore: number = startData.creditsBefore ?? 0;
       activeTaskIdRef.current = taskId;
       if (stopIfCancelled()) return;
@@ -444,11 +455,14 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
         if (stopIfCancelled()) return;
 
         const pollRes = await fetch(`/api/video/poll?id=${encodeURIComponent(taskId)}`, { headers: pollHeaders });
-        const pollData = await pollRes.json();
+        // A failed check throws; the catch below still honours a cancel that arrived meanwhile.
+        const pollData = await readApiJson<{
+          status: string; output: string; failure?: string; failureCode?: string | null; kind?: ErrorKind;
+          progress?: number | null; creditsAfter?: number | null;
+        }>(pollRes, "Status check failed");
         if (stopIfCancelled()) return;
-        if (!pollRes.ok) throw new Error(pollData.error ?? "Status check failed");
 
-        const { status, output, failure, failureCode, progress, creditsAfter } = pollData;
+        const { status, output, failure, failureCode, kind, progress, creditsAfter } = pollData;
         setPollStatus(status);
         if (typeof progress === "number") setPollProgress(Math.round(progress * 100));
         else if (status !== "RUNNING") setPollProgress(null);
@@ -468,12 +482,16 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
           setIncomingVideoUrl(output);
           return;
         }
-        if (status === "FAILED")    throw new Error(`${failure ?? "Video generation failed"}${failureCode ? ` (${failureCode})` : ""}`);
-        if (status === "CANCELLED") throw new Error("Video generation was cancelled");
+        if (status === "FAILED") {
+          throw new GenerationError(`${failure ?? "Video generation failed"}${failureCode ? ` (${failureCode})` : ""}`, {
+            kind: kind ?? kindForFailureCode(failureCode), code: failureCode ?? null,
+          });
+        }
+        if (status === "CANCELLED") throw new GenerationError("Video generation was cancelled", { kind: "runway_failed" });
         // PENDING / THROTTLED / RUNNING → keep polling
       }
 
-      throw new Error("Video generation timed out after 15 minutes. Check your Runway dashboard for task status.");
+      throw new GenerationError("Video generation timed out after 15 minutes. Check your Runway dashboard for task status.", { kind: "timeout" });
     } catch (e) {
       if (stopIfCancelled()) return;
       activeTaskIdRef.current = null;
@@ -482,7 +500,7 @@ export function useGeneration({ settings, apiKey, keyLoaded, uploadedUri, onMiss
       const message = e instanceof Error ? e.message : "Something went wrong";
       setError(message);
       setStep("error");
-      track("Generation Error", { stage: "video", message: message.slice(0, 200) });
+      trackGenerationError(e, "video");
     }
   }
 

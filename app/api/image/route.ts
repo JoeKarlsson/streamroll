@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import RunwayML from "@runwayml/sdk";
 import { generateLogoImage, type GenerationParams } from "@/lib/runway";
+import { runwayErrorResponse } from "@/lib/runwayError";
 
 export const maxDuration = 300;
 
@@ -42,9 +43,6 @@ export async function POST(req: NextRequest) {
     const creditCost = before !== null && after !== null ? Math.max(0, before - after) : 0;
     return NextResponse.json({ imageUrl, creditCost });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Image generation failed";
-    // TaskFailedError carries Runway's failureCode (e.g. SAFETY.INPUT.TEXT for a moderation rejection)
-    const code = (e as { taskDetails?: { failureCode?: string } })?.taskDetails?.failureCode;
-    return NextResponse.json({ error: code ? `${msg} (${code})` : msg }, { status: 500 });
+    return runwayErrorResponse(e, "Image generation failed");
   }
 }

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import RunwayML from "@runwayml/sdk";
+import { kindForFailureCode } from "@/lib/generationError";
+import { runwayErrorResponse } from "@/lib/runwayError";
 
 export const maxDuration = 90;
 
@@ -28,7 +30,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ status: "SUCCEEDED", output: task.output[0], creditsAfter });
     }
     if (task.status === "FAILED") {
-      return NextResponse.json({ status: "FAILED", failure: task.failure, failureCode: task.failureCode ?? null });
+      return NextResponse.json({
+        status: "FAILED", failure: task.failure, failureCode: task.failureCode ?? null, kind: kindForFailureCode(task.failureCode),
+      });
     }
     if (task.status === "RUNNING") {
       return NextResponse.json({ status: "RUNNING", progress: task.progress ?? null });
@@ -36,7 +40,6 @@ export async function GET(req: NextRequest) {
     // PENDING, THROTTLED, CANCELLED
     return NextResponse.json({ status: task.status });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Status check failed";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return runwayErrorResponse(e, "Status check failed");
   }
 }

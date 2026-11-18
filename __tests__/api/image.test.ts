@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
-vi.mock("@runwayml/sdk", () => {
+vi.mock("@runwayml/sdk", async (importOriginal) => {
   const mockOrganization = {
     retrieve: vi.fn().mockResolvedValue({ creditBalance: 100 }),
   };
   const MockRunwayML = vi.fn().mockImplementation(function () { return ({ organization: mockOrganization }); });
-  return { default: MockRunwayML };
+  return { ...(await importOriginal<typeof import("@runwayml/sdk")>()), default: MockRunwayML };
 });
 
 vi.mock("@/lib/runway", () => ({
@@ -15,7 +15,7 @@ vi.mock("@/lib/runway", () => ({
 
 import { POST } from "@/app/api/image/route";
 import { generateLogoImage } from "@/lib/runway";
-import RunwayML from "@runwayml/sdk";
+import RunwayML, { TaskFailedError } from "@runwayml/sdk";
 
 function makeRequest(body: object, headers: Record<string, string> = {}) {
   return new NextRequest("http://localhost/api/image", {
@@ -87,6 +87,7 @@ describe("POST /api/image", () => {
     expect(res.status).toBe(500);
     const json = await res.json();
     expect(json.error).toContain("Runway API error");
+    expect(json.kind).toBe("other");
   });
 
   it("returns the image when the credit-balance lookup fails", async () => {
@@ -100,14 +101,16 @@ describe("POST /api/image", () => {
     expect(json.creditCost).toBe(0);
   });
 
-  it("adds Runway's failure code to the error", async () => {
-    vi.mocked(generateLogoImage).mockRejectedValueOnce(
-      Object.assign(new Error("Prompt was rejected"), { taskDetails: { failureCode: "SAFETY.INPUT.TEXT" } })
-    );
+  it("returns 422 with kind moderation and Runway's failure code when moderation rejects the prompt", async () => {
+    vi.mocked(generateLogoImage).mockRejectedValueOnce(new TaskFailedError(
+      { id: "t1", status: "FAILED", createdAt: "", failure: "Prompt was rejected", failureCode: "SAFETY.INPUT.TEXT" } as never,
+    ));
 
     const res = await POST(makeRequest({ name: "Netflix" }, { "x-runway-key": "key123" }));
-    expect(res.status).toBe(500);
-    expect((await res.json()).error).toBe("Prompt was rejected (SAFETY.INPUT.TEXT)");
+    expect(res.status).toBe(422);
+    const json = await res.json();
+    expect(json).toMatchObject({ kind: "moderation", code: "SAFETY.INPUT.TEXT" });
+    expect(json.error).toContain("(SAFETY.INPUT.TEXT)");
   });
 
   it("creditCost is at least 0 even if credits went up", async () => {

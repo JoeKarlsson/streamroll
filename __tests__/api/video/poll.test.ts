@@ -4,12 +4,12 @@ import { NextRequest } from "next/server";
 const mockTasksRetrieve = vi.fn();
 const mockOrgRetrieve = vi.fn();
 
-vi.mock("@runwayml/sdk", () => {
+vi.mock("@runwayml/sdk", async (importOriginal) => {
   const MockRunwayML = vi.fn().mockImplementation(function () { return ({
     tasks: { retrieve: mockTasksRetrieve },
     organization: { retrieve: mockOrgRetrieve },
   }); });
-  return { default: MockRunwayML };
+  return { ...(await importOriginal<typeof import("@runwayml/sdk")>()), default: MockRunwayML };
 });
 
 import { GET } from "@/app/api/video/poll/route";
@@ -60,6 +60,14 @@ describe("GET /api/video/poll", () => {
     const json = await res.json();
     expect(json.status).toBe("FAILED");
     expect(json.failure).toBe("Content policy violation");
+    expect(json.kind).toBe("runway_failed");
+  });
+
+  it("marks a moderation failure code as kind moderation", async () => {
+    mockTasksRetrieve.mockResolvedValue({ status: "FAILED", failure: "Output rejected", failureCode: "SAFETY.OUTPUT.VIDEO" });
+
+    const json = await (await GET(makeRequest({ id: "task_abc" }, { "x-runway-key": "key123" }))).json();
+    expect(json).toMatchObject({ failureCode: "SAFETY.OUTPUT.VIDEO", kind: "moderation" });
   });
 
   it("returns RUNNING status with progress", async () => {

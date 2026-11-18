@@ -4,13 +4,15 @@ import { NextRequest } from "next/server";
 const mockImageToVideoCreate = vi.fn().mockResolvedValue({ id: "task_xyz" });
 const mockOrgRetrieve = vi.fn().mockResolvedValue({ creditBalance: 500 });
 
-vi.mock("@runwayml/sdk", () => ({
+vi.mock("@runwayml/sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@runwayml/sdk")>()),
   default: vi.fn().mockImplementation(function () { return ({
     imageToVideo: { create: mockImageToVideoCreate },
     organization: { retrieve: mockOrgRetrieve },
   }); }),
 }));
 
+import { RateLimitError } from "@runwayml/sdk";
 import { POST } from "@/app/api/video/start/route";
 
 function makeRequest(body: object, headers: Record<string, string> = {}) {
@@ -111,14 +113,15 @@ describe("POST /api/video/start", () => {
     );
   });
 
-  it("returns 500 when imageToVideo.create throws", async () => {
-    mockImageToVideoCreate.mockRejectedValueOnce(new Error("rate limited"));
+  it("passes Runway's 429 through with kind rate_limit", async () => {
+    mockImageToVideoCreate.mockRejectedValueOnce(new RateLimitError(429, { error: "rate limited" }, "rate limited", new Headers()));
     const res = await POST(makeRequest(
       { imageUrl: "https://cdn.example.com/image.png" },
       { "x-runway-key": "key123" }
     ));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(429);
     const json = await res.json();
     expect(json.error).toContain("rate limited");
+    expect(json.kind).toBe("rate_limit");
   });
 });

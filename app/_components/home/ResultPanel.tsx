@@ -21,7 +21,7 @@ export function ResultPanel({ settings, gen, accentColor, crPerSec, imageCrCost,
   imageCrCost: number;
   pendingAudioFile: File | undefined;
 }) {
-  const { name, style, duration, imageModel, logoMode, genMode, setGenMode } = settings;
+  const { name, style, duration, imageModel, videoModel, logoMode, genMode, setGenMode } = settings;
   const {
     step, isGenerating, imageUrl, videoUrl, error, timings, credits, downloadError, posterDownloadError,
     reviewNotes, setReviewNotes, videoRegenNotes, setVideoRegenNotes, pollStatus, pollProgress,
@@ -297,7 +297,7 @@ export function ResultPanel({ settings, gen, accentColor, crPerSec, imageCrCost,
                     href={redditShareUrl(name.trim())}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => track("Share Reddit", { style })}
+                    onClick={() => track("Share", { method: "reddit", style })}
                     className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
                   >
                     Post to r/plexprerolls
@@ -306,7 +306,7 @@ export function ResultPanel({ settings, gen, accentColor, crPerSec, imageCrCost,
                     href={tweetShareUrl(name.trim())}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => track("Share X", { style })}
+                    onClick={() => track("Share", { method: "x", style })}
                     className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
                   >
                     Share on X
@@ -357,6 +357,7 @@ export function ResultPanel({ settings, gen, accentColor, crPerSec, imageCrCost,
             videoUrl={videoUrl}
             name={name}
             style={style}
+            videoModel={videoModel}
             accentColor={accentColor}
             duration={duration}
             initialFile={pendingAudioFile}

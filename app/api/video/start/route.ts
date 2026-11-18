@@ -3,6 +3,7 @@ import RunwayML from "@runwayml/sdk";
 import type { ImageToVideoCreateParams } from "@runwayml/sdk/resources";
 import { buildPrompts, type GenerationParams } from "@/lib/runway";
 import { isVeoModel } from "@/lib/models";
+import { runwayErrorResponse } from "@/lib/runwayError";
 
 export const maxDuration = 90;
 
@@ -54,7 +55,6 @@ export async function POST(req: NextRequest) {
     const creditsBefore = await client.organization.retrieve().then(r => r.creditBalance).catch(() => null);
     return NextResponse.json({ taskId: task.id, creditsBefore });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Failed to start video generation";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return runwayErrorResponse(e, "Failed to start video generation");
   }
 }

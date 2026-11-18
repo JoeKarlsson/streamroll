@@ -6,6 +6,7 @@ import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS } from "@/lib/links";
 import { IMAGE_MODELS, VIDEO_MODELS, isVeoModel, videoCreditsPerSecond } from "@/lib/models";
 import type { VideoModel } from "@/lib/runway";
+import { track } from "@/lib/plausible";
 
 const STEPS = [
   {
@@ -73,6 +74,7 @@ export default function SetupPage() {
     if (!input.trim()) return;
     focusAfterChange.current = "saved";
     saveKey(input.trim(), { remember });
+    track("Key Saved", { page: "setup" });
     setSaved(true);
     setInput("");
   }
