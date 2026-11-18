@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
+import { preload } from "react-dom";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import { buildPrompts, imageRatio, type Style, type Duration, type ImageModel, type VideoModel, type Treatment } from "@/lib/runway";
 import { useApiKey } from "@/hooks/useApiKey";
-import { LINKS, BUILDER, tweetShareUrl, redditShareUrl } from "@/lib/links";
+import { LINKS, tweetShareUrl, redditShareUrl } from "@/lib/links";
+import { isEnterToSubmitNotes } from "@/lib/enterToSubmit";
 import { track } from "@/lib/plausible";
 import { AudioMixer } from "./AudioMixer";
 
 type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
 
 const SESSION_KEY = "streamroll_gen_state";
-
-// Set to true to re-enable Runway branding (Get Runway nav link, Runway docs + Powered by Runway footer)
-const SHOW_RUNWAY_BRANDING = true;
 
 // Per-style accent colors used for selected state
 const STYLE_COLOR: Record<Style, string> = {
@@ -45,25 +43,25 @@ const STYLE_COLOR: Record<Style, string> = {
   ebs:         "#22C55E",
 };
 
-const STYLES: { id: Style; label: string; emoji: string; desc: string; tip?: string; image?: string }[] = [
-  { id: "prestige",   label: "Netflix",         emoji: "🔴", desc: "Bold red on black",            tip: "Auto: Gen4.5 · Minimal · 4s",        image: "/previews/style-prestige.jpg" },
-  { id: "cinematic",  label: "Cinematic",       emoji: "🎬", desc: "Navy & gold, film grain",       tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-cinematic.jpg" },
-  { id: "retro",      label: "Retro",           emoji: "📺", desc: "80s neon synthwave",            tip: "Auto: Gen4 Turbo · Full Bleed · 5s", image: "/previews/style-retro.jpg" },
-  { id: "futuristic", label: "Futuristic",      emoji: "🚀", desc: "Holographic chrome",            tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-futuristic.jpg" },
-  { id: "minimal",    label: "Minimal",         emoji: "✦",  desc: "Clean & elegant",               tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-minimal.jpg" },
-  { id: "horror",     label: "Horror",          emoji: "🩸", desc: "Gothic, fog & shadow",          tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-horror.jpg" },
-  { id: "anime",      label: "Anime",           emoji: "⚡", desc: "Shonen energy burst",           tip: "Auto: Gen4.5 · Full Bleed · 4s",     image: "/previews/style-anime.jpg" },
-  { id: "adultswim",  label: "Adult Swim",      emoji: "📺", desc: "Black screen, white text",      tip: "Auto: Gen4 Turbo · Minimal · 2s",    image: "/previews/style-adultswim.jpg" },
-  { id: "cartoon",    label: "Cartoon Network", emoji: "🟥", desc: "Checkerboard graphic pop",      tip: "Auto: Gen4 Turbo · Full Bleed · 4s", image: "/previews/style-cartoon.jpg" },
-  { id: "vhs",        label: "VHS",             emoji: "📼", desc: "Tracking errors, tape decay",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-vhs.jpg" },
-  { id: "grindhouse", label: "Grindhouse",      emoji: "🎞️", desc: "Psychedelic cinema pre-show",   tip: "Auto: Gen4 Turbo · Theatrical · 5s", image: "/previews/style-grindhouse.jpg" },
-  { id: "lofi",       label: "Lo-fi",           emoji: "🎧", desc: "Cozy rain, study beats",        tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-lofi.jpg" },
-  { id: "vaporwave",  label: "Vaporwave",       emoji: "🌴", desc: "Pastel grid, marble busts",     tip: "Auto: Gen4.5 · Full Bleed · 5s",     image: "/previews/style-vaporwave.jpg" },
-  { id: "cyberpunk",  label: "Cyberpunk",       emoji: "🌆", desc: "Neon rain, dark mega-city",     tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-cyberpunk.jpg" },
-  { id: "hbo",        label: "HBO",             emoji: "⬛", desc: "3D chrome letters, star field", tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-hbo.jpg" },
-  { id: "epic",       label: "Epic",            emoji: "⚔️", desc: "Golden hour, dust",             tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-epic.jpg" },
-  { id: "nature",     label: "Nature",          emoji: "🌿", desc: "Earthy documentary",            tip: "Auto: Gen4 Turbo · Minimal · 4s",    image: "/previews/style-nature.jpg" },
-  { id: "blockbuster",label: "Blockbuster",     emoji: "🎫", desc: "Yellow on navy, video store",   tip: "Auto: Gen4.5 · Theatrical · 5s",     image: "/previews/style-blockbuster.jpg" },
+const STYLES: { id: Style; label: string; desc: string; tip?: string; image?: string }[] = [
+  { id: "prestige",   label: "Netflix",         desc: "Bold red on black",            tip: "Auto: Gen4.5, Minimal, 4s",        image: "/previews/style-prestige.jpg" },
+  { id: "cinematic",  label: "Cinematic",       desc: "Navy & gold, film grain",       tip: "Auto: Gen4.5, Full Bleed, 5s",     image: "/previews/style-cinematic.jpg" },
+  { id: "retro",      label: "Retro",           desc: "80s neon synthwave",            tip: "Auto: Gen4 Turbo, Full Bleed, 5s", image: "/previews/style-retro.jpg" },
+  { id: "futuristic", label: "Futuristic",      desc: "Holographic chrome",            tip: "Auto: Gen4.5, Full Bleed, 5s",     image: "/previews/style-futuristic.jpg" },
+  { id: "minimal",    label: "Minimal",          desc: "Clean & elegant",               tip: "Auto: Gen4 Turbo, Minimal, 4s",    image: "/previews/style-minimal.jpg" },
+  { id: "horror",     label: "Horror",          desc: "Gothic, fog & shadow",          tip: "Auto: Gen4 Turbo, Theatrical, 5s", image: "/previews/style-horror.jpg" },
+  { id: "anime",      label: "Anime",           desc: "Shonen energy burst",           tip: "Auto: Gen4.5, Full Bleed, 4s",     image: "/previews/style-anime.jpg" },
+  { id: "adultswim",  label: "Adult Swim",      desc: "Black screen, white text",      tip: "Auto: Gen4 Turbo, Minimal, 2s",    image: "/previews/style-adultswim.jpg" },
+  { id: "cartoon",    label: "Cartoon Network", desc: "Checkerboard graphic pop",      tip: "Auto: Gen4 Turbo, Full Bleed, 4s", image: "/previews/style-cartoon.jpg" },
+  { id: "vhs",        label: "VHS",             desc: "Tracking errors, tape decay",   tip: "Auto: Gen4 Turbo, Theatrical, 5s", image: "/previews/style-vhs.jpg" },
+  { id: "grindhouse", label: "Grindhouse",      desc: "Psychedelic cinema pre-show",   tip: "Auto: Gen4 Turbo, Theatrical, 5s", image: "/previews/style-grindhouse.jpg" },
+  { id: "lofi",       label: "Lo-fi",           desc: "Cozy rain, study beats",        tip: "Auto: Gen4 Turbo, Minimal, 4s",    image: "/previews/style-lofi.jpg" },
+  { id: "vaporwave",  label: "Vaporwave",       desc: "Pastel grid, marble busts",     tip: "Auto: Gen4.5, Full Bleed, 5s",     image: "/previews/style-vaporwave.jpg" },
+  { id: "cyberpunk",  label: "Cyberpunk",       desc: "Neon rain, dark mega-city",     tip: "Auto: Gen4.5, Theatrical, 5s",     image: "/previews/style-cyberpunk.jpg" },
+  { id: "hbo",        label: "HBO",             desc: "3D chrome letters, star field", tip: "Auto: Gen4.5, Theatrical, 5s",     image: "/previews/style-hbo.jpg" },
+  { id: "epic",       label: "Epic",            desc: "Golden hour, dust",             tip: "Auto: Gen4.5, Theatrical, 5s",     image: "/previews/style-epic.jpg" },
+  { id: "nature",     label: "Nature",          desc: "Earthy documentary",            tip: "Auto: Gen4 Turbo, Minimal, 4s",    image: "/previews/style-nature.jpg" },
+  { id: "blockbuster",label: "Blockbuster",     desc: "Yellow on navy, video store",   tip: "Auto: Gen4.5, Theatrical, 5s",     image: "/previews/style-blockbuster.jpg" },
 ];
 
 const STYLE_DEFAULTS: Record<Style, { videoModel: VideoModel; imageModel: ImageModel; treatment: Treatment; duration: Duration }> = {
@@ -128,80 +126,80 @@ const DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 10, label: "10s", est: "~60 sec" },
 ];
 
-type Preset = { name: string; style: Style; tagline: string; desc: string; vibe: string; emoji?: string; customNotes?: string; videoPromptOverride?: string; image?: string };
+type Preset = { name: string; style: Style; tagline: string; desc: string; vibe: string; customNotes?: string; videoPromptOverride?: string; image?: string };
 
 const INSPO: Preset[] = [
-  { name: "Joeflix",    style: "prestige",    tagline: "Where stories come alive",         desc: "Example · your name here", vibe: "Bold crimson wordmark, premium streaming identity" },
-  { name: "NightOwl",   style: "horror",      tagline: "Streaming after dark",             desc: "Late-night horror hub",    vibe: "Blood red & black, gothic fog, candlelit" },
-  { name: "SkyBox",     style: "futuristic",  tagline: "Beyond the horizon",               desc: "Sci-fi & space content",   vibe: "Holographic chrome, electric cyan, sci-fi glitch" },
-  { name: "VibeTube",   style: "retro",       tagline: "Totally tubular",                  desc: "80s & 90s nostalgia",      vibe: "Neon synthwave, hot pink & electric blue, CRT glow" },
-  { name: "SakuraTV",   style: "anime",       tagline: "Stories bloom here",               desc: "Anime & animation",        vibe: "Shonen energy burst, speed lines, electric aura" },
-  { name: "EpicQuest",  style: "epic",        tagline: "Every story is legendary",         desc: "Action & adventure",       vibe: "Golden hour dust, monumental scale, bronze & amber" },
-  { name: "TerraDoc",   style: "nature",      tagline: "The world, unfiltered",            desc: "Nature documentaries",     vibe: "Lush green, earthy organic tones, soft natural light" },
-  { name: "WhiteRoom",  style: "minimal",     tagline: "Less is more",                     desc: "Arthouse & indie film",    vibe: "Clean white type, soft gradient, understated" },
-  { name: "LateNight",  style: "adultswim",   tagline: "on after dark",                    desc: "Adult Swim bumper",        vibe: "Pure black, deadpan white Helvetica text" },
+  { name: "Joeflix", style: "prestige",    tagline: "Where stories come alive",         desc: "Example · your name here", vibe: "Bold crimson wordmark, premium streaming identity" },
+  { name: "NightOwl", style: "horror",      tagline: "Streaming after dark",             desc: "Late-night horror hub",    vibe: "Blood red & black, gothic fog, candlelit" },
+  { name: "SkyBox", style: "futuristic",  tagline: "Beyond the horizon",               desc: "Sci-fi & space content",   vibe: "Holographic chrome, electric cyan, sci-fi glitch" },
+  { name: "VibeTube", style: "retro",       tagline: "Totally tubular",                  desc: "80s & 90s nostalgia",      vibe: "Neon synthwave, hot pink & electric blue, CRT glow" },
+  { name: "SakuraTV", style: "anime",       tagline: "Stories bloom here",               desc: "Anime & animation",        vibe: "Shonen energy burst, speed lines, electric aura" },
+  { name: "EpicQuest", style: "epic",        tagline: "Every story is legendary",         desc: "Action & adventure",       vibe: "Golden hour dust, monumental scale, bronze & amber" },
+  { name: "TerraDoc", style: "nature",      tagline: "The world, unfiltered",            desc: "Nature documentaries",     vibe: "Lush green, earthy organic tones, soft natural light" },
+  { name: "WhiteRoom", style: "minimal",     tagline: "Less is more",                     desc: "Arthouse & indie film",    vibe: "Clean white type, soft gradient, understated" },
+  { name: "LateNight", style: "adultswim",   tagline: "on after dark",                    desc: "Adult Swim bumper",        vibe: "Pure black, deadpan white Helvetica text" },
   { name: "CheckerBox", style: "cartoon",     tagline: "Serious about fun",                desc: "Cartoon Network style",    vibe: "Black & white checkerboard tiles, flat primary colors" },
   { name: "RewindFlix", style: "vhs",         tagline: "Be kind, rewind",                  desc: "90s home video",           vibe: "VHS tracking errors, washed-out colors, scan lines" },
   { name: "DriveInFlix",style: "grindhouse",  tagline: "NOW SHOWING",                      desc: "Drive-in theater",         vibe: "Kaleidoscopic rings, max-saturation, film grain" },
-  { name: "ChillFlix",  style: "lofi",        tagline: "beats to stream to",               desc: "Lo-fi study beats",        vibe: "Cozy anime interior, rain on window, warm lamp glow" },
-  { name: "VaporFlix",  style: "vaporwave",   tagline: "aesthetic dreams",                 desc: "Vaporwave",                vibe: "Marble bust, magenta/cyan grid, chromatic aberration" },
-  { name: "NeonCity",   style: "cyberpunk",   tagline: "The future is now",                desc: "Cyberpunk night city",     vibe: "Rain-soaked megacity, neon signs, Blade Runner mood" },
+  { name: "ChillFlix", style: "lofi",        tagline: "beats to stream to",               desc: "Lo-fi study beats",        vibe: "Cozy anime interior, rain on window, warm lamp glow" },
+  { name: "VaporFlix", style: "vaporwave",   tagline: "aesthetic dreams",                 desc: "Vaporwave",                vibe: "Marble bust, magenta/cyan grid, chromatic aberration" },
+  { name: "NeonCity", style: "cyberpunk",   tagline: "The future is now",                desc: "Cyberpunk night city",     vibe: "Rain-soaked megacity, neon signs, Blade Runner mood" },
   { name: "StaticFlix", style: "hbo",         tagline: "It's not TV",                      desc: "HBO prestige style",       vibe: "3D chrome letters, fiber optic light disc, star field" },
   { name: "VideoVault", style: "blockbuster", tagline: "Make it a Blockbuster night",      desc: "Video store nostalgia",    vibe: "Gold on navy blue, bold block lettering, late 80s" },
 ];
 
 const SEASONAL: Preset[] = [
-  { name: "Fall",   emoji: "🍂", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   vibe: "Warm amber tones, golden autumn light, falling leaves",  image: "/previews/fall.jpg",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
-  { name: "Winter", emoji: "❄️", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", vibe: "Icy blue-white palette, clean snowfall, minimalist",      image: "/previews/winter.jpg", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
-  { name: "Spring", emoji: "🌸", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", vibe: "Cherry blossoms, anime pastel colors, nature awakening",  image: "/previews/spring.jpg", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
-  { name: "Summer", emoji: "☀️", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", vibe: "Bold bright energy, blazing golden sun, epic scale",       image: "/previews/summer.jpg", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
+  { name: "Fall", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   vibe: "Warm amber tones, golden autumn light, falling leaves",  image: "/previews/fall.jpg",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
+  { name: "Winter", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", vibe: "Icy blue-white palette, clean snowfall, minimalist",      image: "/previews/winter.jpg", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
+  { name: "Spring", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", vibe: "Cherry blossoms, anime pastel colors, nature awakening",  image: "/previews/spring.jpg", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
+  { name: "Summer", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", vibe: "Bold bright energy, blazing golden sun, epic scale",       image: "/previews/summer.jpg", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
 ];
 
 const HOLIDAYS: Preset[] = [
-  { name: "Easter",         emoji: "🐣", style: "lofi",       tagline: "Where stories bloom",           desc: "Easter",           vibe: "Soft spring pastels, wildflowers, robin egg blue",         image: "/previews/easter.jpg",       customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
-  { name: "Mother's Day",   emoji: "💐", style: "lofi",       tagline: "With love, always",              desc: "Mother's Day",     vibe: "Garden roses, warm golden morning light",                  image: "/previews/mothers-day.jpg",  customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
-  { name: "Father's Day",   emoji: "👨", style: "epic",       tagline: "Dad approved content",           desc: "Father's Day",     vibe: "Golden americana, amber summer afternoon",                  image: "/previews/fathers-day.jpg",  customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
-  { name: "Halloween",      emoji: "🎃", style: "horror",     tagline: "Horror has a home",              desc: "Halloween",        vibe: "Jack-o-lanterns, orange & black, gothic horror",            image: "/previews/halloween.jpg",    customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
-  { name: "Christmas",      emoji: "🎄", style: "cinematic",  tagline: "The magic of Christmas",         desc: "Christmas",        vibe: "Holiday reds & greens, glowing ornaments, snowfall",        image: "/previews/christmas.jpg",    customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
-  { name: "New Year's Eve", emoji: "🎆", style: "futuristic", tagline: "The future starts tonight",      desc: "New Year's Eve",   vibe: "Gold & silver fireworks, midnight countdown",               image: "/previews/new-years.jpg",    customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
-  { name: "Oscar Night",    emoji: "🏆", style: "cinematic",  tagline: "And the award goes to...",       desc: "Oscar Night",      vibe: "Red carpet glamour, gleaming gold statuettes",              image: "/previews/oscars.jpg",       customNotes: "Hollywood red carpet, gleaming gold award statuettes, black-tie glamour, sequins and spotlights" },
-  { name: "Pride",          emoji: "🌈", style: "epic",       tagline: "Stream with pride",              desc: "Pride",            vibe: "Full ROYGBIV rainbow explosion, joyful celebration energy", image: "/previews/pride.jpg",        customNotes: "rainbow pride flag spectrum — vivid red orange yellow green blue violet rays bursting outward from behind the logo, full saturated ROYGBIV color explosion, joyful pride parade celebration energy, love and joy radiating in every direction" },
-  { name: "Valentine's Day",emoji: "💝", style: "retro",      tagline: "For the love of streaming",      desc: "Valentine's Day",  vibe: "Hearts & roses, romantic pink and crimson",                 image: "/previews/valentines.jpg",   customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
-  { name: "St. Patrick's Day",emoji:"🍀",style: "nature",     tagline: "Stream your luck tonight",       desc: "St. Patrick's Day",vibe: "Vivid Irish green, shamrocks, golden sunlight",             image: "/previews/st-patricks.jpg",  customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
-  { name: "Fourth of July", emoji: "🗽", style: "epic",       tagline: "Independence from bad content",  desc: "Fourth of July",   vibe: "Red, white & blue fireworks, patriotic night sky",          image: "/previews/fourth-of-july.jpg",customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
-  { name: "Thanksgiving",   emoji: "🦃", style: "cinematic",  tagline: "Gather and stream together",     desc: "Thanksgiving",     vibe: "Harvest warmth, cornucopia, earthy autumn tones",           image: "/previews/thanksgiving.jpg", customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
-  { name: "Hanukkah",       emoji: "🕎", style: "minimal",    tagline: "Eight nights of great picks",    desc: "Hanukkah",         vibe: "Blue & silver, glowing menorah, Festival of Lights",        image: "/previews/hanukkah.jpg",     customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
+  { name: "Easter", style: "lofi",       tagline: "Where stories bloom",           desc: "Easter",           vibe: "Soft spring pastels, wildflowers, robin egg blue",         image: "/previews/easter.jpg",       customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
+  { name: "Mother's Day", style: "lofi",       tagline: "With love, always",              desc: "Mother's Day",     vibe: "Garden roses, warm golden morning light",                  image: "/previews/mothers-day.jpg",  customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
+  { name: "Father's Day", style: "epic",       tagline: "Dad approved content",           desc: "Father's Day",     vibe: "Golden americana, amber summer afternoon",                  image: "/previews/fathers-day.jpg",  customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
+  { name: "Halloween", style: "horror",     tagline: "Horror has a home",              desc: "Halloween",        vibe: "Jack-o-lanterns, orange & black, gothic horror",            image: "/previews/halloween.jpg",    customNotes: "jack-o-lanterns and cobwebs, haunted autumn night atmosphere, orange and black" },
+  { name: "Christmas", style: "cinematic",  tagline: "The magic of Christmas",         desc: "Christmas",        vibe: "Holiday reds & greens, glowing ornaments, snowfall",        image: "/previews/christmas.jpg",    customNotes: "Christmas tree with glowing lights and ornaments, snowfall, warm holiday red and green" },
+  { name: "New Year's Eve", style: "futuristic", tagline: "The future starts tonight",      desc: "New Year's Eve",   vibe: "Gold & silver fireworks, midnight countdown",               image: "/previews/new-years.jpg",    customNotes: "fireworks bursting overhead, countdown to midnight celebration, gold and silver confetti" },
+  { name: "Oscar Night", style: "cinematic",  tagline: "And the award goes to...",       desc: "Oscar Night",      vibe: "Red carpet glamour, gleaming gold statuettes",              image: "/previews/oscars.jpg",       customNotes: "Hollywood red carpet, gleaming gold award statuettes, black-tie glamour, sequins and spotlights" },
+  { name: "Pride", style: "epic",       tagline: "Stream with pride",              desc: "Pride",            vibe: "Full ROYGBIV rainbow explosion, joyful celebration energy", image: "/previews/pride.jpg",        customNotes: "rainbow pride flag spectrum — vivid red orange yellow green blue violet rays bursting outward from behind the logo, full saturated ROYGBIV color explosion, joyful pride parade celebration energy, love and joy radiating in every direction" },
+  { name: "Valentine's Day",style: "retro",      tagline: "For the love of streaming",      desc: "Valentine's Day",  vibe: "Hearts & roses, romantic pink and crimson",                 image: "/previews/valentines.jpg",   customNotes: "hearts and red roses, romantic pink and crimson palette, love in the air" },
+  { name: "St. Patrick's Day",style: "nature",     tagline: "Stream your luck tonight",       desc: "St. Patrick's Day",vibe: "Vivid Irish green, shamrocks, golden sunlight",             image: "/previews/st-patricks.jpg",  customNotes: "shamrocks and clover, rich vivid Irish green, golden sunlight, festive spirit" },
+  { name: "Fourth of July", style: "epic",       tagline: "Independence from bad content",  desc: "Fourth of July",   vibe: "Red, white & blue fireworks, patriotic night sky",          image: "/previews/fourth-of-july.jpg",customNotes: "fireworks in red white and blue, patriotic summer night sky, stars and stripes energy" },
+  { name: "Thanksgiving", style: "cinematic",  tagline: "Gather and stream together",     desc: "Thanksgiving",     vibe: "Harvest warmth, cornucopia, earthy autumn tones",           image: "/previews/thanksgiving.jpg", customNotes: "harvest cornucopia and autumn abundance, warm earthy tones, grateful gathering season" },
+  { name: "Hanukkah", style: "minimal",    tagline: "Eight nights of great picks",    desc: "Hanukkah",         vibe: "Blue & silver, glowing menorah, Festival of Lights",        image: "/previews/hanukkah.jpg",     customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
 
 
 const STUDIOS: Preset[] = [
   {
-    name: "DreamWorks", emoji: "🌙", style: "dreamworks", tagline: "Where dreams take flight",
-    desc: "DreamWorks", vibe: "Boy fishing on a crescent moon above the clouds", image: "/studios/dreamworks.png",
+    name: "DreamWorks", style: "dreamworks", tagline: "Where dreams take flight",
+    desc: "DreamWorks", vibe: "Boy fishing on a crescent moon above the clouds", image: "/studios/thumbs/dreamworks.webp",
     videoPromptOverride: `The camera drifts slowly upward through the clouds. Billowing white cumulus clouds roll and churn around the edges of the frame, their soft puffy shapes shifting and morphing as they pass. The boy sits on the crescent moon holding his fishing rod, the fishing line sways and dangles in the breeze. The crescent moon glows faintly. Sunlight filters through the clouds with shifting highlights. The text at the bottom of the frame remains steady and stable, completely motionless, no warping or movement. Cinematic, dreamy atmosphere.`,
   },
   {
-    name: "TriStar", emoji: "🐴", style: "tristar", tagline: "Soar above the rest",
-    desc: "TriStar", vibe: "Pegasus galloping through golden clouds", image: "/studios/tristar.png",
+    name: "TriStar", style: "tristar", tagline: "Soar above the rest",
+    desc: "TriStar", vibe: "Pegasus galloping through golden clouds", image: "/studios/thumbs/tristar.webp",
     videoPromptOverride: `The Pegasus gallops in place mid-air, its front legs reaching forward and rear legs kicking back in a powerful running motion, hooves cycling through the air as if charging across the sky. Its massive wings flap up and down with strong, powerful strokes, feathers flexing with each beat. Its mane whips wildly in the wind and its tail streams behind it. The clouds churn and roll across the sky, moving from right to left. Sunlight pulses and flares behind the horse. The water below ripples and shimmers with bright reflections. Dynamic, dramatic motion throughout the entire frame.`,
   },
   {
-    name: "Hanna-Barbera", emoji: "⭐", style: "hannabarbera", tagline: "The original cartoon magic",
-    desc: "Hanna-Barbera", vibe: "Chrome star trailing rainbow swirl, retro broadcast", image: "/studios/hannabarbera.png",
+    name: "Hanna-Barbera", style: "hannabarbera", tagline: "The original cartoon magic",
+    desc: "Hanna-Barbera", vibe: "Chrome star trailing rainbow swirl, retro broadcast", image: "/studios/thumbs/hannabarbera.webp",
     videoPromptOverride: `A 1980s broadcast logo animation on a pure black background. A bright chrome five-pointed star flies through the air in a swooping circular motion, looping around in a full ring, then at the end of its path it swoops upward in a final flourish and comes to rest at the top of the circle. As the star flies, it leaves behind a thick glowing ribbon of rainbow light in its wake — purple, magenta, pink, green, and blue streaks layered like a long-exposure light painting. The rainbow trail persists and remains fully visible after the star finishes its motion, forming a complete glowing circular swirl with an upward tail at the end, with the star resting at the top. Once the star settles into place, the chunky white wordmark fades in below. Retro cel-animation-meets-early-CGI aesthetic, soft neon glow, slight film grain.`,
   },
   {
-    name: "Columbia", emoji: "🏛️", style: "columbia", tagline: "A torch for great stories",
-    desc: "Columbia", vibe: "Torch bearer, classical light beams, cinematic", image: "/studios/columbia.png",
+    name: "Columbia", style: "columbia", tagline: "A torch for great stories",
+    desc: "Columbia", vibe: "Torch bearer, classical light beams, cinematic", image: "/studios/thumbs/columbia.webp",
     videoPromptOverride: ``,
   },
   {
-    name: "MST3K", emoji: "🛸", style: "mst3k", tagline: "We've got movie sign",
-    desc: "MST3K", vibe: "Silhouetted theater seats, asteroid, deep space", image: "/studios/mst3k.png",
+    name: "MST3K", style: "mst3k", tagline: "We've got movie sign",
+    desc: "MST3K", vibe: "Silhouetted theater seats, asteroid, deep space", image: "/studios/thumbs/mst3k.webp",
     videoPromptOverride: `The asteroid slowly rotates in the starfield. Stars twinkle in the deep purple-blue space. The silhouetted figures in the theater seats below gesture and point upward. Campy, low-budget sci-fi energy. The text on the right side of the frame holds steady and motionless.`,
   },
   {
-    name: "Emergency Broadcast", emoji: "📡", style: "ebs", tagline: "This is not a test",
+    name: "Emergency Broadcast", style: "ebs", tagline: "This is not a test",
     desc: "Emergency Broadcast", vibe: "SMPTE color bars, monospace alert text, broadcast signal", image: "/previews/ebs.jpg",
     videoPromptOverride: `SMPTE color bars hold completely static on screen. A harsh single-frequency tone. The black label bar with white monospace text flashes urgently twice, then holds steady. Pure broadcast emergency energy. No camera movement. Static and tense.`,
   },
@@ -282,7 +280,7 @@ export default function Home() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError]       = useState<string | null>(null);
-  const [showPrompt, setShowPrompt] = useState(true);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [showInstall, setShowInstall] = useState(false);
   const [logoMode, setLogoMode] = useState<LogoMode>("ai");
   const [imageModel, setImageModel] = useState<ImageModel>("gen4_image");
@@ -293,16 +291,17 @@ export default function Home() {
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [genStartedAt, setGenStartedAt] = useState(0);
   const [timings, setTimings] = useState<{ image: number; video: number } | null>(null);
   const [credits, setCredits] = useState<{ image: number; video: number } | null>(null);
   const [primaryColor, setPrimaryColor] = useState<string | null>(null);
   const [audio, setAudio] = useState(false);
   const [pendingAudioFile, setPendingAudioFile] = useState<File | null>(null);
   const [apiKeyInput, setApiKeyInput] = useState("");
+  const [rememberKey, setRememberKey] = useState(true);
   const [apiKeySaved, setApiKeySaved] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [pendingAudioPreviewUrl, setPendingAudioPreviewUrl] = useState<string | null>(null);
-  const pendingAudioInputRef = useRef<HTMLInputElement>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [genMode, setGenMode] = useState<GenMode>("full");
   const [reviewNotes, setReviewNotes] = useState("");
@@ -314,22 +313,20 @@ export default function Home() {
   const [videoPromptOverride, setVideoPromptOverride] = useState<string | null>(null);
   const [cancelTaskId, setCancelTaskId] = useState("");
   const [cancelMsg, setCancelMsg] = useState<string | null>(null);
-  const [imageProgress, setImageProgress] = useState(0);
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const imageProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const genStartRef = useRef(0);
   const imageTimeRef = useRef(0);
   const imageCreditCostRef = useRef(0);
   const activeTaskIdRef = useRef<string | null>(null);
   const cancelRequestedRef = useRef(false);
-  const resultRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLElement>(null);
   const activePresetRef = useRef<string>("direct");
+  const restoredFromSessionRef = useRef(false);
+  const apiKeyInputRef = useRef<HTMLInputElement>(null);
+  const apiKeyStatusRef = useRef<HTMLDivElement>(null);
+  const keyFocusAfterChangeRef = useRef(false);
 
-  useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (imageProgressRef.current) clearInterval(imageProgressRef.current);
-  }, []);
+  // LCP: the hero poster is the first thing painted, so fetch it before the video.
+  preload(HERO_POSTER, { as: "image", fetchPriority: "high" });
 
   // Restore completed generation from sessionStorage on mount.
   // Multiple setState calls here are intentional — we batch-restore persisted state.
@@ -351,6 +348,7 @@ export default function Home() {
           if (p.imageModel)  setImageModel(p.imageModel);
           if (p.treatment)   setTreatment(p.treatment);
           if (p.duration)    setDuration(p.duration);
+          restoredFromSessionRef.current = true;
           setStep(p.step);
           /* eslint-enable react-hooks/set-state-in-effect */
         }
@@ -383,14 +381,37 @@ export default function Home() {
 
   // Move focus to result when generation completes so keyboard/screen-reader users
   // don't have to discover the change by tabbing.
+  // A result restored from sessionStorage on load is not news: leave the page at the top.
   useEffect(() => {
-    if (step === "done" || step === "review") {
-      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      resultRef.current?.focus();
-    }
+    if (step !== "done" && step !== "review") return;
+    if (restoredFromSessionRef.current) { restoredFromSessionRef.current = false; return; }
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    resultRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest" });
+    resultRef.current?.focus({ preventScroll: true });
   }, [step]);
 
-  const { key: apiKey, loaded: keyLoaded, saveKey } = useApiKey();
+  const { key: apiKey, loaded: keyLoaded, saveKey, clearKey } = useApiKey();
+
+  // After saving or removing the key, the control that was focused is gone: move focus to its replacement.
+  useEffect(() => {
+    if (!keyFocusAfterChangeRef.current) return;
+    keyFocusAfterChangeRef.current = false;
+    (apiKey ? apiKeyStatusRef.current : apiKeyInputRef.current)?.focus();
+  }, [apiKey]);
+
+  function saveApiKeyFromInput() {
+    if (!apiKeyInput.trim()) return;
+    keyFocusAfterChangeRef.current = true;
+    saveKey(apiKeyInput, { remember: rememberKey });
+    setApiKeyInput("");
+    setApiKeySaved(true);
+  }
+
+  function removeApiKey() {
+    keyFocusAfterChangeRef.current = true;
+    clearKey();
+    setApiKeySaved(false);
+  }
   const preview = buildPrompts({ name, style, tagline, duration, treatment, videoModel, primaryColor: primaryColor ?? undefined, customNotes: customNotes || undefined });
   const isGenerating = step === "image" || step === "video";
   const accentColor = STYLE_COLOR[style];
@@ -405,20 +426,6 @@ export default function Home() {
     const available = suggestions.filter(t => t !== tagline);
     if (!available.length) return;
     setTagline(available[Math.floor(Math.random() * available.length)]);
-  }
-
-  function startImageProgress() {
-    setImageProgress(0);
-    let ticks = 0;
-    imageProgressRef.current = setInterval(() => {
-      ticks++;
-      setImageProgress(88 * (1 - Math.exp(-ticks / 150)));
-    }, 200);
-  }
-
-  function stopImageProgress(complete: boolean) {
-    if (imageProgressRef.current) { clearInterval(imageProgressRef.current); imageProgressRef.current = null; }
-    setImageProgress(complete ? 100 : 0);
   }
 
   async function downloadPoster() {
@@ -438,6 +445,28 @@ export default function Home() {
       URL.revokeObjectURL(objUrl);
     } catch {
       window.open(imageUrl, "_blank");
+    }
+  }
+
+  async function downloadVideo() {
+    if (!videoUrl) return;
+    track("Download Video", { style, video_model: videoModel });
+    setDownloadError(null);
+    try {
+      // Runway's CDN sends Access-Control-Allow-Origin: *, so the MP4 can be saved under our filename.
+      const res = await fetch(videoUrl);
+      if (!res.ok) throw new Error(`Runway returned ${res.status}`);
+      const objUrl = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = makeFilename(name, style);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objUrl);
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      setDownloadError(`Download failed (${reason}). Runway’s video links expire after a while; if this keeps failing, redo the video.`);
     }
   }
 
@@ -476,7 +505,6 @@ export default function Home() {
 
   function reset() {
     cancelActiveTask();
-    stopImageProgress(false);
     setPollStatus(null);
     setPollProgress(null);
     setCancelMsg(null);
@@ -488,8 +516,8 @@ export default function Home() {
     setError(null);
     setTimings(null);
     setCredits(null);
-    setElapsedMs(0);
     setVideoRegenNotes("");
+    setDownloadError(null);
     try { sessionStorage.removeItem(SESSION_KEY); } catch {}
   }
 
@@ -569,13 +597,7 @@ export default function Home() {
   }
 
   function startTimer() {
-    setElapsedMs(0);
-    genStartRef.current = Date.now();
-    timerRef.current = setInterval(() => setElapsedMs(Date.now() - genStartRef.current), 100);
-  }
-
-  function stopTimer() {
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setGenStartedAt(Date.now());
   }
 
   async function generateCanvasLogo(): Promise<string> {
@@ -823,7 +845,7 @@ export default function Home() {
 
   async function generate() {
     if (!name.trim()) return;
-    if (keyLoaded && !apiKey) { router.push("/setup"); return; }
+    if (keyLoaded && !apiKey) { apiKeyInputRef.current?.focus(); return; }
 
     cancelRequestedRef.current = false;
     setImageUrl(null);
@@ -862,11 +884,9 @@ export default function Home() {
       startTimer();
       try {
         setStep("image");
-        startImageProgress();
         const imageStart = Date.now();
         const dataUri = await generateCanvasLogo();
         imageTimeRef.current = Date.now() - imageStart;
-        stopImageProgress(true);
         setImageUrl(dataUri);
         if (genMode === "image-only") {
           setTimings({ image: imageTimeRef.current, video: 0 });
@@ -877,8 +897,6 @@ export default function Home() {
       } catch (e) {
         setError(e instanceof Error ? e.message : "Canvas render failed");
         setStep("error");
-      } finally {
-        stopTimer();
       }
       return;
     }
@@ -890,13 +908,11 @@ export default function Home() {
 
     try {
       setStep("image");
-      startImageProgress();
       const imageStart = Date.now();
       const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody()) });
       const imageData = await imageRes.json();
-      if (!imageRes.ok) { stopImageProgress(false); throw new Error(imageData.error ?? "Image generation failed"); }
+      if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
       imageTimeRef.current = Date.now() - imageStart;
-      stopImageProgress(true);
       setImageUrl(imageData.imageUrl);
       imageCreditCostRef.current = imageData.creditCost ?? 0;
       track("Logo Generated", { style, image_model: imageModel });
@@ -914,8 +930,6 @@ export default function Home() {
       setError(message);
       setStep("error");
       track("Generation Error", { stage: "image", message: message.slice(0, 200) });
-    } finally {
-      stopTimer();
     }
   }
 
@@ -932,15 +946,13 @@ export default function Home() {
     imageTimeRef.current = 0;
     startTimer();
     setStep("image");
-    startImageProgress();
 
     try {
       const imageStart = Date.now();
       const imageRes = await fetch("/api/image", { method: "POST", headers, body: JSON.stringify(buildBody(combined || undefined)) });
       const imageData = await imageRes.json();
-      if (!imageRes.ok) { stopImageProgress(false); throw new Error(imageData.error ?? "Image generation failed"); }
+      if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
       imageTimeRef.current = Date.now() - imageStart;
-      stopImageProgress(true);
       setImageUrl(imageData.imageUrl);
       imageCreditCostRef.current = imageData.creditCost ?? 0;
       setStep("review");
@@ -949,8 +961,6 @@ export default function Home() {
       setError(message);
       setStep("error");
       track("Generation Error", { stage: "regenerate", message: message.slice(0, 200) });
-    } finally {
-      stopTimer();
     }
   }
 
@@ -1035,16 +1045,23 @@ export default function Home() {
       setError(message);
       setStep("error");
       track("Generation Error", { stage: "video", message: message.slice(0, 200) });
-    } finally {
-      stopTimer();
     }
   }
+
+  const generateBlocked = isGenerating || !name.trim() || isUploading || (logoMode === "upload" && !uploadedUri);
+  const statusMessage =
+    step === "image" ? "Generating the poster"
+    : step === "review" ? "Poster ready. Review it, then make the video."
+    : step === "video" ? (pollStatus === "THROTTLED" ? "Video queued: another Runway task is still running" : "Generating the video")
+    : step === "done" ? (videoUrl ? "Your intro video is ready" : "Your title card is ready")
+    : "";
+  const activeStyle = STYLES.find(s => s.id === style);
+  const ratioLabel = imageRatio(imageModel).replace(":", "×");
 
   return (
     <main
       id="main-content"
-      className="relative min-h-screen text-white flex flex-col items-center overflow-hidden"
-      style={{ background: "#080808" }}
+      className="relative flex-1 bg-background text-white flex flex-col items-center overflow-hidden"
     >
       {/* Film grain overlay */}
       <div
@@ -1055,24 +1072,11 @@ export default function Home() {
         }}
       />
 
-      {/* Nav */}
-      <nav aria-label="Site navigation" className="w-full max-w-2xl px-4 flex justify-between items-center pt-6 pb-3 text-sm text-neutral-500">
-        <span className="font-bold text-white tracking-tight text-lg">StreamRoll</span>
-        <div className="flex items-center gap-5">
-          <Link href="/setup" className="hover:text-white transition-colors">API key</Link>
-          {SHOW_RUNWAY_BRANDING && (
-            <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-              Get Runway →
-            </a>
-          )}
-        </div>
-      </nav>
-
       {/* Full-bleed cinematic video hero */}
       <div className="w-full relative" style={{ height: "clamp(220px, 36vw, 500px)" }}>
-        <h1 className="sr-only">StreamRoll — AI-generated streaming intros for Plex, Jellyfin, and Emby</h1>
+        <h1 className="sr-only">StreamRoll: AI-generated streaming intros for Plex, Jellyfin, and Emby</h1>
         <VideoMontage />
-        {/* top: blends nav into video */}
+        {/* design-ok: hero band scrims, kept per DECISIONS.md */}
         <div className="absolute inset-x-0 top-0 pointer-events-none z-10" style={{ height: "35%", background: "linear-gradient(to bottom, #080808 0%, transparent 100%)" }} />
         {/* bottom: dissolves into page */}
         <div className="absolute inset-x-0 bottom-0 pointer-events-none z-10" style={{ height: "50%", background: "linear-gradient(to top, #080808 0%, transparent 100%)" }} />
@@ -1081,312 +1085,69 @@ export default function Home() {
         <div className="absolute inset-y-0 right-0 w-16 pointer-events-none z-10" style={{ background: "linear-gradient(to left, #080808, transparent)" }} />
       </div>
 
-      {/* Works with + API key — sits over the bottom fade of the video */}
-      <div className="w-full max-w-2xl px-4 -mt-10 z-20 relative flex flex-col items-center gap-3 pb-8">
-        <div className="flex items-center justify-center gap-5">
-          <span className="text-xs text-neutral-500">Works with</span>
+      {/* Works with + key status, over the bottom fade of the video */}
+      <div className="w-full max-w-2xl px-4 -mt-10 z-20 relative flex flex-col items-center gap-2 pb-8 text-center">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+          <span className="text-sm text-neutral-400">Works with</span>
           {PLATFORMS.map((p) => (
             <div key={p.name} className="flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/logos/${p.slug}.svg`} alt="" aria-hidden="true" width={16} height={16} />
-              <span className="text-xs font-medium" style={{ color: p.color }}>{p.name}</span>
+              <span className="text-sm font-medium" style={{ color: p.color }}>{p.name}</span>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 text-sm text-neutral-400">
           <span>Community:</span>
-          <a href={LINKS.prerollSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">r/plexprerolls</a>
-          <span>·</span>
-          <a href={LINKS.plexSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">r/PleX</a>
-          <span>·</span>
-          <a href={LINKS.jellyfinSub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">r/jellyfin</a>
-          <span>·</span>
-          <a href={LINKS.plexForums} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-300 transition-colors">Plex Forums</a>
+          {[
+            { href: LINKS.prerollSub, label: "r/plexprerolls" },
+            { href: LINKS.plexSub, label: "r/PleX" },
+            { href: LINKS.jellyfinSub, label: "r/jellyfin" },
+            { href: LINKS.plexForums, label: "Plex Forums" },
+          ].map((l) => (
+            <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center whitespace-nowrap underline underline-offset-2 hover:text-white transition-colors">
+              {l.label}
+            </a>
+          ))}
         </div>
 
-        <p className="text-xs text-neutral-600">Runs entirely in your browser, no install, no account required</p>
+        <p className="text-sm text-neutral-400">No install, no StreamRoll account needed</p>
 
         {keyLoaded && (
-          <div>
-            {apiKey ? (
-              <Link href="/setup" className="inline-flex items-center gap-1.5 text-xs text-green-400 border border-green-900 bg-green-950/40 px-3 py-1 rounded-full hover:border-green-700 transition-colors">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-                Runway API key active
-              </Link>
-            ) : (
-              <Link href="/setup" className="inline-flex items-center gap-1.5 text-xs text-amber-400 border border-amber-900 bg-amber-950/40 px-3 py-1 rounded-full hover:border-amber-700 transition-colors">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-                Add your Runway API key to get started
-              </Link>
-            )}
-          </div>
+          apiKey
+            ? <p className="text-sm text-green-400">Runway API key active</p>
+            : <p className="text-sm text-amber-400">Add your Runway API key below to start</p>
         )}
       </div>
 
-      {/* How it works strip */}
-      <div className="w-full max-w-2xl px-4 mb-2">
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-5 py-4">
-          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-4">How it works</p>
-          <div className="grid grid-cols-4 gap-2">
-            {([
-              { n: "1", title: "Pick a style", desc: "Choose a look and enter your service name" },
-              { n: "2", title: "Get an API key", desc: "Free Runway account — key lives only in your browser", href: "/setup" },
-              { n: "3", title: "Generate", desc: "AI builds a title card and an animated intro" },
-              { n: "4", title: "Add to your server", desc: "Drop the MP4 into Plex, Jellyfin, or Emby" },
-            ]).map((step, i, arr) => (
-              <div key={step.n} className="relative flex flex-col gap-2">
-                {i < arr.length - 1 && (
-                  <div className="absolute top-3 left-[calc(50%+10px)] right-[-8px] h-px bg-neutral-800 z-0" />
-                )}
-                <div className="relative z-10 w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-400 shrink-0">
-                  {step.n}
-                </div>
-                <div>
-                  {"href" in step ? (
-                    <Link href={step.href as string} className="text-xs font-semibold text-neutral-300 leading-snug hover:text-white transition-colors underline underline-offset-2 decoration-neutral-700">
-                      {step.title} →
-                    </Link>
-                  ) : (
-                    <div className="text-xs font-semibold text-neutral-300 leading-snug">{step.title}</div>
-                  )}
-                  <div className="text-xs text-neutral-600 leading-snug mt-0.5">{step.desc}</div>
-                </div>
+      {/* How it works */}
+      <section aria-labelledby="how-it-works-heading" className="w-full max-w-2xl px-4 mb-10">
+        <h2 id="how-it-works-heading" className="text-base font-semibold text-neutral-200 mb-4">How it works</h2>
+        <ol className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6">
+          {([
+            { title: "Pick a style", desc: "Name your service and choose a look" },
+            { title: "Add a Runway API key", desc: "Creating a key is free; generating uses paid Runway credits" },
+            { title: "Generate", desc: "AI builds a title card and an animated intro" },
+            { title: "Add to your server", desc: "Drop the MP4 into Plex, Jellyfin, or Emby" },
+          ]).map((s, i, arr) => (
+            <li key={s.title} className="relative flex flex-col gap-2">
+              {i < arr.length - 1 && (
+                <div aria-hidden="true" className="hidden sm:block absolute top-3 left-8 right-0 h-px bg-neutral-800" />
+              )}
+              <div aria-hidden="true" className="relative w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-300 shrink-0">
+                {i + 1}
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+              <div>
+                <h3 className="text-sm font-semibold text-neutral-200 leading-snug">{s.title}</h3>
+                <p className="text-sm text-neutral-400 leading-relaxed mt-0.5">{s.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-      <div className="w-full max-w-2xl px-4 space-y-8">
-
-        {/* Style */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-neutral-300">
-              {logoMode === "upload" ? "Motion style" : "Style"}
-            </label>
-            <button
-              onClick={() => applyInspo(INSPO[Math.floor(Math.random() * INSPO.length)])}
-              disabled={isGenerating}
-              className="text-xs text-neutral-400 hover:text-white border border-neutral-700 hover:border-neutral-500 px-3 py-1 rounded-full transition-colors disabled:opacity-40"
-            >
-              🎲 Surprise me
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {STYLES.map((s) => {
-              const isActive = style === s.id;
-              const color = STYLE_COLOR[s.id];
-              return (
-                <button
-                  key={s.id}
-                  aria-pressed={isActive}
-                  aria-label={`${s.label} — ${s.desc}`}
-                  onClick={() => {
-                    activePresetRef.current = "direct";
-                    setStyle(s.id);
-                    const d = STYLE_DEFAULTS[s.id];
-                    setVideoModel(d.videoModel);
-                    setImageModel(d.imageModel);
-                    setTreatment(d.treatment);
-                    setDuration(d.duration);
-                  }}
-                  disabled={isGenerating}
-                  className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-50 text-left"
-                  style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#262626", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
-                >
-                  {s.image && (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={s.image} alt={s.label} className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
-                    </>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-2.5" style={{ background: "rgba(0,0,0,0.72)" }}>
-                    <p className="text-xs text-center leading-snug text-neutral-200">{s.desc}</p>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
-                    <div className="font-semibold text-sm text-white leading-tight drop-shadow">{s.label}</div>
-                  </div>
-                </button>
-              );
-            })}
-            {(() => {
-              const isActive = name === "My Service" && style === "cinematic";
-              const color = STYLE_COLOR["cinematic"];
-              return (
-                <button
-                  aria-pressed={isActive}
-                  aria-label="Blank Slate — Cinematic base, your name and brand"
-                  onClick={() => applyInspo({ name: "My Service", style: "cinematic", tagline: "", desc: "Blank Slate", vibe: "Cinematic base — your name, your brand", image: "/previews/blank-slate.jpg", customNotes: "" })}
-                  disabled={isGenerating}
-                  className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-50 text-left"
-                  style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#262626", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/previews/blank-slate.jpg" alt="Blank Slate" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-2.5" style={{ background: "rgba(0,0,0,0.72)" }}>
-                    <p className="text-xs text-center leading-snug text-neutral-200">Cinematic base — your name, your brand</p>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
-                    <div className="font-semibold text-sm text-white leading-tight drop-shadow">Blank Slate</div>
-                  </div>
-                </button>
-              );
-            })()}
-          </div>
-          {STYLES.find(s => s.id === style)?.tip && (
-            <p className="mt-2 text-xs text-neutral-600">
-              💡 {STYLES.find(s => s.id === style)!.tip}
-            </p>
-          )}
-
-          {/* Themed presets */}
-          <div className="mt-4">
-            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
-              <span style={{ color: "#166534" }}>✦</span>
-              <span className="text-neutral-600">Seasonal</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {SEASONAL.map((i) => {
-                const isActive = name === i.name && style === i.style;
-                const color = STYLE_COLOR[i.style];
-                return i.image ? (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    aria-label={`${i.desc} — ${i.vibe}`}
-                    className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-40 text-left"
-                    style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#1c2a1c", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={i.image} alt={i.desc} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-3" style={{ background: "rgba(0,0,0,0.65)" }}>
-                      <p className="text-xs text-center leading-snug text-neutral-200">{i.vibe}</p>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
-                      <div className="font-semibold text-sm text-white leading-tight drop-shadow">{i.desc}</div>
-                    </div>
-                  </button>
-                ) : (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40 text-left"
-                    style={isActive ? { borderColor: color + "60", backgroundColor: color + "12" } : { borderColor: "#1c2a1c" }}
-                  >
-                    <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.desc}</div>
-                    <div className="text-xs mt-0.5 leading-tight" style={{ color: "#7aaa7a" }}>{i.vibe}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
-              <span style={{ color: "#92400e" }}>✦</span>
-              <span className="text-neutral-600">Holidays</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {HOLIDAYS.map((i) => {
-                const isActive = name === i.name && style === i.style;
-                const color = STYLE_COLOR[i.style];
-                return i.image ? (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    aria-label={`${i.desc} — ${i.vibe}`}
-                    className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-40 text-left"
-                    style={{ aspectRatio: "16/9", borderColor: isActive ? color + "80" : "#2a1e0e", boxShadow: isActive ? `0 0 16px ${color}30` : undefined }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={i.image} alt={i.desc} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 30%, transparent 100%)" }} />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-3" style={{ background: "rgba(0,0,0,0.65)" }}>
-                      <p className="text-xs text-center leading-snug text-neutral-200">{i.vibe}</p>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
-                      <div className="font-semibold text-sm text-white leading-tight drop-shadow">{i.desc}</div>
-                    </div>
-                  </button>
-                ) : (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40 text-left"
-                    style={isActive ? { borderColor: color + "60", backgroundColor: color + "12" } : { borderColor: "#2a1e0e" }}
-                  >
-                    <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.desc}</div>
-                    <div className="text-xs mt-0.5 leading-tight" style={{ color: "#b8895a" }}>{i.vibe}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-xs mb-2 tracking-wide flex items-center gap-1.5">
-              <span style={{ color: "#b45309" }}>✦</span>
-              <span className="text-neutral-600">Classic Studios</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {STUDIOS.map((i) => {
-                const isActive = name === i.name && style === i.style;
-                const color = STYLE_COLOR[i.style];
-                return i.image ? (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    aria-label={`${i.desc} — ${i.vibe}`}
-                    className="group relative rounded-lg border overflow-hidden transition-all disabled:opacity-40 text-left"
-                    style={{
-                      aspectRatio: "16/9",
-                      borderColor: isActive ? color + "80" : "#1e1a0e",
-                      boxShadow: isActive ? `0 0 16px ${color}30` : undefined,
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={i.image} alt={i.desc} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 transition-opacity duration-200" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 30%, rgba(0,0,0,0.1) 60%, transparent 100%)" }} />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 px-3" style={{ background: "rgba(0,0,0,0.65)" }}>
-                      <p className="text-xs text-center leading-snug text-neutral-200">{i.vibe}</p>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2">
-                      <div className="font-semibold text-sm text-white leading-tight" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>{i.desc}</div>
-                    </div>
-                  </button>
-                ) : (
-                  <button
-                    key={i.name}
-                    onClick={() => applyInspo(i)}
-                    disabled={isGenerating}
-                    className="flex flex-col items-start p-2.5 rounded-lg border transition-all disabled:opacity-40 text-left"
-                    style={isActive
-                      ? { borderColor: color + "60", backgroundColor: color + "12" }
-                      : { borderColor: "#1e1a0e" }
-                    }
-                  >
-                    <span className="text-xl mb-1">{i.emoji}</span>
-                    <div className="font-medium text-sm" style={isActive ? { color } : { color: "#e5e7eb" }}>{i.desc}</div>
-                    <div className="text-xs mt-0.5 leading-tight" style={{ color: "#a16207" }}>{i.vibe}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-        </section>
+      <div className="w-full max-w-2xl px-4 space-y-10">
 
         {/* Name & tagline */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1400,16 +1161,16 @@ export default function Home() {
               placeholder="e.g. Joeflix, Cinema Corner, The Movie Vault"
               maxLength={30}
               disabled={isGenerating}
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors"
+              className={INPUT_CLASS}
             />
             <div className="flex justify-between mt-1">
-              <span className="text-xs text-neutral-500">Short names render best</span>
-              <span className={`text-xs tabular-nums ${name.length > 18 ? "text-amber-600" : "text-neutral-500"}`}>{name.length}/30</span>
+              <span className="text-sm text-neutral-400">Short names render best</span>
+              <span className={`text-sm tabular-nums ${name.length > 18 ? "text-amber-500" : "text-neutral-400"}`}>{name.length}/30</span>
             </div>
           </div>
           <div>
             <label htmlFor="tagline" className="block text-sm font-medium text-neutral-300 mb-2">
-              Tagline <span className="text-neutral-600">(optional)</span>
+              Tagline <span className="text-neutral-400 font-normal">(optional)</span>
             </label>
             <div className="relative">
               <input
@@ -1420,88 +1181,179 @@ export default function Home() {
                 placeholder="e.g. Where stories come alive"
                 maxLength={60}
                 disabled={isGenerating}
-                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors pr-10"
+                className={`${INPUT_CLASS} pr-12`}
               />
               <button
+                type="button"
                 onClick={shuffleTagline}
                 disabled={isGenerating}
                 aria-label="Shuffle tagline"
                 title="Shuffle tagline"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-300 transition-colors disabled:opacity-40 text-base leading-none"
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-lg text-neutral-400 hover:text-white transition-colors disabled:opacity-40 text-base leading-none focus-visible:outline-2 focus-visible:outline-white"
               >
-                ↺
+                <span aria-hidden="true">↺</span>
               </button>
             </div>
           </div>
         </section>
 
+        {/* Style */}
+        <section aria-labelledby="style-heading">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 id="style-heading" className="text-sm font-medium text-neutral-300">
+              {logoMode === "upload" ? "Motion style" : "Style"}
+            </h2>
+            <button
+              type="button"
+              onClick={() => applyInspo(INSPO[Math.floor(Math.random() * INSPO.length)])}
+              disabled={isGenerating}
+              className="min-h-11 px-3 text-sm text-neutral-300 hover:text-white border border-neutral-700 hover:border-neutral-500 rounded-lg transition-colors disabled:opacity-40"
+            >
+              Surprise me
+            </button>
+          </div>
+          <div role="group" aria-labelledby="style-heading" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {STYLES.map((s, i) => (
+              <ThemeTile
+                key={s.id}
+                label={s.label}
+                desc={s.desc}
+                image={s.image!}
+                eager={i < 4}
+                active={style === s.id && name !== "My Service"}
+                color={STYLE_COLOR[s.id]}
+                disabled={isGenerating}
+                onClick={() => {
+                  activePresetRef.current = "direct";
+                  setStyle(s.id);
+                  const d = STYLE_DEFAULTS[s.id];
+                  setVideoModel(d.videoModel);
+                  setImageModel(d.imageModel);
+                  setTreatment(d.treatment);
+                  setDuration(d.duration);
+                }}
+              />
+            ))}
+            <ThemeTile
+              label="Blank Slate"
+              desc="Cinematic base, your name and brand"
+              image="/previews/blank-slate.jpg"
+              active={name === "My Service" && style === "cinematic"}
+              color={STYLE_COLOR.cinematic}
+              disabled={isGenerating}
+              onClick={() => applyInspo({ name: "My Service", style: "cinematic", tagline: "", desc: "Blank Slate", vibe: "Cinematic base, your name and brand", image: "/previews/blank-slate.jpg", customNotes: "" })}
+            />
+          </div>
+          {activeStyle && (
+            <p className="mt-2 text-sm text-neutral-400">
+              <span className="text-neutral-200">{activeStyle.label}:</span> {activeStyle.desc}. {activeStyle.tip}
+            </p>
+          )}
+
+          <details className="mt-6 group/themes">
+            <summary className="min-h-11 inline-flex items-center gap-2 cursor-pointer list-none text-sm font-medium text-neutral-300 hover:text-white transition-colors [&::-webkit-details-marker]:hidden">
+              <span aria-hidden="true" className="inline-block text-neutral-400 transition-transform group-open/themes:rotate-90">▸</span>
+              More themes
+            </summary>
+            <div className="mt-3 space-y-6">
+              {([
+                { id: "seasonal", title: "Seasonal", presets: SEASONAL },
+                { id: "holidays", title: "Holidays", presets: HOLIDAYS },
+                { id: "studios", title: "Classic studios", presets: STUDIOS },
+              ]).map((group) => {
+                const activePreset = group.presets.find((p) => name === p.name && style === p.style);
+                return (
+                  <section key={group.id} aria-labelledby={`${group.id}-heading`}>
+                    <h3 id={`${group.id}-heading`} className="text-sm font-medium text-neutral-300 mb-2">{group.title}</h3>
+                    <div role="group" aria-labelledby={`${group.id}-heading`} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {group.presets.map((p) => (
+                        <ThemeTile
+                          key={p.name}
+                          label={p.desc}
+                          desc={p.vibe}
+                          image={p.image!}
+                          active={p === activePreset}
+                          color={STYLE_COLOR[p.style]}
+                          disabled={isGenerating}
+                          onClick={() => applyInspo(p)}
+                        />
+                      ))}
+                    </div>
+                    {activePreset && (
+                      <p className="mt-2 text-sm text-neutral-400">
+                        <span className="text-neutral-200">{activePreset.desc}:</span> {activePreset.vibe}
+                      </p>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          </details>
+        </section>
 
         {/* Duration */}
-        <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Duration</label>
-          <div className="flex gap-3">
-            {activeDurations.map((d) => (
-              <button
-                key={d.value}
-                aria-pressed={duration === d.value}
-                onClick={() => setDuration(d.value)}
-                disabled={isGenerating}
-                className="flex-1 flex flex-col items-center gap-1 py-3 rounded-lg border text-xs transition-all disabled:opacity-50"
-                style={duration === d.value
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                  : { borderColor: "#262626" }
-                }
-              >
-                <span className="text-base font-bold" style={duration === d.value ? { color: accentColor } : { color: "#e5e7eb" }}>
-                  {d.label}
-                </span>
-                <span className="text-neutral-500">{d.value * crPerSec + imageCrCost} cr · {d.est}</span>
-              </button>
-            ))}
+        <section aria-labelledby="duration-heading">
+          <h2 id="duration-heading" className="text-sm font-medium text-neutral-300 mb-3">Duration</h2>
+          <div role="group" aria-labelledby="duration-heading" className="flex gap-2">
+            {activeDurations.map((d) => {
+              const active = duration === d.value;
+              return (
+                <button
+                  type="button"
+                  key={d.value}
+                  aria-pressed={active}
+                  onClick={() => setDuration(d.value)}
+                  disabled={isGenerating}
+                  className="flex-1 min-w-0 flex flex-col items-center gap-1 py-3 rounded-lg border text-xs transition-colors disabled:opacity-50"
+                  style={active
+                    ? { borderColor: accentColor, backgroundColor: accentColor + "15" }
+                    : { borderColor: "#262626" }
+                  }
+                >
+                  <span className="text-base font-bold" style={active ? { color: accentColor } : { color: "#e5e7eb" }}>
+                    {active && <span aria-hidden="true">✓ </span>}{d.label}
+                  </span>
+                  <span className="text-neutral-400 whitespace-nowrap">
+                    {d.value * crPerSec + imageCrCost} cr<span className="hidden sm:inline">, {d.est}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        {/* Advanced Settings */}
-        <section>
-          <button
-            onClick={() => setShowAdvanced((v) => !v)}
-            className="w-full flex items-center justify-between text-sm font-medium text-neutral-400 hover:text-white transition-colors mb-3"
-          >
-            <span>Advanced Settings</span>
-            <span className="text-neutral-600 text-xs">{showAdvanced ? "▾ collapse" : "▸ expand · using recommended defaults"}</span>
-          </button>
+        {/* Advanced settings */}
+        <section aria-labelledby="advanced-heading">
+          <h2 id="advanced-heading">
+            <button
+              type="button"
+              aria-expanded={showAdvanced}
+              aria-controls="advanced-settings"
+              onClick={() => setShowAdvanced((v) => !v)}
+              className="w-full min-h-11 flex items-center justify-between gap-3 text-left text-sm font-medium text-neutral-300 hover:text-white transition-colors"
+            >
+              <span>Advanced settings</span>
+              <span aria-hidden="true" className={`inline-block text-neutral-400 transition-transform ${showAdvanced ? "rotate-90" : ""}`}>▸</span>
+            </button>
+          </h2>
+          <p className="text-sm text-neutral-400">Each style sets recommended defaults; change them here.</p>
 
           {showAdvanced && (
-            <div className="space-y-7 pt-1">
+            <div id="advanced-settings" className="space-y-7 pt-5">
 
               {/* Image model */}
               <div>
-                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Image model</label>
-                <div className="space-y-1.5">
+                <h3 id="image-model-heading" className="text-sm font-medium text-neutral-300 mb-3">Image model</h3>
+                <div role="group" aria-labelledby="image-model-heading" className="space-y-1.5">
                   {(["Runway", "OpenAI", "Google"] as const).map((group) => {
                     const models = IMAGE_MODELS.filter(m => m.group === group);
                     if (!models.length) return null;
                     return (
                       <div key={group}>
-                        <div className="text-xs text-neutral-500 mb-2">{group === "OpenAI" ? "OpenAI via Runway" : group === "Google" ? "Google via Runway" : "Runway"}</div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="text-sm text-neutral-400 mb-2">{group === "OpenAI" ? "OpenAI via Runway" : group === "Google" ? "Google via Runway" : "Runway"}</div>
+                        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
                           {models.map((m) => (
-                            <button
-                              key={m.id}
-                              onClick={() => setImageModel(m.id)}
-                              disabled={isGenerating}
-                              className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
-                              style={imageModel === m.id
-                                ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                                : { borderColor: "#262626" }
-                              }
-                            >
-                              <div className="flex items-center justify-between w-full mb-0.5">
-                                <span className="font-semibold" style={imageModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                                <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
-                              </div>
-                              <span className="text-neutral-500 leading-tight">{m.desc}</span>
-                            </button>
+                            <ModelOption key={m.id} label={m.label} cost={m.crInfo} desc={m.desc} active={imageModel === m.id} accentColor={accentColor} disabled={isGenerating} onClick={() => setImageModel(m.id)} />
                           ))}
                         </div>
                       </div>
@@ -1512,58 +1364,28 @@ export default function Home() {
 
               {/* Video model */}
               <div>
-                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Video model</label>
-                <div className="space-y-1.5">
-                  <div className="text-xs text-neutral-500 mb-2">Runway</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {VIDEO_MODELS.filter((m) => m.group === "Runway").map((m) => {
-                      const isRecommended = STYLE_DEFAULTS[style].videoModel === m.id;
-                      return (
-                        <button
-                          key={m.id}
-                          onClick={() => handleModelChange(m.id)}
-                          disabled={isGenerating}
-                          className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
-                          style={videoModel === m.id
-                            ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                            : { borderColor: "#262626" }
-                          }
-                        >
-                          <div className="flex items-center justify-between w-full mb-1">
-                            <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                            <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
-                          </div>
-                          <span className="text-neutral-500 leading-tight">{m.desc}</span>
-                          {isRecommended && (
-                            <span className="mt-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: accentColor + "20", color: accentColor }}>
-                              Recommended
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-3 mb-2">Google via Runway</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {VIDEO_MODELS.filter((m) => m.group === "Google").map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => handleModelChange(m.id)}
-                        disabled={isGenerating}
-                        className="flex flex-col items-start p-2.5 rounded-lg border text-xs transition-all disabled:opacity-50 text-left"
-                        style={videoModel === m.id
-                          ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                          : { borderColor: "#262626" }
-                        }
-                      >
-                        <div className="flex items-center justify-between w-full mb-1">
-                          <span className="font-semibold" style={videoModel === m.id ? { color: accentColor } : { color: "#e5e7eb" }}>{m.label}</span>
-                          <span className="text-neutral-500 text-[10px]">{m.crInfo}</span>
-                        </div>
-                        <span className="text-neutral-500 leading-tight">{m.desc}</span>
-                      </button>
-                    ))}
-                  </div>
+                <h3 id="video-model-heading" className="text-sm font-medium text-neutral-300 mb-3">Video model</h3>
+                <div role="group" aria-labelledby="video-model-heading" className="space-y-1.5">
+                  {(["Runway", "Google"] as const).map((group) => (
+                    <div key={group}>
+                      <div className="text-sm text-neutral-400 mt-3 mb-2">{group === "Google" ? "Google via Runway" : "Runway"}</div>
+                      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 gap-2">
+                        {VIDEO_MODELS.filter((m) => m.group === group).map((m) => (
+                          <ModelOption
+                            key={m.id}
+                            label={m.label}
+                            cost={m.crInfo}
+                            desc={m.desc}
+                            note={STYLE_DEFAULTS[style].videoModel === m.id ? "Recommended" : undefined}
+                            active={videoModel === m.id}
+                            accentColor={accentColor}
+                            disabled={isGenerating}
+                            onClick={() => handleModelChange(m.id)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Audio toggle — Veo models only */}
@@ -1573,21 +1395,22 @@ export default function Home() {
                     style={{ borderColor: "#262626" }}
                   >
                     <div className="flex-1">
-                      <div className="text-xs font-medium text-neutral-300">Generate audio</div>
-                      <div className="text-xs text-neutral-600 mt-0.5">Veo can auto-generate ambient sound &amp; music</div>
+                      <div className="text-sm font-medium text-neutral-300">Generate audio</div>
+                      <div className="text-sm text-neutral-400 mt-0.5">Veo can auto-generate ambient sound &amp; music</div>
                     </div>
                     <button
+                      type="button"
                       role="switch"
                       aria-checked={audio}
                       onClick={() => setAudio((v) => !v)}
                       disabled={isGenerating}
                       aria-label="Generate audio"
-                      className="relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 shrink-0"
+                      className="relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 shrink-0"
                       style={{ backgroundColor: audio ? accentColor : "#404040" }}
                     >
                       <div
-                        className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all"
-                        style={{ left: audio ? "calc(100% - 18px)" : "2px" }}
+                        className="absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all"
+                        style={{ left: audio ? "calc(100% - 22px)" : "2px" }}
                       />
                     </button>
                   </div>
@@ -1596,58 +1419,79 @@ export default function Home() {
 
               {/* Card treatment */}
               <div>
-                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Card treatment</label>
-                <div className="flex gap-3">
-                  {TREATMENTS.map((t) => (
-                    <button
-                      key={t.id}
-                      aria-pressed={treatment === t.id}
-                      onClick={() => setTreatment(t.id)}
-                      disabled={isGenerating}
-                      className="flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-xs transition-all disabled:opacity-50"
-                      style={treatment === t.id
-                        ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15" }
-                        : { borderColor: "#262626" }
-                      }
-                    >
-                      <span className="font-medium mb-0.5" style={treatment === t.id ? { color: accentColor } : { color: "#e5e7eb" }}>{t.label}</span>
-                      <span style={{ color: "#525252" }}>{t.desc}</span>
-                    </button>
-                  ))}
+                <h3 id="treatment-heading" className="text-sm font-medium text-neutral-300 mb-3">Card treatment</h3>
+                <div role="group" aria-labelledby="treatment-heading" className="flex gap-2">
+                  {TREATMENTS.map((t) => {
+                    const active = treatment === t.id;
+                    return (
+                      <button
+                        type="button"
+                        key={t.id}
+                        aria-pressed={active}
+                        onClick={() => setTreatment(t.id)}
+                        disabled={isGenerating}
+                        className="flex-1 min-w-0 flex flex-col items-start px-3 py-2.5 rounded-lg border text-sm text-left transition-colors disabled:opacity-50"
+                        style={active
+                          ? { borderColor: accentColor, backgroundColor: accentColor + "15" }
+                          : { borderColor: "#262626" }
+                        }
+                      >
+                        <span className={`mb-0.5 ${active ? "font-semibold" : "font-medium"}`} style={active ? { color: accentColor } : { color: "#e5e7eb" }}>
+                          {active && <span aria-hidden="true">✓ </span>}{t.label}
+                        </span>
+                        <span className="text-neutral-400">{t.desc}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Primary color */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Primary color <span className="text-neutral-700 font-normal normal-case">(optional)</span>
-                  </label>
+                  <h3 id="primary-color-heading" className="text-sm font-medium text-neutral-300">
+                    Primary color <span className="text-neutral-400 font-normal">(optional)</span>
+                  </h3>
                   {primaryColor && (
-                    <button onClick={() => setPrimaryColor(null)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Clear</button>
+                    <button type="button" onClick={() => setPrimaryColor(null)} className="min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors">Clear</button>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  {COLOR_SWATCHES.map((c) => (
-                    <button
-                      key={c.value}
-                      onClick={() => setPrimaryColor(primaryColor === c.value ? null : c.value)}
-                      disabled={isGenerating}
-                      aria-label={`Select ${c.label} color`}
-                      className="w-7 h-7 rounded-full transition-all disabled:opacity-50 shrink-0"
-                      style={{
-                        backgroundColor: c.value,
-                        boxShadow: primaryColor === c.value ? `0 0 0 2px #0a0a0a, 0 0 0 4px ${c.value}` : "none",
-                      }}
-                    />
-                  ))}
+                <div role="group" aria-labelledby="primary-color-heading" className="flex flex-wrap items-center gap-1">
+                  {COLOR_SWATCHES.map((c) => {
+                    const active = primaryColor === c.value;
+                    return (
+                      <button
+                        type="button"
+                        key={c.value}
+                        aria-pressed={active}
+                        onClick={() => setPrimaryColor(active ? null : c.value)}
+                        disabled={isGenerating}
+                        aria-label={c.label}
+                        title={c.label}
+                        className="w-11 h-11 flex items-center justify-center rounded-full disabled:opacity-50"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
+                          style={{
+                            backgroundColor: c.value,
+                            color: c.label === "White" ? "#000" : "#fff",
+                            outline: active ? `2px solid ${c.value}` : undefined,
+                            outlineOffset: 2,
+                          }}
+                        >
+                          {active && "✓"}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Custom notes */}
               <div>
-                <label htmlFor="custom-details" className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">
-                  Custom details <span className="text-neutral-700 font-normal normal-case">(optional)</span>
+                <label htmlFor="custom-details" className="block text-sm font-medium text-neutral-300 mb-2">
+                  Custom details <span className="text-neutral-400 font-normal">(optional)</span>
                 </label>
                 <input
                   id="custom-details"
@@ -1657,7 +1501,7 @@ export default function Home() {
                   placeholder='e.g. "wolf mascot", "slow burn reveal", "HBO Max aesthetic"'
                   maxLength={120}
                   disabled={isGenerating}
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50 transition-colors text-sm"
+                  className={INPUT_CLASS}
                 />
               </div>
 
@@ -1666,34 +1510,39 @@ export default function Home() {
         </section>
 
         {/* Prompt preview */}
-        <section>
-          <div className="flex items-center mb-3">
+        <section aria-labelledby="prompt-heading">
+          <h2 id="prompt-heading">
             <button
+              type="button"
+              aria-expanded={showPrompt}
+              aria-controls="prompt-preview"
               onClick={() => setShowPrompt((v) => !v)}
-              className="flex items-center gap-2 text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+              className="w-full min-h-11 flex items-center justify-between gap-3 text-left text-sm font-medium text-neutral-300 hover:text-white transition-colors"
             >
-              <span>{showPrompt ? "▾" : "▸"}</span>
-              <span className="font-medium text-neutral-300">Prompt preview</span>
-              <span className="text-neutral-500">· see &amp; edit what gets sent to the AI</span>
+              <span>Prompt preview</span>
+              <span aria-hidden="true" className={`inline-block text-neutral-400 transition-transform ${showPrompt ? "rotate-90" : ""}`}>▸</span>
             </button>
-          </div>
+          </h2>
+          <p className="text-sm text-neutral-400">See and edit what gets sent to the AI.</p>
           {showPrompt && (
-            <div className="space-y-3">
+            <div id="prompt-preview" className="space-y-3 pt-4">
               <EditablePromptBlock
-                label={`Step 1 · ${IMAGE_MODELS.find(m => m.id === imageModel)?.label ?? imageModel} · ${imageRatio(imageModel).replace(":", "x")}`}
+                label="Step 1: title card"
+                meta={`${IMAGE_MODELS.find(m => m.id === imageModel)?.label ?? imageModel}, ${ratioLabel}`}
                 generated={preview.imagePrompt}
                 override={imagePromptOverride}
                 onChange={setImagePromptOverride}
               />
               <EditablePromptBlock
-                label={`Step 2 · ${videoModel} · 1280x720${isVeoModel && audio ? " · audio on" : ""}`}
+                label="Step 2: video"
+                meta={`${videoModel}, 1280×720${isVeoModel && audio ? ", audio on" : ""}`}
                 generated={preview.videoPrompt}
                 override={videoPromptOverride}
                 onChange={setVideoPromptOverride}
               />
               {gen3aTurboPromptTooLong && (
-                <p className="text-xs text-amber-500 flex items-center gap-1.5">
-                  <span>⚠</span> Gen3a Turbo has a 768-character prompt limit. This video prompt is {(videoPromptOverride ?? preview.videoPrompt).length} chars. Switch to Gen4 Turbo or shorten custom notes to avoid an API error.
+                <p className="text-sm text-amber-500">
+                  Gen3a Turbo has a 768-character prompt limit. This video prompt is {(videoPromptOverride ?? preview.videoPrompt).length} characters. Switch to Gen4 Turbo or shorten custom notes to avoid an API error.
                 </p>
               )}
             </div>
@@ -1701,22 +1550,24 @@ export default function Home() {
         </section>
 
         {/* Logo source */}
-        <section>
-          <label className="block text-sm font-medium text-neutral-300 mb-3">Title card</label>
-          <div className="flex gap-2">
+        <section aria-labelledby="title-card-heading">
+          <h2 id="title-card-heading" className="text-sm font-medium text-neutral-300 mb-3">Title card</h2>
+          <div role="group" aria-labelledby="title-card-heading" className="flex gap-2">
             {(["ai", "upload"] as LogoMode[]).map((m) => (
               <button
+                type="button"
                 key={m}
                 aria-pressed={logoMode === m}
                 onClick={() => { setLogoMode(m); setUploadError(null); }}
                 disabled={isGenerating}
-                className="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all disabled:opacity-50"
+                className={`flex-1 min-h-11 py-2.5 rounded-lg border text-sm transition-colors disabled:opacity-50 ${logoMode === m ? "font-semibold" : "font-medium"}`}
                 style={logoMode === m
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
+                  ? { borderColor: accentColor, backgroundColor: accentColor + "15", color: accentColor }
                   : { borderColor: "#262626", color: "#a3a3a3" }
                 }
               >
-                {m === "ai" ? "✦ Generate with AI" : "⬆ Upload your own"}
+                {logoMode === m && <span aria-hidden="true">✓ </span>}
+                {m === "ai" ? "Generate with AI" : "Upload your own"}
               </button>
             ))}
           </div>
@@ -1724,8 +1575,7 @@ export default function Home() {
           {logoMode === "upload" && (
             <div className="mt-4">
               <label
-                aria-label={uploadedUri ? "Replace uploaded title card" : "Upload your title card image"}
-                className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all"
+                className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-white has-[:focus-visible]:outline-offset-2"
                 style={{ borderColor: uploadError ? "#ef4444" : uploadedUri ? accentColor + "60" : "#404040", backgroundColor: uploadedUri ? accentColor + "08" : "transparent" }}
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDrop={(e) => {
@@ -1744,30 +1594,28 @@ export default function Home() {
                       </div>
                     )}
                     {uploadedUri && !isUploading && (
-                      <div className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full" style={{ background: accentColor + "30", color: accentColor }}>
+                      <div className="absolute top-2 right-2 text-sm px-2 py-0.5 rounded" style={{ background: "#000", color: accentColor }}>
                         Ready
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="text-center pointer-events-none">
-                    <div className="text-3xl mb-2">🖼</div>
-                    <div className="text-sm text-neutral-400">Drop your title card image here or click to browse</div>
-                    <div className="text-xs text-neutral-600 mt-1">PNG, JPG, WebP · max 3 MB · max 2.36:1 ratio (16:9 or squarer)</div>
+                  <div className="text-center px-4">
+                    <div className="text-sm text-neutral-300">Drop your title card image here or click to browse</div>
+                    <div className="text-sm text-neutral-400 mt-1">PNG, JPG or WebP, up to 3 MB, at most 2.36:1 (16:9 or squarer)</div>
                   </div>
                 )}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
+                  aria-label={uploadedUri ? "Replace uploaded title card" : "Upload your title card image"}
+                  className="sr-only"
                   disabled={isGenerating || isUploading}
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
                 />
               </label>
               {uploadError && (
-                <p className="mt-2 text-xs text-red-400 flex items-center gap-1.5">
-                  <span>⚠</span> {uploadError}
-                </p>
+                <p role="alert" className="mt-2 text-sm text-red-400">{uploadError}</p>
               )}
             </div>
           )}
@@ -1775,24 +1623,28 @@ export default function Home() {
 
         {/* Generation mode — AI path only */}
         {logoMode === "ai" && (
-          <div className="flex gap-2">
+          <div role="group" aria-label="What to generate" className="flex gap-2">
             {(["image-only", "full"] as GenMode[]).map((m) => (
               <button
+                type="button"
                 key={m}
                 aria-pressed={genMode === m}
                 onClick={() => setGenMode(m)}
                 disabled={isGenerating}
-                className="flex-1 py-3 px-3 rounded-lg border text-left transition-all disabled:opacity-50"
+                className="flex-1 min-w-0 py-3 px-3 rounded-lg border text-left transition-colors disabled:opacity-50"
                 style={genMode === m
-                  ? { borderColor: accentColor + "70", backgroundColor: accentColor + "15", color: accentColor }
+                  ? { borderColor: accentColor, backgroundColor: accentColor + "15", color: accentColor }
                   : { borderColor: "#262626", color: "#a3a3a3" }
                 }
               >
-                <div className="text-sm font-medium">{m === "image-only" ? "🖼 Title card only" : "🎬 Full intro"}</div>
-                <div className="text-xs mt-0.5" style={{ color: genMode === m ? accentColor + "aa" : "#525252" }}>
+                <div className={`text-sm ${genMode === m ? "font-semibold" : "font-medium"}`}>
+                  {genMode === m && <span aria-hidden="true">✓ </span>}
+                  {m === "image-only" ? "Title card only" : "Full intro"}
+                </div>
+                <div className="text-sm mt-0.5 text-neutral-400">
                   {m === "image-only"
                     ? "Generate the title card, then choose what to do next"
-                    : "Title card + animated video, start to finish"}
+                    : "Title card and animated video, start to finish"}
                 </div>
               </button>
             ))}
@@ -1801,19 +1653,20 @@ export default function Home() {
 
         {/* Audio track — queue before generating, mixed in after video is done */}
         {(genMode === "full" || logoMode === "upload") && (
-          <section>
+          <section aria-labelledby="audio-track-heading">
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-neutral-300">
-                Audio track <span className="text-neutral-500 text-xs font-normal">(optional)</span>
-              </label>
+              <h2 id="audio-track-heading" className="text-sm font-medium text-neutral-300">
+                Audio track <span className="text-neutral-400 font-normal">(optional)</span>
+              </h2>
               {pendingAudioFile && (
                 <button
+                  type="button"
                   onClick={() => {
                     if (pendingAudioPreviewUrl) URL.revokeObjectURL(pendingAudioPreviewUrl);
                     setPendingAudioFile(null);
                     setPendingAudioPreviewUrl(null);
                   }}
-                  className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+                  className="min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors"
                 >
                   Clear
                 </button>
@@ -1821,7 +1674,7 @@ export default function Home() {
             </div>
             {!pendingAudioFile ? (
               <label
-                className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-neutral-600"
+                className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-colors hover:border-neutral-500 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-white has-[:focus-visible]:outline-offset-2"
                 style={{ borderColor: "#404040" }}
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDrop={(e) => {
@@ -1834,16 +1687,14 @@ export default function Home() {
                   }
                 }}
               >
-                <div className="text-center pointer-events-none">
-                  <div className="text-2xl mb-1">♪</div>
-                  <div className="text-sm text-neutral-400">Drop audio file or click to browse</div>
-                  <div className="text-xs text-neutral-600 mt-0.5">MP3, WAV, AAC, OGG, FLAC, M4A · will be mixed in after the video generates</div>
+                <div className="text-center px-4">
+                  <div className="text-sm text-neutral-300">Drop an audio file or click to browse</div>
+                  <div className="text-sm text-neutral-400 mt-0.5">MP3, WAV, AAC, OGG, FLAC or M4A, mixed in after the video generates</div>
                 </div>
                 <input
-                  ref={pendingAudioInputRef}
                   type="file"
                   accept="audio/*"
-                  className="hidden"
+                  className="sr-only"
                   disabled={isGenerating}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
@@ -1856,22 +1707,22 @@ export default function Home() {
                 />
               </label>
             ) : (
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800">
-                <span className="text-lg shrink-0">♪</span>
+              <div className="flex flex-wrap items-center gap-3 px-3 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-neutral-300 truncate">{pendingAudioFile.name}</div>
-                  <div className="text-xs text-neutral-600 mt-0.5">
+                  <div className="text-sm text-neutral-400 mt-0.5">
                     {pendingAudioFile.size < 1048576
                       ? `${Math.round(pendingAudioFile.size / 1024)} KB`
                       : `${(pendingAudioFile.size / 1048576).toFixed(1)} MB`}
-                    {" · ready to mix after video generates"}
+                    {", ready to mix after the video generates"}
                   </div>
                 </div>
                 {pendingAudioPreviewUrl && (
                   <audio
                     src={pendingAudioPreviewUrl}
                     controls
-                    className="h-7 w-32 shrink-0"
+                    aria-label={`Preview ${pendingAudioFile.name}`}
+                    className="h-8 w-40 shrink-0"
                     style={{ colorScheme: "dark" }}
                   />
                 )}
@@ -1884,63 +1735,69 @@ export default function Home() {
         {keyLoaded && (
           <section>
             {apiKey ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border" style={{ borderColor: "#14532d40", backgroundColor: "#052e1620" }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                <span className="text-xs text-green-400 flex-1">Runway API key active</span>
-                <Link href="/setup" className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0">Change</Link>
+              <div
+                ref={apiKeyStatusRef}
+                tabIndex={-1}
+                className="flex items-center gap-3 px-3 py-1 rounded-lg border focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+                style={{ borderColor: "#14532d", backgroundColor: "#052e1620" }}
+              >
+                <p role="status" className="text-sm text-green-400 flex-1">
+                  {apiKeySaved ? "Key saved. You’re ready to generate." : "Runway API key active"}
+                </p>
+                <button type="button" onClick={removeApiKey} className="min-h-11 px-2 text-sm text-neutral-300 hover:text-white transition-colors shrink-0">
+                  Remove key
+                </button>
               </div>
             ) : (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300">
-                  Runway API key <span className="text-neutral-500 text-xs font-normal">· required to generate</span>
+              <form
+                className="space-y-2"
+                onSubmit={(e) => { e.preventDefault(); saveApiKeyFromInput(); }}
+              >
+                <label htmlFor="runway-api-key" className="block text-sm font-medium text-neutral-300">
+                  Runway API key <span className="text-neutral-400 font-normal">(required to generate)</span>
                 </label>
                 <div className="flex gap-2">
                   <input
+                    id="runway-api-key"
+                    ref={apiKeyInputRef}
                     type="password"
                     value={apiKeyInput}
-                    onChange={(e) => { setApiKeyInput(e.target.value); setApiKeySaved(false); }}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
                     placeholder="key_••••••••••••••••••••••"
-                    aria-label="Runway API key"
                     autoComplete="off"
                     data-lpignore="true"
                     data-1p-ignore="true"
-                    className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2.5 text-white font-mono text-sm placeholder:text-neutral-700 focus:outline-none focus:border-neutral-500 transition-colors"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && apiKeyInput.trim()) {
-                        saveKey(apiKeyInput.trim());
-                        setApiKeyInput("");
-                        setApiKeySaved(true);
-                      }
-                    }}
+                    className={`${INPUT_CLASS} flex-1 min-w-0 font-mono`}
                   />
                   <button
-                    onClick={() => {
-                      if (!apiKeyInput.trim()) return;
-                      saveKey(apiKeyInput.trim());
-                      setApiKeyInput("");
-                      setApiKeySaved(true);
-                    }}
+                    type="submit"
                     disabled={!apiKeyInput.trim()}
-                    className="px-4 py-2.5 rounded-lg text-sm font-semibold bg-white text-black hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    className="min-h-11 px-4 rounded-lg text-sm font-semibold bg-white text-black hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   >
                     Save
                   </button>
                 </div>
-                {apiKeySaved && (
-                  <p className="text-xs text-green-400">Key saved — you&apos;re ready to generate.</p>
-                )}
-                <p className="text-xs text-neutral-600">
-                  Stored only in your browser. Never sent to our servers.{" "}
-                  <Link href="/setup" className="underline underline-offset-2 hover:text-neutral-400 transition-colors">Setup guide →</Link>
+                <label className="flex items-center gap-2 min-h-11 w-fit cursor-pointer text-sm text-neutral-300">
+                  <input
+                    type="checkbox"
+                    checked={rememberKey}
+                    onChange={(e) => setRememberKey(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  Remember this key on this device
+                </label>
+                <p className="text-sm text-neutral-400 max-w-[65ch]">
+                  Your key stays in your browser. Each request passes it through this site’s server to Runway; the server never saves or logs it. Unchecked, the key is forgotten when you close this tab.{" "}
+                  <a href={LINKS.runwayApiKeys} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white transition-colors">Get a Runway API key</a>
                 </p>
-              </div>
+              </form>
             )}
           </section>
         )}
 
         {/* Credit cost estimate */}
         {!isGenerating && name.trim() && apiKey && (
-          <p className="text-xs text-neutral-600 text-center -mb-4">
+          <p className="text-sm text-neutral-400 text-center -mb-6">
             {logoMode === "upload"
               ? `~${crPerSec * duration} Runway credits for the animated video`
               : genMode === "image-only"
@@ -1951,58 +1808,50 @@ export default function Home() {
 
         {/* Generate */}
         <button
+          type="button"
           onClick={generate}
-          disabled={isGenerating || !name.trim() || (keyLoaded && !apiKey) || isUploading || (logoMode === "upload" && !uploadedUri)}
-          className="w-full font-semibold py-3.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed text-base"
-          style={
-            isGenerating || !name.trim() || (keyLoaded && !apiKey) || isUploading || (logoMode === "upload" && !uploadedUri)
-              ? { background: "#fff", color: "#000" }
-              : {
-                  background: `linear-gradient(135deg, ${accentColor}22 0%, transparent 60%), #fff`,
-                  color: "#000",
-                  boxShadow: `0 0 24px ${accentColor}30`,
-                }
-          }
+          disabled={generateBlocked}
+          className={`w-full min-h-11 font-semibold py-3.5 rounded-lg transition-colors disabled:cursor-not-allowed text-base bg-white text-black hover:bg-neutral-200 tabular-nums ${isGenerating ? "" : "disabled:opacity-40"}`}
         >
           {isGenerating
-            ? `Generating... ${(elapsedMs / 1000).toFixed(1)}s`
+            ? <>Generating… <ElapsedSeconds since={genStartedAt} /></>
             : isUploading
-            ? "Uploading..."
+            ? "Uploading…"
             : keyLoaded && !apiKey
-            ? "Add API key to generate →"
+            ? "Add your API key above to generate"
             : logoMode === "upload" && !uploadedUri
             ? "Upload a title card first"
             : logoMode === "upload"
-            ? "Animate My Title Card"
+            ? "Animate my title card"
             : genMode === "image-only"
-            ? "Generate Title Card"
-            : "Generate Intro"}
+            ? "Generate title card"
+            : "Generate intro"}
         </button>
 
         {/* Disabled reason hint */}
-        {keyLoaded && !isGenerating && (
-          <p className="text-xs text-center text-neutral-600 -mt-5">
+        {keyLoaded && !isGenerating && (!name.trim() || (logoMode === "upload" && !uploadedUri)) && (
+          <p className="text-sm text-center text-neutral-400 -mt-7">
             {!name.trim()
               ? "Enter a service name above to continue"
-              : !apiKey
-              ? <>Need an API key? <Link href="/setup" className="underline underline-offset-2 hover:text-neutral-400 transition-colors">Get one free →</Link></>
-              : logoMode === "upload" && !uploadedUri
-              ? "Upload a title card image above to continue"
-              : null}
+              : "Upload a title card image above to continue"}
           </p>
         )}
       </div>
 
+      {/* One live region for generation progress; errors use role="alert" below */}
+      <p role="status" className="sr-only">{statusMessage}</p>
+
       {/* Progress + results */}
       {(isGenerating || step === "review" || step === "done" || (step === "error" && imageUrl)) && (
-        <div ref={resultRef} tabIndex={-1} className="mt-10 w-full max-w-2xl px-4 focus:outline-none">
-          <div className="flex items-center gap-4 mb-6">
-            <StepIndicator label="Scene 1 · Design poster" status={step === "image" ? "active" : "done"} color={accentColor} />
+        <section aria-labelledby="result-heading" ref={resultRef} tabIndex={-1} className="mt-12 w-full max-w-2xl px-4 focus:outline-none">
+          <h2 id="result-heading" className="sr-only">Your intro</h2>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6">
+            <StepIndicator label="Scene 1: Design poster" status={step === "image" ? "active" : "done"} color={accentColor} />
             {genMode === "full" && (
               <>
-                <div className="flex-1 h-px bg-neutral-800" />
+                <div className="flex-1 min-w-6 h-px bg-neutral-800" />
                 <StepIndicator
-                  label="Scene 2 · Roll camera"
+                  label="Scene 2: Roll camera"
                   status={step === "video" ? "active" : step === "done" ? "done" : step === "error" ? "error" : "pending"}
                   color={accentColor}
                 />
@@ -2010,41 +1859,32 @@ export default function Home() {
             )}
             {step === "video" && (
               <button
+                type="button"
                 onClick={handleCancelVideo}
-                className="ml-2 text-xs text-red-500 hover:text-red-400 transition-colors shrink-0"
+                className="min-h-11 px-2 text-sm text-red-400 hover:text-red-300 transition-colors shrink-0"
               >
-                ✕ Cancel
+                Cancel video
               </button>
             )}
             {!isGenerating && (
               confirmingReset ? (
-                <div className="ml-2 flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs text-neutral-500">Video will be lost:</span>
-                  <button onClick={reset} className="text-xs text-red-400 hover:text-red-300 transition-colors">Confirm</button>
-                  <button onClick={() => setConfirmingReset(false)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">Cancel</button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-sm text-neutral-400">Video will be lost:</span>
+                  <button type="button" onClick={reset} className="min-h-11 px-2 text-sm text-red-400 hover:text-red-300 transition-colors">Confirm</button>
+                  <button type="button" onClick={() => setConfirmingReset(false)} className="min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors">Cancel</button>
                 </div>
               ) : step === "error" && imageUrl && !videoUrl ? (
-                <div className="ml-2 flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => proceedToVideo()}
-                    className="text-xs text-white hover:text-neutral-300 transition-colors"
-                  >
-                    ↺ Try again
+                <div className="flex items-center gap-2 shrink-0">
+                  <button type="button" onClick={() => proceedToVideo()} className="min-h-11 px-2 text-sm text-white hover:text-neutral-300 transition-colors">
+                    Try again
                   </button>
-                  <span className="text-neutral-700">·</span>
-                  <button
-                    onClick={safeReset}
-                    className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
-                  >
-                    ✕ Start over
+                  <button type="button" onClick={safeReset} className="min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors">
+                    Start over
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={safeReset}
-                  className="ml-2 text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0"
-                >
-                  ✕ Start over
+                <button type="button" onClick={safeReset} className="min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors shrink-0">
+                  Start over
                 </button>
               )
             )}
@@ -2054,35 +1894,26 @@ export default function Home() {
             {/* Image skeleton */}
             {step === "image" && !imageUrl && logoMode === "ai" && (
               <div className="rounded-xl overflow-hidden border border-neutral-800">
-                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
-                  <div className="h-3 w-44 rounded bg-neutral-800 animate-pulse" />
-                  <span className="text-xs tabular-nums" style={{ color: accentColor }}>{Math.round(imageProgress)}%</span>
-                </div>
                 <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }} />
                 <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800 flex items-center gap-3">
-                  <div className="flex-1 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${imageProgress}%`, backgroundColor: accentColor }}
-                    />
-                  </div>
-                  <span className="text-xs text-neutral-500 shrink-0">Generating poster…</span>
+                  <progress aria-label="Generating poster" className="flex-1 h-1.5" style={{ accentColor }} />
+                  <span className="text-sm text-neutral-400 shrink-0">Generating poster…</span>
                 </div>
               </div>
             )}
 
             {imageUrl && (
-              <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 40px ${accentColor}18` }}>
-                <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
-                  <span>Scene 1 · Logo · {imageRatio(imageModel).replace(":", "x")}</span>
+              <div className="rounded-xl overflow-hidden border border-neutral-800">
+                <div className="px-3 text-sm text-neutral-400 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2">
+                  <span>Scene 1: Logo, {ratioLabel}</span>
                   <div className="flex items-center gap-3">
                     {timings && timings.image > 0 && <span className="tabular-nums">{(timings.image / 1000).toFixed(1)}s</span>}
                     <button
+                      type="button"
                       onClick={downloadPoster}
-                      className="text-xs border px-2 py-0.5 rounded transition-colors hover:text-white hover:border-neutral-500"
-                      style={{ borderColor: "#404040", color: "#737373" }}
+                      className="min-h-11 px-2 text-sm text-neutral-300 hover:text-white transition-colors"
                     >
-                      ↓ Download poster
+                      Download poster
                     </button>
                   </div>
                 </div>
@@ -2092,21 +1923,23 @@ export default function Home() {
 
             {/* Logo-only done — offer to continue to video */}
             {step === "done" && genMode === "image-only" && imageUrl && (
-              <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: accentColor + "50", background: accentColor + "0a", boxShadow: `0 0 32px ${accentColor}18` }}>
+              <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: accentColor + "50", background: accentColor + "0a" }}>
                 <div>
                   <p className="text-base font-semibold text-white">Happy with the logo?</p>
-                  <p className="text-sm text-neutral-400 mt-1">Animate it into a full streaming intro, or download the poster above.</p>
+                  <p className="text-sm text-neutral-300 mt-1">Animate it into a full streaming intro, or download the poster above.</p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => { setGenMode("full"); proceedToVideo(); }}
-                  className="w-full py-3.5 rounded-lg text-sm font-semibold text-black transition-all"
+                  className="w-full py-3.5 rounded-lg text-sm font-semibold text-black transition-colors"
                   style={{ background: accentColor }}
                 >
-                  Animate into a video intro →
+                  Animate into a video intro
                 </button>
                 <button
+                  type="button"
                   onClick={reset}
-                  className="w-full py-2 rounded-lg text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+                  className="w-full min-h-11 rounded-lg text-sm text-neutral-400 hover:text-white transition-colors"
                 >
                   Start over with a new style
                 </button>
@@ -2115,37 +1948,43 @@ export default function Home() {
 
             {/* Review step — approve or regenerate before animating */}
             {step === "review" && genMode === "full" && (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 space-y-3">
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 space-y-3">
                 <p className="text-sm font-medium text-neutral-200">Happy with the logo?</p>
-                <p className="text-xs text-neutral-500">Approve it to animate, or add notes and regenerate.</p>
-                <input
-                  type="text"
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && reviewNotes.trim() && handleRegenerate()}
-                  placeholder='e.g. "make text bolder", "brighter red", "less grain"'
-                  aria-label="Notes for logo regeneration"
-                  className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-sm"
-                />
-                <div className="flex gap-3">
+                <p className="text-sm text-neutral-400">Approve it to animate, or add notes and regenerate.</p>
+                <div>
+                  <label htmlFor="review-notes" className="block text-sm text-neutral-300 mb-1.5">Notes for a new version (optional)</label>
+                  <input
+                    id="review-notes"
+                    type="text"
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    onKeyDown={(e) => { if (isEnterToSubmitNotes(e, reviewNotes)) handleRegenerate(); }}
+                    placeholder='e.g. "make text bolder", "brighter red", "less grain"'
+                    className={`${INPUT_CLASS} bg-neutral-950`}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-3">
                   <button
+                    type="button"
                     onClick={reset}
-                    className="py-2.5 px-4 rounded-lg border border-neutral-800 text-sm text-neutral-600 hover:text-neutral-400 hover:border-neutral-700 transition-colors"
+                    className="min-h-11 px-4 rounded-lg border border-neutral-700 text-sm text-neutral-300 hover:text-white hover:border-neutral-500 transition-colors"
                   >
                     Start over
                   </button>
                   <button
+                    type="button"
                     onClick={handleRegenerate}
-                    className="flex-1 py-2.5 rounded-lg border border-neutral-700 text-sm text-neutral-300 hover:border-neutral-500 hover:text-white transition-colors"
+                    className="flex-1 min-h-11 px-4 rounded-lg border border-neutral-700 text-sm text-neutral-300 hover:border-neutral-500 hover:text-white transition-colors"
                   >
-                    ↺ Regenerate
+                    Regenerate
                   </button>
                   <button
+                    type="button"
                     onClick={() => proceedToVideo()}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-black transition-all"
+                    className="flex-1 min-h-11 px-4 rounded-lg text-sm font-semibold text-black whitespace-nowrap transition-colors"
                     style={{ background: accentColor }}
                   >
-                    Looks good → Make the video
+                    Looks good, make the video
                   </button>
                 </div>
               </div>
@@ -2154,47 +1993,33 @@ export default function Home() {
             {/* Video skeleton */}
             {step === "video" && !videoUrl && (
               <div className="rounded-xl overflow-hidden border border-neutral-800">
-                {/* Status bar */}
-                <div
-                  role="status"
-                  aria-live="polite"
-                  aria-atomic="true"
-                  className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2"
-                >
-                  <div className="h-3 w-56 rounded bg-neutral-800 animate-pulse shrink-0" />
+                {/* Status bar (announced via the page's status region, not here) */}
+                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center gap-3">
+                  <progress
+                    aria-label="Video progress"
+                    max={100}
+                    value={pollStatus === "RUNNING" && pollProgress !== null ? pollProgress : undefined}
+                    className="flex-1 h-1.5"
+                    style={{ accentColor }}
+                  />
                   {pollStatus && (
-                    <span className="text-xs shrink-0" style={{ color: pollStatus === "RUNNING" ? "#22C55E" : pollStatus === "THROTTLED" ? "#F59E0B" : "#6B7280" }}>
+                    <span className="text-sm shrink-0 tabular-nums" style={{ color: pollStatus === "RUNNING" ? "#22C55E" : pollStatus === "THROTTLED" ? "#F59E0B" : "#a3a3a3" }}>
                       {pollStatus === "STARTING"  && "Submitting task…"}
                       {pollStatus === "PENDING"   && "Queued, waiting to start"}
-                      {pollStatus === "RUNNING"   && `⚙ Generating frames…${pollProgress !== null ? ` ${pollProgress}%` : ""}`}
-                      {pollStatus === "THROTTLED" && "⏳ Throttled, concurrent task limit reached"}
+                      {pollStatus === "RUNNING"   && `Generating frames${pollProgress !== null ? ` ${pollProgress}%` : "…"}`}
+                      {pollStatus === "THROTTLED" && "Throttled: concurrent task limit reached"}
                     </span>
                   )}
                 </div>
-
-                {/* Progress bar (RUNNING only) */}
-                {pollStatus === "RUNNING" && pollProgress !== null && (
-                  <div className="px-3 py-2 bg-neutral-950 border-b border-neutral-800 flex items-center gap-3">
-                    <div className="flex-1 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${pollProgress}%`, backgroundColor: "#22C55E" }}
-                      />
-                    </div>
-                    <span className="text-xs tabular-nums shrink-0" style={{ color: "#22C55E" }}>
-                      {pollProgress}%
-                    </span>
-                  </div>
-                )}
 
                 {/* Placeholder area */}
                 <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }}>
                   {pollStatus === "THROTTLED" && (
                     <div className="flex flex-col items-center justify-center h-full gap-4 py-10 px-6">
-                      <p className="text-sm text-neutral-400 text-center max-w-sm">
+                      <p className="text-sm text-neutral-300 text-center max-w-sm">
                         Another task is still running on your Runway account (concurrency limit: 1).
                         Copy a task ID from your{" "}
-                        <span className="text-neutral-300">Runway dev portal → Request History</span>
+                        <span className="text-white">Runway dev portal, Request History</span>
                         {" "}and cancel it here, or cancel this queued task and try again later.
                       </p>
 
@@ -2206,9 +2031,10 @@ export default function Home() {
                           onChange={e => { setCancelTaskId(e.target.value); setCancelMsg(null); }}
                           placeholder="Paste task ID to cancel…"
                           aria-label="Runway task ID to cancel"
-                          className="flex-1 text-xs bg-neutral-800 border border-neutral-700 rounded px-3 py-1.5 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-600"
+                          className={`${INPUT_CLASS} flex-1 min-w-0 bg-neutral-800`}
                         />
                         <button
+                          type="button"
                           disabled={!cancelTaskId.trim()}
                           onClick={async () => {
                             const id = cancelTaskId.trim();
@@ -2217,25 +2043,26 @@ export default function Home() {
                             if (apiKey) h["x-runway-key"] = apiKey;
                             const res = await fetch(`/api/video/cancel?id=${encodeURIComponent(id)}`, { method: "DELETE", headers: h });
                             const data = await res.json();
-                            if (res.ok) { setCancelMsg("Cancelled ✓. Polling will resume shortly."); setCancelTaskId(""); }
+                            if (res.ok) { setCancelMsg("Cancelled. Polling will resume shortly."); setCancelTaskId(""); }
                             else setCancelMsg(`Error: ${data.error ?? "cancel failed"}`);
                           }}
-                          className="text-xs px-3 py-1.5 rounded border border-amber-700 text-amber-400 hover:bg-amber-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                          className="min-h-11 text-sm px-3 rounded-lg border border-amber-700 text-amber-400 hover:bg-amber-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                         >
                           Cancel task
                         </button>
                       </div>
                       {cancelMsg && (
-                        <p className="text-xs" style={{ color: cancelMsg.startsWith("Error") ? "#EF4444" : "#22C55E" }}>
+                        <p role="status" className="text-sm" style={{ color: cancelMsg.startsWith("Error") ? "#EF4444" : "#22C55E" }}>
                           {cancelMsg}
                         </p>
                       )}
 
                       <button
+                        type="button"
                         onClick={reset}
-                        className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+                        className="min-h-11 text-sm text-neutral-300 hover:text-white transition-colors"
                       >
-                        Cancel this queued task & start over
+                        Cancel this queued task and start over
                       </button>
                     </div>
                   )}
@@ -2249,14 +2076,16 @@ export default function Home() {
                 <p className="text-sm text-red-300">{error}</p>
                 <div className="flex items-center gap-3">
                   <button
+                    type="button"
                     onClick={() => proceedToVideo()}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-black bg-white hover:bg-neutral-200 transition-colors"
+                    className="min-h-11 px-4 rounded-lg text-sm font-semibold text-black bg-white hover:bg-neutral-200 transition-colors"
                   >
                     Try again
                   </button>
                   <button
+                    type="button"
                     onClick={safeReset}
-                    className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                    className="min-h-11 px-2 text-sm text-red-300 hover:text-red-200 transition-colors"
                   >
                     Start over
                   </button>
@@ -2265,30 +2094,26 @@ export default function Home() {
             )}
 
             {videoUrl && (
-              <div className="rounded-xl overflow-hidden border border-neutral-800" style={{ boxShadow: `0 0 80px ${accentColor}30` }}>
-                <div className="px-3 py-2 text-xs text-neutral-500 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
-                  <span>Scene 2 · Intro video · {duration}s · 1280x720</span>
+              <div className="rounded-xl overflow-hidden border border-neutral-800">
+                <div className="px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2">
+                  <span>Scene 2: Intro video, {duration}s, 1280×720</span>
                   {timings && <span className="tabular-nums">{(timings.video / 1000).toFixed(1)}s</span>}
                 </div>
-                {/* TV screen */}
-                <div className="relative bg-black">
-                  <video src={videoUrl} autoPlay loop muted playsInline className="w-full block" />
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 40%)" }} />
-                </div>
+                <video src={videoUrl} autoPlay loop muted playsInline controls className="w-full block bg-black" />
                 {/* Timing + cost strip */}
                 {timings && (
-                  <div className="px-3 py-1.5 bg-neutral-950 border-b border-neutral-800 flex gap-4 text-xs text-neutral-600 tabular-nums flex-wrap">
+                  <div className="px-3 py-1.5 bg-neutral-950 border-b border-neutral-800 flex gap-x-4 gap-y-1 text-sm text-neutral-400 tabular-nums flex-wrap">
                     <span>Scene 1: {(timings.image / 1000).toFixed(1)}s</span>
                     <span>Scene 2: {(timings.video / 1000).toFixed(1)}s</span>
-                    <span className="text-neutral-500 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
-                    <span className="ml-auto flex gap-3">
+                    <span className="text-neutral-300 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
+                    <span className="ml-auto flex flex-wrap gap-x-3">
                       {(credits ? credits.image : imageCrCost) > 0 && (
                         <span>Poster: {credits ? `${credits.image} cr` : `~${imageCrCost} cr`}</span>
                       )}
                       {(credits?.video ?? 0) > 0 || !credits ? (
                         <span>Video: {credits ? `${credits.video} cr` : `~${crPerSec * duration} cr`}</span>
                       ) : null}
-                      <span className="text-neutral-400 font-medium">
+                      <span className="text-neutral-300 font-medium">
                         Total: {credits
                           ? `${credits.image + credits.video} cr`
                           : `~${imageCrCost + crPerSec * duration} cr`}
@@ -2296,70 +2121,71 @@ export default function Home() {
                     </span>
                   </div>
                 )}
-                <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800 flex items-center gap-2">
+                <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800">
+                  <label htmlFor="redo-notes" className="block text-sm text-neutral-300 mb-1.5">Notes for a redo (optional)</label>
                   <input
+                    id="redo-notes"
                     type="text"
                     value={videoRegenNotes}
                     onChange={(e) => setVideoRegenNotes(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { setVideoUrl(null); proceedToVideo(); } }}
-                    placeholder='Notes for redo: e.g. "more energy", "darker background", "slower reveal"'
-                    className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
+                    onKeyDown={(e) => { if (isEnterToSubmitNotes(e, videoRegenNotes)) { setVideoUrl(null); proceedToVideo(); } }}
+                    placeholder='e.g. "more energy", "darker background", "slower reveal"'
+                    className={INPUT_CLASS}
                   />
                 </div>
-                <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    {confirmingReset ? (
-                      <>
-                        <span className="text-xs text-neutral-400 shrink-0">Video will be lost:</span>
-                        <button onClick={reset} className="text-sm text-red-400 border border-red-900 hover:border-red-700 px-4 py-1.5 rounded transition-colors shrink-0">
-                          Confirm
-                        </button>
-                        <button onClick={() => setConfirmingReset(false)} className="text-sm text-neutral-400 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <button onClick={safeReset} className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0">
-                        Start over
+                <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex flex-wrap items-center gap-2">
+                  {confirmingReset ? (
+                    <>
+                      <span className="text-sm text-neutral-300 shrink-0">Video will be lost:</span>
+                      <button type="button" onClick={reset} className="min-h-11 text-sm text-red-400 border border-red-900 hover:border-red-700 px-4 rounded transition-colors shrink-0">
+                        Confirm
                       </button>
-                    )}
-                    <button
-                      onClick={() => { setVideoUrl(null); proceedToVideo(); }}
-                      className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors shrink-0"
-                    >
-                      Redo video
+                      <button type="button" onClick={() => setConfirmingReset(false)} className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={safeReset} className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0">
+                      Start over
                     </button>
-                    <a
-                      href={redditShareUrl(name.trim())}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => track("Share Reddit", { style })}
-                      className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"
-                    >
-                      Post to r/plexprerolls
-                    </a>
-                    <a
-                      href={tweetShareUrl(name.trim())}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => track("Share X", { style })}
-                      className="text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 py-1.5 rounded transition-colors"
-                    >
-                      Share on X
-                    </a>
-                    <a
-                      href={videoUrl}
-                      download={makeFilename(name, style)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => track("Download Video", { style, video_model: videoModel })}
-                      className="text-sm text-black font-medium px-4 py-1.5 rounded transition-all"
-                      style={{ background: accentColor }}
-                    >
-                      Download MP4
-                    </a>
-                  </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { setVideoUrl(null); proceedToVideo(); }}
+                    className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0"
+                  >
+                    Redo video
+                  </button>
+                  <a
+                    href={redditShareUrl(name.trim())}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("Share Reddit", { style })}
+                    className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
+                  >
+                    Post to r/plexprerolls
+                  </a>
+                  <a
+                    href={tweetShareUrl(name.trim())}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("Share X", { style })}
+                    className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
+                  >
+                    Share on X
+                  </a>
+                  <button
+                    type="button"
+                    onClick={downloadVideo}
+                    className="min-h-11 text-sm text-black font-medium px-4 rounded transition-colors"
+                    style={{ background: accentColor }}
+                  >
+                    Download MP4
+                  </button>
                 </div>
+                {downloadError && (
+                  <p role="alert" className="px-3 py-2 text-sm text-red-300 bg-red-950 border-t border-red-900">{downloadError}</p>
+                )}
               </div>
             )}
 
@@ -2378,35 +2204,37 @@ export default function Home() {
             {/* Install guide */}
             {videoUrl && (
               <div className="rounded-xl border border-neutral-800 overflow-hidden">
-                <button
-                  onClick={() => setShowInstall((v) => !v)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-neutral-900 text-sm text-neutral-400 hover:text-white transition-colors"
-                >
-                  <span>How to add this to your media server</span>
-                  <span className="text-neutral-600">{showInstall ? "▾" : "▸"}</span>
-                </button>
+                <h3>
+                  <button
+                    type="button"
+                    aria-expanded={showInstall}
+                    aria-controls="install-guide"
+                    onClick={() => setShowInstall((v) => !v)}
+                    className="w-full min-h-11 flex items-center justify-between gap-3 px-4 py-3 bg-neutral-900 text-left text-sm text-neutral-300 hover:text-white transition-colors"
+                  >
+                    <span>How to add this to your media server</span>
+                    <span aria-hidden="true" className={`inline-block text-neutral-400 transition-transform ${showInstall ? "rotate-90" : ""}`}>▸</span>
+                  </button>
+                </h3>
                 {showInstall && (
-                  <div className="divide-y divide-neutral-800">
+                  <div id="install-guide" className="divide-y divide-neutral-800">
                     {PLATFORMS.map((p) => (
-                      <div key={p.name} className="px-4 py-3 flex gap-3 items-start bg-neutral-950">
-                        <div
-                          className="flex items-center gap-1.5 shrink-0 mt-0.5 px-2 py-0.5 rounded"
-                          style={{ backgroundColor: p.color + "18" }}
-                        >
+                      <div key={p.name} className="px-4 py-3 flex flex-wrap gap-3 items-start bg-neutral-950">
+                        <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={`/logos/${p.slug}.svg`} alt="" aria-hidden="true" width={12} height={12} />
-                          <span className="text-xs font-bold" style={{ color: p.color }}>{p.name}</span>
+                          <span className="text-sm font-bold" style={{ color: p.color }}>{p.name}</span>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-neutral-400 leading-relaxed">{p.howTo}</p>
+                        <div className="flex-1 min-w-48">
+                          <p className="text-sm text-neutral-300 leading-relaxed">{p.howTo}</p>
                           <a
                             href={p.docs}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs mt-1 inline-block transition-colors hover:text-neutral-300"
-                            style={{ color: p.color + "cc" }}
+                            className="text-sm inline-flex items-center min-h-11 underline underline-offset-2 transition-colors hover:text-white"
+                            style={{ color: p.color }}
                           >
-                            Official docs →
+                            {p.name} docs
                           </a>
                         </div>
                       </div>
@@ -2416,50 +2244,24 @@ export default function Home() {
               </div>
             )}
           </div>
-        </div>
+        </section>
       )}
 
       {step === "error" && !imageUrl && (
         <div className="mt-8 max-w-2xl w-full px-4 space-y-3">
           <div role="alert" className="bg-red-950 border border-red-800 rounded-lg px-4 py-3 text-red-300 text-sm">{error}</div>
-          <button onClick={reset} className="text-sm text-neutral-400 hover:text-white transition-colors">Start over</button>
+          <button type="button" onClick={reset} className="min-h-11 text-sm text-neutral-300 hover:text-white transition-colors">Start over</button>
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="mt-16 w-full max-w-2xl px-4 border-t border-neutral-900 pt-8 pb-12 flex flex-col items-center gap-4 text-xs text-neutral-600">
-        <div className="flex items-center gap-4">
-          <Link href="/about" className="hover:text-neutral-400 transition-colors">About</Link>
-          <Link href="/how-it-works" className="hover:text-neutral-400 transition-colors">How it&apos;s built</Link>
-          <a href={LINKS.repoGitHub} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Fork on GitHub</a>
-          {SHOW_RUNWAY_BRANDING && (
-            <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Runway docs</a>
-          )}
-          <a href={LINKS.runwayCommunity} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Discord</a>
-          <a href={LINKS.runwaySignup} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">Get API key</a>
-        </div>
-        <div className="flex items-center gap-4 text-neutral-700">
-          <div className="flex items-center gap-1.5">
-            <span>Built by</span>
-            <a href={BUILDER.website} target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-white transition-colors">{BUILDER.name}</a>
-            <span>·</span>
-            <a href={BUILDER.github} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-500 transition-colors">GitHub</a>
-            <span>·</span>
-            <a href={BUILDER.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-500 transition-colors">LinkedIn</a>
-          </div>
-          {SHOW_RUNWAY_BRANDING && (
-            <>
-              <span className="text-neutral-800">|</span>
-              <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-400 transition-colors">
-                Powered by Runway
-              </a>
-            </>
-          )}
-        </div>
-      </footer>
+      <div className="pb-16" />
     </main>
   );
 }
+
+const INPUT_CLASS = "w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-base sm:text-sm text-white placeholder:text-neutral-500 focus:border-neutral-500 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 disabled:opacity-50 transition-colors";
+
+const HERO_POSTER = "/examples/hero-poster.webp";
 
 const EXAMPLE_CLIPS = [
   "/examples/clip-netflix-v2.mp4",
@@ -2495,9 +2297,10 @@ function VideoMontage() {
           key={src}
           ref={(el) => { videoRefs.current[i] = el; }}
           src={src}
+          poster={i === 0 ? HERO_POSTER : undefined}
           muted
           playsInline
-          preload={i === 0 ? "auto" : "none"}
+          preload={i === 0 ? "metadata" : "none"}
           onEnded={() => {
             const next = (i + 1) % EXAMPLE_CLIPS.length;
             const nextVid = videoRefs.current[next];
@@ -2520,26 +2323,102 @@ function makeFilename(name: string, style: string): string {
   return `${slug}-${style}-${date}-${time}.mp4`;
 }
 
+// Owns its own interval so the 10 Hz tick re-renders only this text, not the whole page.
+function ElapsedSeconds({ since }: { since: number }) {
+  const [now, setNow] = useState(since);
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(id);
+  }, []);
+  return <>{(Math.max(0, now - since) / 1000).toFixed(1)}s</>;
+}
+
+function ThemeTile({ label, desc, image, active, color, disabled, eager = false, onClick }: {
+  label: string; desc: string; image: string; active: boolean; color: string; disabled: boolean; eager?: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      disabled={disabled}
+      className="group flex flex-col rounded-lg border overflow-hidden transition-colors disabled:opacity-50 text-left bg-neutral-950"
+      style={{ borderColor: active ? color : "#262626", borderWidth: active ? 2 : 1 }}
+    >
+      {/* Caption sits under the image so it never covers the logo in it */}
+      <span className="relative block w-full" style={{ aspectRatio: "16/9" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image}
+          alt=""
+          width={640}
+          height={360}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200 px-2.5 bg-black/80">
+          <span className="text-sm text-center leading-snug text-neutral-100">{desc}</span>
+        </span>
+      </span>
+      <span className={`block px-2 py-1.5 text-sm leading-tight ${active ? "font-bold text-white" : "font-medium text-neutral-300"}`}>
+        {active && <span aria-hidden="true">✓ </span>}{label}
+      </span>
+    </button>
+  );
+}
+
+function ModelOption({ label, cost, desc, note, active, accentColor, disabled, onClick }: {
+  label: string; cost: string; desc: string; note?: string; active: boolean; accentColor: string; disabled: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      disabled={disabled}
+      className="flex flex-col items-start p-2.5 rounded-lg border text-sm transition-colors disabled:opacity-50 text-left"
+      style={active
+        ? { borderColor: accentColor, backgroundColor: accentColor + "15" }
+        : { borderColor: "#262626" }
+      }
+    >
+      <div className="flex items-center justify-between gap-2 w-full mb-0.5">
+        <span className={`min-w-0 ${active ? "font-bold" : "font-semibold"}`} style={active ? { color: accentColor } : { color: "#e5e7eb" }}>
+          {active && <span aria-hidden="true">✓ </span>}{label}
+        </span>
+        <span className="text-neutral-400 text-xs whitespace-nowrap shrink-0">{cost}</span>
+      </div>
+      <span className="text-neutral-400 leading-tight">{desc}</span>
+      {note && <span className="mt-1.5 text-xs font-medium" style={{ color: accentColor }}>{note}</span>}
+    </button>
+  );
+}
+
 function StepIndicator({ label, status, color }: { label: string; status: "pending" | "active" | "done" | "error"; color: string }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <div
-        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+        aria-hidden="true"
+        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
         style={
           status === "done"   ? { background: color, color: "#000" } :
           status === "active" ? { background: "#fff", color: "#000", animation: "pulse 1.5s cubic-bezier(0.4,0,0.6,1) infinite" } :
           status === "error"  ? { background: "#7f1d1d", color: "#fca5a5" } :
-                                { background: "#262626", color: "#737373" }
+                                { background: "#262626", color: "#a3a3a3" }
         }
       >
-        {status === "done" ? "✓" : status === "active" ? "..." : status === "error" ? "✕" : "○"}
+        {status === "done" ? "✓" : status === "active" ? "…" : status === "error" ? "✕" : "○"}
       </div>
-      <span className="text-sm" style={
-        status === "active" ? { color: "#fff" } :
-        status === "done"   ? { color } :
-        status === "error"  ? { color: "#fca5a5" } :
-                              { color: "#525252" }
-      }>
+      <span
+        className={`text-sm ${status === "pending" ? "text-neutral-400" : ""}`}
+        style={
+          status === "active" ? { color: "#fff" } :
+          status === "done"   ? { color } :
+          status === "error"  ? { color: "#fca5a5" } :
+                                undefined
+        }
+      >
         {label}
       </span>
     </div>
@@ -2547,57 +2426,70 @@ function StepIndicator({ label, status, color }: { label: string; status: "pendi
 }
 
 function EditablePromptBlock({
-  label, generated, override, onChange,
+  label, meta, generated, override, onChange,
 }: {
   label: string;
+  meta: string;
   generated: string;
   override: string | null;
   onChange: (v: string | null) => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const labelId = useId();
   const active = override ?? generated;
   const isEdited = override !== null && override !== generated;
 
+  // field-sizing: content grows the textarea in CSS; measure by hand only where it's unsupported.
   useEffect(() => {
     const el = textareaRef.current;
-    if (!el) return;
+    if (!el || CSS.supports("field-sizing", "content")) return;
     el.style.height = "auto";
     el.style.height = el.scrollHeight + "px";
   }, [active]);
 
-  function copy() {
-    navigator.clipboard.writeText(active);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(active);
+      setCopyState("copied");
+    } catch {
+      setCopyState("failed");
+    }
+    setTimeout(() => setCopyState("idle"), 2500);
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden group/prompt transition-colors" style={{ borderColor: isEdited ? "#3f3f00" : "#262626" }}>
-      <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ backgroundColor: isEdited ? "#1a1a00" : "#171717", borderColor: isEdited ? "#3f3f00" : "#262626" }}>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-500">{label}</span>
+    <div className="rounded-lg border overflow-hidden" style={{ borderColor: isEdited ? "#3f3f00" : "#262626" }}>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 px-3 border-b" style={{ backgroundColor: isEdited ? "#1a1a00" : "#171717", borderColor: isEdited ? "#3f3f00" : "#262626" }}>
+        <div className="flex flex-wrap items-center gap-x-2 py-1.5">
+          <span id={labelId} className="text-sm text-neutral-200">{label}</span>
+          <span className="text-sm text-neutral-400">{meta}</span>
           {isEdited
-            ? <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#3f3f00", color: "#facc15" }}>edited</span>
-            : <span className="text-xs text-neutral-500 flex items-center gap-1">· ✏ click to edit</span>
+            ? <span className="text-sm" style={{ color: "#facc15" }}>Edited</span>
+            : <span className="text-sm text-neutral-400">Click to edit</span>
           }
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
           {isEdited && (
-            <button onClick={() => onChange(null)} className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors">
+            <button type="button" onClick={() => onChange(null)} className="min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors">
               Reset
             </button>
           )}
-          <button onClick={copy} className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors">
-            {copied ? "Copied!" : "Copy"}
+          <button type="button" onClick={copy} className="grid min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors">
+            <span className={`[grid-area:1/1] ${copyState === "copied" ? "invisible" : ""}`}>Copy</span>
+            <span className={`[grid-area:1/1] ${copyState === "copied" ? "" : "invisible"}`}>Copied</span>
           </button>
+          <span role="status" className={copyState === "failed" ? "text-sm text-red-400" : "sr-only"}>
+            {copyState === "copied" ? "Prompt copied" : copyState === "failed" ? "Couldn’t copy; select the text and copy it by hand" : ""}
+          </span>
         </div>
       </div>
       <textarea
         ref={textareaRef}
+        aria-labelledby={labelId}
         value={active}
         onChange={e => onChange(e.target.value === generated ? null : e.target.value)}
-        className="w-full px-3 py-2.5 text-xs font-mono leading-relaxed bg-neutral-950 text-neutral-400 resize-none focus:outline-none focus:text-neutral-200 hover:text-neutral-300 hover:bg-neutral-900 transition-colors cursor-text"
+        className="block w-full px-3 py-2.5 text-base sm:text-xs font-mono leading-relaxed bg-neutral-950 text-neutral-300 resize-none [field-sizing:content] focus-visible:outline-2 focus-visible:outline-white focus-visible:-outline-offset-2 focus:text-neutral-100 hover:bg-neutral-900 transition-colors cursor-text"
         style={{ overflow: "hidden", minHeight: "4rem" }}
         spellCheck={false}
       />
