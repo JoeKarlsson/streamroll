@@ -88,10 +88,10 @@ test("R34 Generate without a key is enabled and focuses the key field", async ({
 test("R35 Prompt preview is closed by default", async ({ page }) => {
   await gotoQuiet(page, "/");
   await expect(page.getByRole("button", { name: "Prompt preview" })).toHaveAttribute("aria-expanded", "false");
-  await expect(page.locator("#prompt-preview")).toHaveCount(0);
+  await expect(page.locator("#prompt-preview")).toHaveAttribute("inert", "");
 });
 
-test("R10 service name comes before Style; Seasonal, Holidays and Studios sit in a closed <details>", async ({ page }) => {
+test("R10 service name comes before Style; Seasonal, Holidays and Studios sit in the closed More themes panel", async ({ page }) => {
   await gotoQuiet(page, "/");
   const nameFirst = await page.evaluate(() => {
     const input = document.getElementById("service-name")!;
@@ -102,7 +102,7 @@ test("R10 service name comes before Style; Seasonal, Holidays and Studios sit in
   for (const group of ["seasonal", "holidays", "studios"]) {
     const heading = page.locator(`#${group}-heading`);
     await expect(heading, group).toHaveCount(1);
-    expect(await heading.evaluate((h) => h.closest("details")?.open), group).toBe(false);
+    expect(await heading.evaluate((h) => h.closest("#more-themes")?.hasAttribute("inert")), group).toBe(true);
   }
 });
 
@@ -115,14 +115,18 @@ test("R07 Duration, title card and preset tiles flip aria-pressed", async ({ pag
   }
 });
 
-test("R29 a clicked preset tile hides its description once the mouse leaves", async ({ page }) => {
+test("R29 preset tile description uses hover intent (150ms in, 100ms out) and hides once the mouse leaves", async ({ page }) => {
   await gotoQuiet(page, "/");
   const tile = await firstUnpressed(page.getByRole("group", { name: "Style" }));
+  const overlay = tile.locator("span.absolute.inset-0");
+  const timing = () => overlay.evaluate((el) => [getComputedStyle(el).transitionDelay, getComputedStyle(el).transitionDuration]);
   await tile.hover();
+  expect((await timing())[0]).toBe("0.15s");
+  await expect(overlay).toHaveCSS("opacity", "1");
   await tile.click();
   await page.mouse.move(0, 0);
-  const overlay = tile.locator("span.absolute.inset-0");
-  await expect.poll(() => overlay.evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
+  expect(await timing()).toEqual(["0s", "0.1s"]);
+  await expect(overlay).toHaveCSS("opacity", "0");
 });
 
 test("R55 the selected tile's description is visible without hovering", async ({ page }) => {
@@ -152,6 +156,42 @@ test.describe("R12 reduced motion", () => {
     }));
     expect(moving).toEqual({ transitions: [], animations: 0 });
   });
+
+  test("the hero montage starts paused", async ({ page }) => {
+    await gotoQuiet(page, "/");
+    await expect(page.getByRole("button", { name: "Play background video" })).toBeVisible();
+    expect(await page.locator("main video").evaluateAll((vs) => vs.every((v) => (v as HTMLVideoElement).paused))).toBe(true);
+  });
+});
+
+test("hero montage has a labelled 44px pause/play button that stops and restarts it", async ({ page }) => {
+  await gotoQuiet(page, "/");
+  const montagePlaying = () =>
+    page.locator("main video").evaluateAll((vs) => vs.some((v) => !(v as HTMLVideoElement).paused));
+  const pause = page.getByRole("button", { name: "Pause background video" });
+  await expect(pause).toBeVisible();
+  const box = (await pause.boundingBox())!;
+  expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+  await expect.poll(montagePlaying).toBe(true);
+  await pause.click();
+  await expect(page.getByRole("button", { name: "Play background video" })).toBeVisible();
+  await expect.poll(montagePlaying).toBe(false);
+  await page.getByRole("button", { name: "Play background video" }).click();
+  await expect.poll(montagePlaying).toBe(true);
+});
+
+test("primary buttons press down to scale 0.97", async ({ page }) => {
+  await blockApi(page);
+  await gotoQuiet(page, "/");
+  await page.locator("#service-name").fill("Joeflix");
+  const generate = page.getByRole("button", { name: /generate/i }).last();
+  await expect(generate).toBeEnabled();
+  await generate.hover();
+  await page.mouse.down();
+  await expect(generate).toHaveCSS("scale", "0.97");
+  // Release away from the button so it doesn't click.
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
 });
 
 test("R37 no glow or gradient on the Generate button and the active tile", async ({ page }) => {
@@ -195,10 +235,22 @@ test.describe("video generation in progress", () => {
     await expect(page.locator('[role="status"]').filter({ hasText: /Generating the video/ })).toHaveCount(1);
   });
 
-  test("R30 Cancel shows Cancelling… straight away", async ({ page }) => {
-    test.fixme(true, "waits for motion branch");
+  test("R30 Cancel shows Cancelling… straight away, then stops without waiting for the next poll", async ({ page }) => {
+    // The label can last a single frame, so record every text the button shows instead of racing to see it.
+    await page.evaluate(() => {
+      const w = window as Window & { cancelLabels?: string[] };
+      w.cancelLabels = [];
+      new MutationObserver(() => {
+        const button = [...document.querySelectorAll("button")].find((b) => /Cancel(ling| video)/.test(b.textContent ?? ""));
+        if (button) w.cancelLabels!.push(button.textContent!);
+      }).observe(document.body, { subtree: true, childList: true, characterData: true });
+    });
+    const cancelled = page.waitForRequest((r) => r.method() === "DELETE" && r.url().includes("/api/video/cancel"));
     await page.getByRole("button", { name: "Cancel video" }).click();
-    await expect(page.getByText("Cancelling…")).toBeVisible();
+    await cancelled;
+    // Back to the review step well inside the 8s poll interval.
+    await expect(page.getByRole("button", { name: "Looks good, make the video" })).toBeVisible({ timeout: 2000 });
+    expect(await page.evaluate(() => (window as Window & { cancelLabels?: string[] }).cancelLabels)).toContain("Cancelling…");
   });
 });
 
@@ -214,8 +266,7 @@ test.describe("R61 home Copy buttons", () => {
     expect((await copy.boundingBox())!.width).toBe(before);
   });
 
-  test("a failed copy says Copy failed", async ({ page }) => {
-    test.fixme(true, "waits for motion branch");
+  test("a failed copy says so", async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, "clipboard", {
         value: { writeText: () => Promise.reject(new Error("denied")) },
@@ -224,6 +275,21 @@ test.describe("R61 home Copy buttons", () => {
     await gotoQuiet(page, "/");
     await page.getByRole("button", { name: "Prompt preview" }).click();
     await page.locator("#prompt-preview").getByRole("button", { name: /Copy/ }).first().click();
-    await expect(page.getByText("Copy failed").first()).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: /Couldn.t copy/ }).first()).toBeVisible();
   });
+});
+
+test("a redo keeps the old video on screen at 40% opacity while the new one generates", async ({ page }) => {
+  await withSavedKey(page);
+  await blockApi(page);
+  await page.route("**/api/video/start", (r) => r.fulfill({ json: { taskId: "task-e2e", creditsBefore: 0 } }));
+  await page.route("**/api/video/poll**", (r) => r.fulfill({ json: { status: "PENDING" } }));
+  await seed(page, doneState);
+  await gotoQuiet(page, "/");
+  await page.locator("#redo-notes").fill("more energy");
+  await page.locator("#redo-notes").press("Enter");
+  await expect(page.getByRole("button", { name: "Cancel video" })).toBeVisible();
+  const oldVideo = page.locator(`section[aria-labelledby="result-heading"] video[src="${doneState.videoUrl}"]`);
+  await expect(oldVideo).toHaveCSS("opacity", "0.4");
+  await expect(oldVideo).not.toHaveAttribute("controls");
 });

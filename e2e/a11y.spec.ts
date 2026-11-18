@@ -3,12 +3,18 @@ import { ROUTES, gotoQuiet, expectNoAxeViolations, fileInputsReachedByTab, first
 
 const WIDTHS = [1440, 390] as const;
 
+const DISCLOSURES = [
+  ["Advanced settings", "#advanced-settings"],
+  ["Prompt preview", "#prompt-preview"],
+  ["More themes", "#more-themes"],
+] as const;
+
 async function openHomeDisclosures(page: Page) {
-  await page.getByRole("button", { name: "Advanced settings" }).click();
-  await page.getByRole("button", { name: "Prompt preview" }).click();
-  await page.locator("summary", { hasText: "More themes" }).click();
-  await expect(page.locator("#advanced-settings")).toBeVisible();
-  await expect(page.locator("#prompt-preview")).toBeVisible();
+  for (const [name, panel] of DISCLOSURES) {
+    await page.getByRole("button", { name }).click();
+    // axe must see the finished state, not a half-faded panel.
+    await expect(page.locator(panel)).toHaveCSS("opacity", "1");
+  }
 }
 
 for (const width of WIDTHS) {
@@ -123,7 +129,8 @@ test("R24 home has visible h2s; 404 has one h1", async ({ page }) => {
 test("R25 focused text inputs show a visible outline on keyboard focus", async ({ page }) => {
   for (const path of ["/", "/setup"]) {
     await gotoQuiet(page, path);
-    const inputs = page.locator('main input[type="text"], main input[type="password"]');
+    // Inputs inside a closed (inert) disclosure can't take focus by design.
+    const inputs = page.locator('main input[type="text"]:not([inert] *), main input[type="password"]:not([inert] *)');
     for (const input of await inputs.all()) {
       await input.focus();
       await page.keyboard.press("Shift+Tab");
@@ -136,12 +143,17 @@ test("R25 focused text inputs show a visible outline on keyboard focus", async (
   }
 });
 
-test("R26 disclosures expose aria-expanded that flips", async ({ page }) => {
+test("R26 disclosures flip aria-expanded, and their panels are inert while closed", async ({ page }) => {
   await gotoQuiet(page, "/");
-  for (const name of ["Advanced settings", "Prompt preview"]) {
+  for (const [name, panel] of DISCLOSURES) {
     const button = page.getByRole("button", { name });
     await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(button).toHaveAttribute("aria-controls", panel.slice(1));
+    await expect(page.locator(panel)).toHaveAttribute("inert", "");
     await button.click();
     await expect(button).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator(panel)).not.toHaveAttribute("inert");
+    await button.click();
+    await expect(page.locator(panel)).toHaveAttribute("inert", "");
   }
 });
