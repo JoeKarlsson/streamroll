@@ -14,6 +14,13 @@ describe("parseSavedGeneration", () => {
     expect(parseSavedGeneration(null)).toBeNull();
   });
 
+  it("drops a style or model this version doesn't offer and keeps the rest", () => {
+    const saved = parseSavedGeneration(JSON.stringify({ step: "done", style: "gone", imageModel: "gen9_image", videoModel: "gen4.5", treatment: "minimal" }));
+    expect(saved).toMatchObject({ step: "done", videoModel: "gen4.5", treatment: "minimal" });
+    expect(saved?.style).toBeUndefined();
+    expect(saved?.imageModel).toBeUndefined();
+  });
+
   it("ignores unreadable storage", () => {
     expect(parseSavedGeneration("{not json")).toBeNull();
     expect(parseSavedGeneration("null")).toBeNull();

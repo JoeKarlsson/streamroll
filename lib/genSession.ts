@@ -1,4 +1,6 @@
 import type { Duration, ImageModel, Style, Treatment, VideoModel } from "./runway";
+import { STYLE_COLOR } from "./styles";
+import { IMAGE_MODELS, TREATMENTS, VIDEO_MODELS } from "./models";
 
 export type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
 
@@ -11,13 +13,13 @@ export type SavedGeneration = {
   videoUrl?: string | null;
   timings?: { image: number; video: number } | null;
   error?: string | null;
-  name?: string;
-  style?: Style;
-  tagline?: string;
-  videoModel?: VideoModel;
-  imageModel?: ImageModel;
-  treatment?: Treatment;
-  duration?: Duration;
+  name?: string | undefined;
+  style?: Style | undefined;
+  tagline?: string | undefined;
+  videoModel?: VideoModel | undefined;
+  imageModel?: ImageModel | undefined;
+  treatment?: Treatment | undefined;
+  duration?: Duration | undefined;
 };
 
 export function isSavedStep(step: GenStep): step is SavedGeneration["step"] {
@@ -37,5 +39,17 @@ export function parseSavedGeneration(raw: string | null): SavedGeneration | null
   if (typeof saved !== "object" || saved === null) return null;
   const { step } = saved as { step?: unknown };
   if (step !== "done" && step !== "error" && step !== "review") return null;
-  return saved as SavedGeneration;
+  // Saved by another version, a choice may no longer exist: drop it and keep the default rather than fail to render.
+  const { style, imageModel, videoModel, treatment } = saved as Record<string, unknown>;
+  return {
+    ...(saved as SavedGeneration),
+    style: known(style, Object.keys(STYLE_COLOR) as Style[]),
+    imageModel: known(imageModel, IMAGE_MODELS.map((m) => m.id)),
+    videoModel: known(videoModel, VIDEO_MODELS.map((m) => m.id)),
+    treatment: known(treatment, TREATMENTS.map((t) => t.id)),
+  };
+}
+
+function known<T>(value: unknown, allowed: readonly T[]): T | undefined {
+  return allowed.find((option) => option === value);
 }

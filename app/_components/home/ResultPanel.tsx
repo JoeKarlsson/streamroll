@@ -359,7 +359,7 @@ export function ResultPanel({ settings, gen, accentColor, crPerSec, imageCrCost,
             style={style}
             accentColor={accentColor}
             duration={duration}
-            initialFile={pendingAudioFile ?? undefined}
+            initialFile={pendingAudioFile}
           />
         )}
 

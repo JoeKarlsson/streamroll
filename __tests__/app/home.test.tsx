@@ -38,6 +38,12 @@ describe("Home with a restored session", () => {
     expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
+  it("a saved session naming a model or style this version doesn't offer still loads", async () => {
+    seedSession({ step: "review", imageModel: "gen9_image", videoModel: "gen9", style: "retired-style" });
+    render(<Home />);
+    expect(await screen.findByText("Happy with the logo?")).toBeTruthy();
+  });
+
   it("Enter in empty redo notes does not start a paid regeneration", async () => {
     localStorage.setItem("runway_api_key", "key_test");
     seedSession({ step: "done", videoUrl: "https://example.com/intro.mp4" });

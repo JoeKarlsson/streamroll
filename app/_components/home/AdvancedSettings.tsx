@@ -64,7 +64,7 @@ export function AdvancedSettings({ settings, isGenerating, accentColor }: { sett
                       <ModelOption
                         key={m.id}
                         label={m.label}
-                        cost={m.crInfo}
+                        cost={`${m.estimate ? "~" : ""}${m.crPerSec} cr/s`}
                         desc={m.desc}
                         note={STYLE_DEFAULTS[style].videoModel === m.id ? "Recommended" : undefined}
                         active={videoModel === m.id}

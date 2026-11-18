@@ -22,13 +22,13 @@ export const IMAGE_MODELS: { id: ImageModel; label: string; group: "Runway" | "O
   { id: "gemini_2.5_flash",  label: "Gemini 2.5 Flash",   group: "Google",  crInfo: "~10 cr",  crCost: 10, desc: "Fast, Google quality" },
 ];
 
-export const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crInfo: string; crPerSec: number; desc: string }[] = [
-  { id: "gen4_turbo",  label: "Gen4 Turbo",  group: "Runway", crInfo: "5 cr/s",   crPerSec: 5,  desc: "Fast, great quality" },
-  { id: "gen4.5",      label: "Gen4.5",       group: "Runway", crInfo: "12 cr/s",  crPerSec: 12, desc: "Highest quality" },
-  { id: "gen3a_turbo", label: "Gen3a Turbo",  group: "Runway", crInfo: "5 cr/s",   crPerSec: 5,  desc: "Previous generation" },
-  { id: "veo3",        label: "Veo 3",        group: "Google", crInfo: "~25 cr/s", crPerSec: 25, desc: "Google video model" },
-  { id: "veo3.1",      label: "Veo 3.1",      group: "Google", crInfo: "~25 cr/s", crPerSec: 25, desc: "Google latest" },
-  { id: "veo3.1_fast", label: "Veo 3.1 Fast", group: "Google", crInfo: "~15 cr/s", crPerSec: 15, desc: "Fast Google model" },
+export const VIDEO_MODELS: { id: VideoModel; label: string; group: "Runway" | "Google"; crPerSec: number; estimate?: true; desc: string }[] = [
+  { id: "gen4_turbo",  label: "Gen4 Turbo",  group: "Runway", crPerSec: 5, desc: "Fast, great quality" },
+  { id: "gen4.5",      label: "Gen4.5",       group: "Runway", crPerSec: 12, desc: "Highest quality" },
+  { id: "gen3a_turbo", label: "Gen3a Turbo",  group: "Runway", crPerSec: 5, desc: "Previous generation" },
+  { id: "veo3",        label: "Veo 3",        group: "Google", crPerSec: 25, estimate: true, desc: "Google video model" },
+  { id: "veo3.1",      label: "Veo 3.1",      group: "Google", crPerSec: 25, estimate: true, desc: "Google latest" },
+  { id: "veo3.1_fast", label: "Veo 3.1 Fast", group: "Google", crPerSec: 15, estimate: true, desc: "Fast Google model" },
 ];
 
 export const TREATMENTS: { id: Treatment; label: string; desc: string }[] = [

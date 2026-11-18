@@ -28,7 +28,7 @@ export const STYLE_COLOR: Record<Style, string> = {
   ebs:         "#22C55E",
 };
 
-export const STYLES: { id: Style; label: string; desc: string; tip?: string; image?: string }[] = [
+export const STYLES: { id: Style; label: string; desc: string; tip: string; image: string }[] = [
   { id: "prestige",   label: "Netflix",         desc: "Bold red on black",            tip: "Auto: Gen4.5, Minimal, 4s",        image: "/previews/style-prestige.jpg" },
   { id: "cinematic",  label: "Cinematic",       desc: "Navy & gold, film grain",       tip: "Auto: Gen4.5, Full Bleed, 5s",     image: "/previews/style-cinematic.jpg" },
   { id: "retro",      label: "Retro",           desc: "80s neon synthwave",            tip: "Auto: Gen4 Turbo, Full Bleed, 5s", image: "/previews/style-retro.jpg" },

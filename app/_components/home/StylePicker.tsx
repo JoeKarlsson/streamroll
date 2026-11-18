@@ -33,7 +33,7 @@ export function StylePicker({ settings, isGenerating, onPreset }: {
             key={s.id}
             label={s.label}
             desc={s.desc}
-            image={s.image!}
+            image={s.image}
             active={style === s.id && name !== "My Service"}
             color={STYLE_COLOR[s.id]}
             disabled={isGenerating}
