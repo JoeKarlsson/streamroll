@@ -162,7 +162,7 @@ async function localBlobURL(
 }
 
 const PIPELINE_STEPS = [
-  { id: "engine",  label: "Load audio engine",  detail: "~30 MB · slow on first load · cached after" },
+  { id: "engine",  label: "Load audio engine",  detail: "about 30 MB, slow on first load, cached after" },
   { id: "video",   label: "Fetch video",         detail: "downloading from Runway CDN" },
   { id: "audio",   label: "Read audio file",     detail: "" },
   { id: "encode",  label: "Encode",              detail: "mixing tracks" },
@@ -181,7 +181,6 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
   const [error, setError]                   = useState<string | null>(null);
   const [loopAudio, setLoopAudio]           = useState(false);
   const [fadeOut, setFadeOut]               = useState(true);
-  const inputRef                            = useRef<HTMLInputElement>(null);
   const prevOutputRef                       = useRef<string | null>(null);
   const prevPreviewRef                      = useRef<string | null>(null);
   const activeStepRef                       = useRef<string | null>(null);
@@ -301,6 +300,12 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
 
   const outputFilename = `${sanitizeFilename(name)}_${style}_with_audio.mp4`;
 
+  const announcement =
+    mixState === "done" ? "Audio mixed successfully"
+    : mixState === "error" ? "Mixing failed"
+    : mixState === "working" && activeStep ? `${PIPELINE_STEPS.find((s) => s.id === activeStep)?.label}…`
+    : "";
+
   const steps: StatusStep[] = PIPELINE_STEPS.map(({ id, label, detail }) => {
     const idx    = PIPELINE_STEPS.findIndex((s) => s.id === id);
     const active = PIPELINE_STEPS.findIndex((s) => s.id === activeStep);
@@ -318,21 +323,28 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
 
   return (
     <div className="rounded-xl border border-neutral-800 overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-neutral-900 text-sm text-neutral-400 hover:text-white transition-colors"
-      >
-        <span>Add audio to your video</span>
-        <span className="text-neutral-600">{open ? "▾" : "▸"}</span>
-      </button>
+      <h3>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="audio-mixer-panel"
+          onClick={() => setOpen((v) => !v)}
+          className="w-full min-h-11 flex items-center justify-between gap-3 px-4 py-3 bg-neutral-900 text-left text-sm text-neutral-300 hover:text-white transition-colors"
+        >
+          <span>Add audio to your video</span>
+          <span aria-hidden="true" className={`inline-block text-neutral-400 transition-transform ${open ? "rotate-90" : ""}`}>▸</span>
+        </button>
+      </h3>
+
+      {/* Announces step changes and the result once each, never the running percentages */}
+      <p role="status" className="sr-only">{announcement}</p>
 
       {open && (
-        <div className="bg-neutral-950 p-4 space-y-4">
+        <div id="audio-mixer-panel" className="bg-neutral-950 p-4 space-y-4">
 
           {/* Browser compat warning */}
           {!supportsWasm && (
-            <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-amber-800/60 bg-amber-950/30 text-xs text-amber-300">
-              <span className="shrink-0 mt-0.5">⚠</span>
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-amber-800 bg-amber-950 text-sm text-amber-300">
               <span>
                 Your browser doesn&apos;t support SharedArrayBuffer, which is required for in-browser audio mixing.
                 Try Chrome or Firefox, or make sure the page is loaded over HTTPS.
@@ -341,24 +353,22 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
           )}
 
           {supportsWasm && (
-            <p className="text-xs text-neutral-500">
-              Upload an audio file and we&apos;ll mix it directly in your browser — nothing leaves your device.
+            <p className="text-sm text-neutral-400">
+              Upload an audio file and we’ll mix it directly in your browser. Nothing leaves your device.
             </p>
           )}
 
           {/* Drop zone */}
           {supportsWasm && mixState === "idle" && !audioFile && (
-            <div
+            <label
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleFileDrop}
-              onClick={() => inputRef.current?.click()}
-              className="border-2 border-dashed border-neutral-700 rounded-lg px-6 py-8 flex flex-col items-center gap-2 cursor-pointer hover:border-neutral-500 transition-colors text-center"
+              className="border-2 border-dashed border-neutral-700 rounded-lg px-6 py-8 flex flex-col items-center gap-2 cursor-pointer hover:border-neutral-500 transition-colors text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-white has-[:focus-visible]:outline-offset-2"
             >
-              <span className="text-2xl">♪</span>
-              <span className="text-sm text-neutral-400">Drop an audio file or click to browse</span>
-              <span className="text-xs text-neutral-600">MP3, WAV, AAC, OGG, FLAC, M4A</span>
-              <input ref={inputRef} type="file" accept="audio/*" className="hidden" onChange={handleFileChange} />
-            </div>
+              <span className="text-sm text-neutral-300">Drop an audio file or click to browse</span>
+              <span className="text-sm text-neutral-400">MP3, WAV, AAC, OGG, FLAC or M4A</span>
+              <input type="file" accept="audio/*" className="sr-only" onChange={handleFileChange} />
+            </label>
           )}
 
           {/* Selected file pill + audio preview */}
@@ -366,13 +376,12 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-base shrink-0">♪</span>
                   <span className="text-sm text-neutral-300 truncate">{audioFile.name}</span>
-                  <span className="text-xs text-neutral-600 shrink-0">{formatBytes(audioFile.size)}</span>
+                  <span className="text-sm text-neutral-400 shrink-0">{formatBytes(audioFile.size)}</span>
                 </div>
                 {mixState === "idle" && (
-                  <button onClick={reset} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors shrink-0">
-                    ✕
+                  <button type="button" onClick={reset} className="min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors shrink-0">
+                    Remove
                   </button>
                 )}
               </div>
@@ -381,6 +390,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
                 <audio
                   src={audioPreviewUrl}
                   controls
+                  aria-label={`Preview ${audioFile.name}`}
                   className="w-full h-8"
                   style={{ colorScheme: "dark" }}
                 />
@@ -391,25 +401,25 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
           {/* Options */}
           {audioFile && mixState === "idle" && (
             <div className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+              <label className="flex items-center gap-2 min-h-11 cursor-pointer select-none w-fit">
                 <input
                   type="checkbox"
                   checked={loopAudio}
                   onChange={(e) => setLoopAudio(e.target.checked)}
-                  className="w-3.5 h-3.5"
+                  className="w-4 h-4"
                   style={{ accentColor }}
                 />
-                <span className="text-xs text-neutral-500">Loop audio to fill video length</span>
+                <span className="text-sm text-neutral-300">Loop audio to fill video length</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+              <label className="flex items-center gap-2 min-h-11 cursor-pointer select-none w-fit">
                 <input
                   type="checkbox"
                   checked={fadeOut}
                   onChange={(e) => setFadeOut(e.target.checked)}
-                  className="w-3.5 h-3.5"
+                  className="w-4 h-4"
                   style={{ accentColor }}
                 />
-                <span className="text-xs text-neutral-500">Fade out audio at end</span>
+                <span className="text-sm text-neutral-300">Fade out audio at end</span>
               </label>
             </div>
           )}
@@ -417,23 +427,24 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
           {/* Mix button */}
           {audioFile && mixState === "idle" && (
             <button
+              type="button"
               onClick={mix}
-              className="w-full py-2.5 rounded-lg text-sm font-semibold text-black transition-all"
+              className="w-full min-h-11 py-2.5 rounded-lg text-sm font-semibold text-black transition-colors"
               style={{ background: accentColor }}
             >
-              Mix Audio
+              Mix audio
             </button>
           )}
 
           {/* ── Pipeline status ─────────────────────────────────────────── */}
           {(mixState === "working" || mixState === "error") && (
-            <div role="status" aria-live="polite" aria-atomic="false" className="rounded-lg border border-neutral-800 overflow-hidden">
+            <div className="rounded-lg border border-neutral-800 overflow-hidden">
               {/* Header bar */}
               <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center gap-2">
                 {mixState === "working" ? (
                   <>
-                    <div className="w-3 h-3 border-2 border-neutral-700 border-t-neutral-400 rounded-full animate-spin shrink-0" />
-                    <span className="text-xs text-neutral-400">
+                    <div aria-hidden="true" className="w-3 h-3 border-2 border-neutral-700 border-t-neutral-400 rounded-full animate-spin shrink-0" />
+                    <span className="text-sm text-neutral-300">
                       {activeStep === "engine"  && (engineProgress !== null ? `Downloading audio engine… ${engineProgress}%` : "Loading audio engine…")}
                       {activeStep === "video"   && "Fetching video from Runway…"}
                       {activeStep === "audio"   && "Reading audio file…"}
@@ -443,8 +454,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
                   </>
                 ) : (
                   <>
-                    <span className="text-red-400 text-xs">⚠</span>
-                    <span className="text-xs text-red-400">Mixing failed</span>
+                    <span className="text-sm text-red-400">Mixing failed</span>
                   </>
                 )}
               </div>
@@ -452,44 +462,40 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
               {/* Step list */}
               <div className="divide-y divide-neutral-900">
                 {steps.map(({ label, detail, state }, i) => (
-                  <div key={i} className="px-3 py-2 flex items-center gap-3 bg-neutral-950">
-                    <div className="w-4 shrink-0 flex items-center justify-center">
+                  <div key={i} className="px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 bg-neutral-950">
+                    <div aria-hidden="true" className="w-4 shrink-0 flex items-center justify-center">
                       {state === "done"    && <span className="text-xs" style={{ color: accentColor }}>✓</span>}
                       {state === "active"  && <div className="w-3 h-3 border-2 border-neutral-700 border-t-neutral-300 rounded-full animate-spin" />}
                       {state === "error"   && <span className="text-xs text-red-400">✕</span>}
-                      {state === "pending" && <span className="text-xs text-neutral-700">·</span>}
                     </div>
-                    <span className={`text-xs flex-1 ${
-                      state === "done"    ? "text-neutral-500"
-                      : state === "active"  ? "text-neutral-200"
+                    <span className={`text-sm flex-1 ${
+                      state === "done"    ? "text-neutral-400"
+                      : state === "active"  ? "text-neutral-100"
                       : state === "error"   ? "text-red-400"
-                      : "text-neutral-700"
+                      : "text-neutral-500"
                     }`}>
                       {label}
                       {state === "active" && detail && (
-                        <span className="ml-1.5 text-neutral-600">{detail}</span>
+                        <span className="ml-1.5 text-neutral-400">{detail}</span>
                       )}
                     </span>
                     {state === "active" && label === "Load audio engine" && (
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <div className="w-24 h-1 rounded-full bg-neutral-800 overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-300"
-                            style={{ width: `${engineProgress ?? 0}%`, backgroundColor: accentColor }}
-                          />
-                        </div>
-                        {engineProgress !== null && engineProgress < 100 && (
-                          <span className="text-neutral-700 text-xs">{engineProgress}%</span>
-                        )}
-                      </div>
+                      <progress
+                        aria-label="Audio engine download"
+                        max={100}
+                        value={engineProgress ?? undefined}
+                        className="w-24 h-1.5 shrink-0"
+                        style={{ accentColor }}
+                      />
                     )}
                     {state === "active" && label === "Encode" && (
-                      <div className="w-20 h-1 rounded-full bg-neutral-800 overflow-hidden shrink-0">
-                        <div
-                          className="h-full rounded-full transition-all duration-300"
-                          style={{ width: `${encodeProgress}%`, backgroundColor: accentColor }}
-                        />
-                      </div>
+                      <progress
+                        aria-label="Encoding"
+                        max={100}
+                        value={encodeProgress}
+                        className="w-20 h-1.5 shrink-0"
+                        style={{ accentColor }}
+                      />
                     )}
                   </div>
                 ))}
@@ -497,10 +503,10 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
 
               {/* Error detail */}
               {mixState === "error" && error && (
-                <div className="px-3 py-3 bg-red-950/30 border-t border-red-900/40 space-y-2">
-                  <p className="text-xs text-red-300">{error}</p>
-                  <button onClick={reset} className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
-                    ← Try again
+                <div role="alert" className="px-3 py-3 bg-red-950 border-t border-red-900 space-y-2">
+                  <p className="text-sm text-red-300">{error}</p>
+                  <button type="button" onClick={reset} className="min-h-11 text-sm text-neutral-300 hover:text-white transition-colors">
+                    Try again
                   </button>
                 </div>
               )}
@@ -511,11 +517,10 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
           {mixState === "done" && outputUrl && (
             <div className="space-y-3">
               <div
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border text-xs"
-                style={{ borderColor: accentColor + "40", background: accentColor + "0d", color: accentColor }}
+                className="px-3 py-2 rounded-lg border text-sm"
+                style={{ borderColor: accentColor, color: accentColor }}
               >
-                <span>✓</span>
-                <span>Audio mixed successfully — all 5 steps complete</span>
+                Audio mixed successfully
               </div>
               <video src={outputUrl} controls className="w-full rounded-lg" />
               <div className="flex items-center gap-2">
@@ -523,14 +528,15 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
                   href={outputUrl}
                   download={outputFilename}
                   onClick={() => track("Download Video", { style, audio: "mixed" })}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-black text-center transition-all"
+                  className="flex-1 min-h-11 py-2.5 rounded-lg text-sm font-semibold text-black text-center transition-colors"
                   style={{ background: accentColor }}
                 >
                   Download with audio
                 </a>
                 <button
+                  type="button"
                   onClick={reset}
-                  className="px-4 py-2.5 rounded-lg text-sm text-neutral-400 border border-neutral-700 hover:border-neutral-500 transition-colors"
+                  className="min-h-11 px-4 py-2.5 rounded-lg text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 transition-colors"
                 >
                   Change audio
                 </button>
