@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { baseOpenGraph, baseTwitter } from "@/lib/metadata";
 import { JsErrorTracker } from "./JsErrorTracker";
 import "./globals.css";
+import { siteDescription as description } from "@/lib/metadata";
 import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 
@@ -21,9 +22,6 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   themeColor: "#080808",
 };
-
-const description =
-  "Make an animated pre-roll intro for your Plex, Jellyfin or Emby server with Runway AI. Type its name, pick a style and download the MP4.";
 
 export const metadata: Metadata = {
   title: "StreamRoll — AI Streaming Intros",
@@ -85,26 +83,6 @@ export default function RootLayout({
           Skip to main content
         </a>
         {/* Home-page-only schema: belongs in app/page.tsx (Agent C's file); move it there at merge. */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebApplication",
-              name: "StreamRoll",
-              url: "https://streamroll.vercel.app",
-              description,
-              applicationCategory: "UtilityApplication",
-              operatingSystem: "Web",
-              author: {
-                "@type": "Person",
-                name: "Joe Karlsson",
-                url: "https://joekarlsson.com",
-              },
-              offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-            }),
-          }}
-        />
         <JsErrorTracker />
         <SiteHeader />
         {children}

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 
+export const siteDescription =
+  "Make an animated pre-roll intro for your Plex, Jellyfin or Emby server with Runway AI. Type its name, pick a style and download the MP4.";
+
 // Next replaces a parent's openGraph/twitter objects wholesale in a child segment,
 // so every page spreads these to keep the site name, type, locale and card image.
 

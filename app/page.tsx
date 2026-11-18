@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useId } from "react";
+import { WebAppJsonLd } from "./WebAppJsonLd";
 import { preload } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -1063,6 +1064,7 @@ export default function Home() {
       id="main-content"
       className="relative flex-1 bg-background text-white flex flex-col items-center overflow-hidden"
     >
+      <WebAppJsonLd />
       {/* Film grain overlay */}
       <div
         className="pointer-events-none fixed inset-0 z-50 opacity-[0.032]"
