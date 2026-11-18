@@ -7,7 +7,7 @@ StreamRoll generates custom animated pre-roll video intros for home media server
 
 Two Runway API calls, chained:
 1. textToImage — a style-tuned prompt produces a title card (1920×1080 or 1344×768 depending on model)
-2. imageToVideo — that still frame animates into a 2–10 second intro
+2. imageToVideo — that still frame animates into a 2, 4, 5 or 10 second intro (4, 6 or 8 seconds on the Veo models)
 
 The output URL from step 1 is the input to step 2. The app exposes the generated Node.js code so users can reproduce the result in their own projects.
 
@@ -36,6 +36,8 @@ Netflix/Prestige, Cinematic, Retro (80s neon), Futuristic, Minimal, Horror, Anim
 
 - [Home](https://streamroll.vercel.app): The main generator — enter a name, pick a style, generate and download.
 - [How it's built](https://streamroll.vercel.app/how-it-works): Technical walkthrough of the Runway API chaining pattern.
+- [About](https://streamroll.vercel.app/about): Artist statement — why StreamRoll exists and what it makes.
+- [How it's built, as Markdown](https://streamroll.vercel.app/how-it-works.md): The same walkthrough as plain Markdown (also served at /how-it-works with Accept: text/markdown).
 - [Setup](https://streamroll.vercel.app/setup): Add your Runway API key to get started.
 
 ## Tech stack
