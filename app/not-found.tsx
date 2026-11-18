@@ -1,27 +1,28 @@
-"use client";
-
-import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { track } from "@/lib/plausible";
+import { NotFoundTracker } from "./NotFoundTracker";
+
+export const metadata: Metadata = {
+  title: "Page not found — StreamRoll",
+};
+
+const LINK_CLASS =
+  "min-h-11 inline-flex items-center text-neutral-300 hover:text-white underline underline-offset-4 transition-colors";
 
 export default function NotFound() {
-  const pathname = usePathname();
-
-  useEffect(() => {
-    track("404", { path: pathname ?? "/" });
-  }, [pathname]);
-
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-4 text-white" style={{ background: "#080808" }}>
-      <p className="text-6xl font-bold tracking-tight">404</p>
-      <p className="text-neutral-400 text-sm">Page not found</p>
-      <Link
-        href="/"
-        className="mt-2 text-sm border border-neutral-700 hover:border-neutral-500 px-4 py-2 rounded transition-colors text-neutral-300 hover:text-white"
-      >
-        Go home
-      </Link>
+    <main id="main-content" className="flex-1 bg-background text-white flex flex-col items-center pt-10 pb-16">
+      <NotFoundTracker />
+      <div className="w-full max-w-2xl px-4">
+        <h1 className="text-3xl font-bold mb-3">Page not found</h1>
+        <p className="text-neutral-400 mb-8">There’s nothing at this address. Try one of these instead.</p>
+        <ul className="flex flex-wrap gap-x-6 text-sm">
+          <li><Link href="/" className={LINK_CLASS}>Make an intro</Link></li>
+          <li><Link href="/how-it-works" className={LINK_CLASS}>How it’s built</Link></li>
+          <li><Link href="/about" className={LINK_CLASS}>About</Link></li>
+          <li><Link href="/setup" className={LINK_CLASS}>Get started</Link></li>
+        </ul>
+      </div>
     </main>
   );
 }
