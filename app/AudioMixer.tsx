@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/plausible";
+import { pulseOnce } from "@/lib/pulseOnce";
+import { Collapsible } from "./Collapsible";
+import { ProgressBar } from "./ProgressBar";
 
 interface Props {
   videoUrl: string;
@@ -185,6 +188,12 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
   const prevPreviewRef                      = useRef<string | null>(null);
   const activeStepRef                       = useRef<string | null>(null);
   const initialFileApplied                  = useRef(false);
+  const successRef                          = useRef<HTMLDivElement>(null);
+
+  // Confirm a finished mix with one pulse on the success banner.
+  useEffect(() => {
+    if (mixState === "done") pulseOnce(successRef.current);
+  }, [mixState]);
 
   useEffect(() => {
     if (initialFile && !initialFileApplied.current) {
@@ -339,8 +348,8 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
       {/* Announces step changes and the result once each, never the running percentages */}
       <p role="status" className="sr-only">{announcement}</p>
 
-      {open && (
-        <div id="audio-mixer-panel" className="bg-neutral-950 p-4 space-y-4">
+      <Collapsible id="audio-mixer-panel" open={open}>
+        <div className="bg-neutral-950 p-4 space-y-4">
 
           {/* Browser compat warning */}
           {!supportsWasm && (
@@ -429,7 +438,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
             <button
               type="button"
               onClick={mix}
-              className="w-full min-h-11 py-2.5 rounded-lg text-sm font-semibold text-black transition-colors"
+              className="w-full min-h-11 py-2.5 rounded-lg text-sm font-semibold text-black transition-[color,background-color,scale] duration-75 ease-out active:scale-[0.97]"
               style={{ background: accentColor }}
             >
               Mix audio
@@ -480,22 +489,10 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
                       )}
                     </span>
                     {state === "active" && label === "Load audio engine" && (
-                      <progress
-                        aria-label="Audio engine download"
-                        max={100}
-                        value={engineProgress ?? undefined}
-                        className="w-24 h-1.5 shrink-0"
-                        style={{ accentColor }}
-                      />
+                      <ProgressBar label="Audio engine download" value={engineProgress} color={accentColor} className="w-24 shrink-0" />
                     )}
                     {state === "active" && label === "Encode" && (
-                      <progress
-                        aria-label="Encoding"
-                        max={100}
-                        value={encodeProgress}
-                        className="w-20 h-1.5 shrink-0"
-                        style={{ accentColor }}
-                      />
+                      <ProgressBar label="Encoding" value={encodeProgress} color={accentColor} className="w-20 shrink-0" />
                     )}
                   </div>
                 ))}
@@ -517,6 +514,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
           {mixState === "done" && outputUrl && (
             <div className="space-y-3">
               <div
+                ref={successRef}
                 className="px-3 py-2 rounded-lg border text-sm"
                 style={{ borderColor: accentColor, color: accentColor }}
               >
@@ -528,7 +526,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
                   href={outputUrl}
                   download={outputFilename}
                   onClick={() => track("Download Video", { style, audio: "mixed" })}
-                  className="flex-1 min-h-11 py-2.5 rounded-lg text-sm font-semibold text-black text-center transition-colors"
+                  className="flex-1 min-h-11 py-2.5 rounded-lg text-sm font-semibold text-black text-center transition-[color,background-color,scale] duration-75 ease-out active:scale-[0.97]"
                   style={{ background: accentColor }}
                 >
                   Download with audio
@@ -544,7 +542,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
             </div>
           )}
         </div>
-      )}
+      </Collapsible>
     </div>
   );
 }

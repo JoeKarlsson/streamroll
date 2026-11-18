@@ -27,6 +27,8 @@ describe("Home with a restored session", () => {
     vi.stubGlobal("matchMedia", (q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }));
     HTMLMediaElement.prototype.play = () => Promise.resolve();
     HTMLMediaElement.prototype.pause = () => {};
+    vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} });
+    vi.stubGlobal("CSS", { supports: () => true });
   });
 
   it("does not scroll the page to a result restored from sessionStorage", async () => {
@@ -43,5 +45,25 @@ describe("Home with a restored session", () => {
     const notes = await screen.findByLabelText("Notes for a redo (optional)");
     fireEvent.keyDown(notes, { key: "Enter", keyCode: 13 });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("Cancel video stops waiting at once, cancels the Runway task and goes back to the poster", async () => {
+    localStorage.setItem("runway_api_key", "key_test");
+    seedSession({ step: "review" });
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === "/api/video/start") return new Response(JSON.stringify({ taskId: "task_1", creditsBefore: 100 }));
+      if (url.startsWith("/api/video/cancel")) return new Response(JSON.stringify({ ok: true }));
+      throw new Error(`unexpected fetch ${url}`);
+    });
+    render(<Home />);
+    fireEvent.click(await screen.findByRole("button", { name: "Looks good, make the video" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel video" }));
+
+    const cancelling = screen.getByRole<HTMLButtonElement>("button", { name: "Cancelling…" });
+    expect(cancelling.disabled).toBe(true);
+    // Without the abortable sleep this waits out the 8s poll interval and the find times out.
+    await screen.findByText("Happy with the logo?");
+    expect(fetchMock).toHaveBeenCalledWith("/api/video/cancel?id=task_1", expect.objectContaining({ method: "DELETE" }));
+    expect(fetchMock.mock.calls.some(([u]) => String(u).startsWith("/api/video/poll"))).toBe(false);
   });
 });

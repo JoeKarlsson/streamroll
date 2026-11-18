@@ -10,7 +10,11 @@ import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS, tweetShareUrl, redditShareUrl } from "@/lib/links";
 import { isEnterToSubmitNotes } from "@/lib/enterToSubmit";
 import { track } from "@/lib/plausible";
+import { sleepUnlessAborted } from "@/lib/sleepUnlessAborted";
+import { pulseOnce } from "@/lib/pulseOnce";
 import { AudioMixer } from "./AudioMixer";
+import { ProgressBar } from "./ProgressBar";
+import { Collapsible } from "./Collapsible";
 
 type GenStep = "idle" | "image" | "review" | "video" | "done" | "error";
 
@@ -283,6 +287,7 @@ export default function Home() {
   const [error, setError]       = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [showInstall, setShowInstall] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
   const [logoMode, setLogoMode] = useState<LogoMode>("ai");
   const [imageModel, setImageModel] = useState<ImageModel>("gen4_image");
   const [videoModel, setVideoModel] = useState<VideoModel>(STYLE_DEFAULTS["cinematic"].videoModel);
@@ -315,10 +320,20 @@ export default function Home() {
   const [cancelTaskId, setCancelTaskId] = useState("");
   const [cancelMsg, setCancelMsg] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [posterDownloadError, setPosterDownloadError] = useState<string | null>(null);
+  // A finished video that is still loading: the skeleton (or the old video, on a redo) stays until it can play.
+  const [incomingVideoUrl, setIncomingVideoUrl] = useState<string | null>(null);
+  // The video being replaced, kept underneath while the new one fades in.
+  const [outgoingVideoUrl, setOutgoingVideoUrl] = useState<string | null>(null);
+  // Only a freshly generated poster wipes in; one restored on load just appears.
+  const [revealPoster, setRevealPoster] = useState(false);
   const imageTimeRef = useRef(0);
   const imageCreditCostRef = useRef(0);
   const activeTaskIdRef = useRef<string | null>(null);
-  const cancelRequestedRef = useRef(false);
+  const cancelControllerRef = useRef<AbortController | null>(null);
+  const currentVideoRef = useRef<HTMLVideoElement>(null);
   const resultRef = useRef<HTMLElement>(null);
   const activePresetRef = useRef<string>("direct");
   const restoredFromSessionRef = useRef(false);
@@ -391,6 +406,15 @@ export default function Home() {
     resultRef.current?.focus({ preventScroll: true });
   }, [step]);
 
+  // While a redo runs, the old video holds still under the progress bar so only the bar moves.
+  useEffect(() => {
+    const vid = currentVideoRef.current;
+    if (!vid) return;
+    if (step === "video") vid.pause();
+    // Muted autoplay can't be refused; a rejection here only means the element went away mid-call.
+    else if (vid.paused) vid.play().catch(() => {});
+  }, [step, videoUrl]);
+
   const { key: apiKey, loaded: keyLoaded, saveKey, clearKey } = useApiKey();
 
   // After saving or removing the key, the control that was focused is gone: move focus to its replacement.
@@ -432,8 +456,10 @@ export default function Home() {
   async function downloadPoster() {
     if (!imageUrl) return;
     track("Download Poster", { style });
+    setPosterDownloadError(null);
     try {
       const res = await fetch(imageUrl);
+      if (!res.ok) throw new Error(`Runway returned ${res.status}`);
       const blob = await res.blob();
       const ext = blob.type.includes("png") ? "png" : "jpg";
       const objUrl = URL.createObjectURL(blob);
@@ -444,8 +470,9 @@ export default function Home() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(objUrl);
-    } catch {
-      window.open(imageUrl, "_blank");
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      setPosterDownloadError(`Download failed (${reason}). Runway’s image links expire after a while; if this keeps failing, regenerate the poster.`);
     }
   }
 
@@ -489,23 +516,41 @@ export default function Home() {
     setError(null);
   }
 
+  // Asks Runway to stop the running task without blocking the UI; a failure is shown, since the task may still use credits.
   function cancelActiveTask() {
     const taskId = activeTaskIdRef.current;
     if (!taskId) return;
     activeTaskIdRef.current = null;
+    setCancelError(null);
+    cancelRunwayTask(taskId).catch((e) => {
+      const reason = e instanceof Error ? e.message : String(e);
+      setCancelError(`Couldn’t cancel the Runway task (${reason}). It may still finish and use credits; check your Runway dashboard.`);
+    });
+  }
+
+  async function cancelRunwayTask(taskId: string) {
     const headers: Record<string, string> = {};
     if (apiKey) headers["x-runway-key"] = apiKey;
-    // Fire-and-forget — don't block the UI on this
-    fetch(`/api/video/cancel?id=${encodeURIComponent(taskId)}`, { method: "DELETE", headers }).catch(() => {});
+    const res = await fetch(`/api/video/cancel?id=${encodeURIComponent(taskId)}`, { method: "DELETE", headers });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `cancel failed with ${res.status}`);
+    }
   }
 
   function handleCancelVideo() {
-    cancelRequestedRef.current = true;
+    setCancelling(true);
+    cancelControllerRef.current?.abort("cancel");
     cancelActiveTask();
   }
 
   function reset() {
+    cancelControllerRef.current?.abort("reset");
     cancelActiveTask();
+    setIncomingVideoUrl(null);
+    setOutgoingVideoUrl(null);
+    setCancelling(false);
+    setPosterDownloadError(null);
     setPollStatus(null);
     setPollProgress(null);
     setCancelMsg(null);
@@ -595,6 +640,20 @@ export default function Home() {
       imagePromptOverride: imagePromptOverride ?? undefined,
       videoPromptOverride: videoPromptOverride ?? undefined,
     };
+  }
+
+  // Decode the poster off-screen first, so it appears whole in one reveal instead of painting in as it loads.
+  async function showGeneratedPoster(url: string) {
+    setRevealPoster(true);
+    try {
+      const img = new window.Image();
+      img.src = url;
+      await img.decode();
+    } catch (e) {
+      throw new Error(`The poster was generated but couldn’t be loaded (${e instanceof Error ? e.message : String(e)})`);
+    } finally {
+      setImageUrl(url);
+    }
   }
 
   function startTimer() {
@@ -848,7 +907,6 @@ export default function Home() {
     if (!name.trim()) return;
     if (keyLoaded && !apiKey) { apiKeyInputRef.current?.focus(); return; }
 
-    cancelRequestedRef.current = false;
     setImageUrl(null);
     setVideoUrl(null);
     setError(null);
@@ -888,7 +946,7 @@ export default function Home() {
         const imageStart = Date.now();
         const dataUri = await generateCanvasLogo();
         imageTimeRef.current = Date.now() - imageStart;
-        setImageUrl(dataUri);
+        await showGeneratedPoster(dataUri);
         if (genMode === "image-only") {
           setTimings({ image: imageTimeRef.current, video: 0 });
           setStep("done");
@@ -914,7 +972,7 @@ export default function Home() {
       const imageData = await imageRes.json();
       if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
       imageTimeRef.current = Date.now() - imageStart;
-      setImageUrl(imageData.imageUrl);
+      await showGeneratedPoster(imageData.imageUrl);
       imageCreditCostRef.current = imageData.creditCost ?? 0;
       track("Logo Generated", { style, image_model: imageModel });
 
@@ -954,7 +1012,7 @@ export default function Home() {
       const imageData = await imageRes.json();
       if (!imageRes.ok) throw new Error(imageData.error ?? "Image generation failed");
       imageTimeRef.current = Date.now() - imageStart;
-      setImageUrl(imageData.imageUrl);
+      await showGeneratedPoster(imageData.imageUrl);
       imageCreditCostRef.current = imageData.creditCost ?? 0;
       setStep("review");
     } catch (e) {
@@ -975,9 +1033,29 @@ export default function Home() {
 
     setError(null);
     setPollStatus(null);
+    setPollProgress(null);
+    setCancelling(false);
+    setCancelError(null);
     startTimer();
     setStep("video");
     track("Video Started", { style, video_model: videoModel, duration: String(duration) });
+
+    // Cancel video aborts with "cancel" (back to the poster, or to the old video on a redo); Start over aborts with "reset".
+    const controller = new AbortController();
+    cancelControllerRef.current = controller;
+    const { signal } = controller;
+    const previousVideoUrl = videoUrl;
+    function stopIfCancelled() {
+      if (!signal.aborted) return false;
+      cancelActiveTask();
+      if (signal.reason === "cancel") {
+        setPollStatus(null);
+        setPollProgress(null);
+        setCancelling(false);
+        setStep(previousVideoUrl ? "done" : "review");
+      }
+      return true;
+    }
 
     try {
       // Step 1: kick off the Runway task (fast, < 5s)
@@ -994,23 +1072,18 @@ export default function Home() {
       const taskId: string = startData.taskId;
       const videoCreditsBefore: number = startData.creditsBefore ?? 0;
       activeTaskIdRef.current = taskId;
+      if (stopIfCancelled()) return;
       const videoStart = Date.now();
       const maxWaitMs = 15 * 60 * 1000; // 15 minutes
 
       // Step 2: poll every 8s until done (Runway updates no more than every 5s)
       while (Date.now() - videoStart < maxWaitMs) {
-        await new Promise<void>(r => setTimeout(r, 8_000));
-
-        if (cancelRequestedRef.current) {
-          cancelRequestedRef.current = false;
-          setPollStatus(null);
-          setPollProgress(null);
-          setStep("review");
-          return;
-        }
+        await sleepUnlessAborted(8_000, signal);
+        if (stopIfCancelled()) return;
 
         const pollRes = await fetch(`/api/video/poll?id=${encodeURIComponent(taskId)}`, { headers: pollHeaders });
         const pollData = await pollRes.json();
+        if (stopIfCancelled()) return;
         if (!pollRes.ok) throw new Error(pollData.error ?? "Status check failed");
 
         const { status, output, failure, failureCode, progress, creditsAfter } = pollData;
@@ -1021,15 +1094,16 @@ export default function Home() {
         if (status === "SUCCEEDED") {
           activeTaskIdRef.current = null;
           const videoTime = Date.now() - videoStart;
-          setVideoUrl(output);
           setTimings({ image: imageTimeRef.current, video: videoTime });
           track("Video Generated", { style, video_model: videoModel, duration: String(duration) });
           if (videoCreditsBefore > 0 && typeof creditsAfter === "number") {
             setCredits({ image: imageCreditCostRef.current, video: Math.max(0, videoCreditsBefore - creditsAfter) });
           }
-          setPollStatus(null);
-          setPollProgress(null);
-          setStep("done");
+          // Let the bar land at 100% before the video takes over; showIncomingVideo finishes the step once it can play.
+          setPollProgress(100);
+          await sleepUnlessAborted(150, signal);
+          if (signal.aborted && signal.reason === "reset") return;
+          setIncomingVideoUrl(output);
           return;
         }
         if (status === "FAILED")    throw new Error(`${failure ?? "Video generation failed"}${failureCode ? ` (${failureCode})` : ""}`);
@@ -1039,6 +1113,7 @@ export default function Home() {
 
       throw new Error("Video generation timed out after 15 minutes. Check your Runway dashboard for task status.");
     } catch (e) {
+      if (stopIfCancelled()) return;
       activeTaskIdRef.current = null;
       setPollStatus(null);
       setPollProgress(null);
@@ -1047,6 +1122,26 @@ export default function Home() {
       setStep("error");
       track("Generation Error", { stage: "video", message: message.slice(0, 200) });
     }
+  }
+
+  // The new video can play: it fades in over the skeleton (or over the dimmed old video on a redo), which leaves after the fade.
+  function showIncomingVideo() {
+    if (!incomingVideoUrl) return;
+    setOutgoingVideoUrl(videoUrl);
+    setVideoUrl(incomingVideoUrl);
+    setIncomingVideoUrl(null);
+    setPollStatus(null);
+    setPollProgress(null);
+    setStep("done");
+    setTimeout(() => setOutgoingVideoUrl(null), VIDEO_REVEAL_MS);
+  }
+
+  function failIncomingVideo() {
+    setIncomingVideoUrl(null);
+    setPollStatus(null);
+    setPollProgress(null);
+    setError("The video was generated but your browser couldn’t load it. Runway’s links expire after a while; try again.");
+    setStep("error");
   }
 
   const generateBlocked = isGenerating || !name.trim() || isUploading || (logoMode === "upload" && !uploadedUri);
@@ -1252,12 +1347,18 @@ export default function Home() {
             </p>
           )}
 
-          <details className="mt-6 group/themes">
-            <summary className="min-h-11 inline-flex items-center gap-2 cursor-pointer list-none text-sm font-medium text-neutral-300 hover:text-white transition-colors [&::-webkit-details-marker]:hidden">
-              <span aria-hidden="true" className="inline-block text-neutral-400 transition-transform group-open/themes:rotate-90">▸</span>
-              More themes
-            </summary>
-            <div className="mt-3 space-y-6">
+          <button
+            type="button"
+            aria-expanded={showThemes}
+            aria-controls="more-themes"
+            onClick={() => setShowThemes((v) => !v)}
+            className="mt-6 min-h-11 inline-flex items-center gap-2 text-sm font-medium text-neutral-300 hover:text-white transition-colors"
+          >
+            <span aria-hidden="true" className={`inline-block text-neutral-400 transition-transform ${showThemes ? "rotate-90" : ""}`}>▸</span>
+            More themes
+          </button>
+          <Collapsible id="more-themes" open={showThemes}>
+            <div className="pt-3 space-y-6">
               {([
                 { id: "seasonal", title: "Seasonal", presets: SEASONAL },
                 { id: "holidays", title: "Holidays", presets: HOLIDAYS },
@@ -1290,7 +1391,7 @@ export default function Home() {
                 );
               })}
             </div>
-          </details>
+          </Collapsible>
         </section>
 
         {/* Duration */}
@@ -1340,8 +1441,8 @@ export default function Home() {
           </h2>
           <p className="text-sm text-neutral-400">Each style sets recommended defaults; change them here.</p>
 
-          {showAdvanced && (
-            <div id="advanced-settings" className="space-y-7 pt-5">
+          <Collapsible id="advanced-settings" open={showAdvanced}>
+            <div className="space-y-7 pt-5">
 
               {/* Image model */}
               <div>
@@ -1410,10 +1511,7 @@ export default function Home() {
                       className="relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 shrink-0"
                       style={{ backgroundColor: audio ? accentColor : "#404040" }}
                     >
-                      <div
-                        className="absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all"
-                        style={{ left: audio ? "calc(100% - 22px)" : "2px" }}
-                      />
+                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${audio ? "translate-x-5" : ""}`} />
                     </button>
                   </div>
                 )}
@@ -1508,7 +1606,7 @@ export default function Home() {
               </div>
 
             </div>
-          )}
+          </Collapsible>
         </section>
 
         {/* Prompt preview */}
@@ -1526,8 +1624,8 @@ export default function Home() {
             </button>
           </h2>
           <p className="text-sm text-neutral-400">See and edit what gets sent to the AI.</p>
-          {showPrompt && (
-            <div id="prompt-preview" className="space-y-3 pt-4">
+          <Collapsible id="prompt-preview" open={showPrompt}>
+            <div className="space-y-3 pt-4">
               <EditablePromptBlock
                 label="Step 1: title card"
                 meta={`${IMAGE_MODELS.find(m => m.id === imageModel)?.label ?? imageModel}, ${ratioLabel}`}
@@ -1548,7 +1646,7 @@ export default function Home() {
                 </p>
               )}
             </div>
-          )}
+          </Collapsible>
         </section>
 
         {/* Logo source */}
@@ -1592,7 +1690,7 @@ export default function Home() {
                     <Image src={uploadPreview} alt="Uploaded logo" fill className="object-contain p-3 rounded-xl" unoptimized />
                     {isUploading && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
-                        <span className="text-sm text-white animate-pulse">Uploading to Runway…</span>
+                        <span className="text-sm text-white">Uploading to Runway…</span>
                       </div>
                     )}
                     {uploadedUri && !isUploading && (
@@ -1774,7 +1872,7 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={!apiKeyInput.trim()}
-                    className="min-h-11 px-4 rounded-lg text-sm font-semibold bg-white text-black hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    className={`min-h-11 px-4 rounded-lg text-sm font-semibold bg-white text-black hover:bg-neutral-200 ${PRESS} disabled:opacity-40 disabled:cursor-not-allowed shrink-0`}
                   >
                     Save
                   </button>
@@ -1813,7 +1911,7 @@ export default function Home() {
           type="button"
           onClick={generate}
           disabled={generateBlocked}
-          className={`w-full min-h-11 font-semibold py-3.5 rounded-lg transition-colors disabled:cursor-not-allowed text-base bg-white text-black hover:bg-neutral-200 tabular-nums ${isGenerating ? "" : "disabled:opacity-40"}`}
+          className={`w-full min-h-11 font-semibold py-3.5 rounded-lg ${PRESS} disabled:cursor-not-allowed text-base bg-white text-black hover:bg-neutral-200 tabular-nums ${isGenerating ? "" : "disabled:opacity-40"}`}
         >
           {isGenerating
             ? <>Generating… <ElapsedSeconds since={genStartedAt} /></>
@@ -1859,13 +1957,14 @@ export default function Home() {
                 />
               </>
             )}
-            {step === "video" && (
+            {step === "video" && pollStatus !== "SUCCEEDED" && (
               <button
                 type="button"
                 onClick={handleCancelVideo}
-                className="min-h-11 px-2 text-sm text-red-400 hover:text-red-300 transition-colors shrink-0"
+                disabled={cancelling}
+                className="min-h-11 px-2 text-sm text-red-400 hover:text-red-300 transition-colors shrink-0 disabled:text-neutral-400 disabled:cursor-not-allowed"
               >
-                Cancel video
+                {cancelling ? "Cancelling…" : "Cancel video"}
               </button>
             )}
             {!isGenerating && (
@@ -1893,12 +1992,16 @@ export default function Home() {
           </div>
 
           <div className="space-y-4">
+            {cancelError && (
+              <p role="alert" className="rounded-lg border border-red-800 bg-red-950 px-4 py-3 text-sm text-red-300">{cancelError}</p>
+            )}
+
             {/* Image skeleton */}
             {step === "image" && !imageUrl && logoMode === "ai" && (
               <div className="rounded-xl overflow-hidden border border-neutral-800">
-                <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }} />
+                <div className="w-full bg-neutral-900" style={{ aspectRatio: "16/9" }} />
                 <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800 flex items-center gap-3">
-                  <progress aria-label="Generating poster" className="flex-1 h-1.5" style={{ accentColor }} />
+                  <ProgressBar label="Generating poster" value={null} color={accentColor} className="flex-1" />
                   <span className="text-sm text-neutral-400 shrink-0">Generating poster…</span>
                 </div>
               </div>
@@ -1919,7 +2022,17 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <Image src={imageUrl} alt="Generated logo" width={1920} height={1080} className="w-full" unoptimized />
+                <Image
+                  src={imageUrl}
+                  alt="Generated logo"
+                  width={1920}
+                  height={1080}
+                  className={`w-full ${revealPoster ? "[clip-path:inset(0)] starting:[clip-path:inset(0_100%_0_0)] transition-[clip-path] duration-400 ease-enter" : ""}`}
+                  unoptimized
+                />
+                {posterDownloadError && (
+                  <p role="alert" className="px-3 py-2 text-sm text-red-300 bg-red-950 border-t border-red-900">{posterDownloadError}</p>
+                )}
               </div>
             )}
 
@@ -1933,7 +2046,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => { setGenMode("full"); proceedToVideo(); }}
-                  className="w-full py-3.5 rounded-lg text-sm font-semibold text-black transition-colors"
+                  className={`w-full py-3.5 rounded-lg text-sm font-semibold text-black ${PRESS}`}
                   style={{ background: accentColor }}
                 >
                   Animate into a video intro
@@ -1983,7 +2096,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => proceedToVideo()}
-                    className="flex-1 min-h-11 px-4 rounded-lg text-sm font-semibold text-black whitespace-nowrap transition-colors"
+                    className={`flex-1 min-h-11 px-4 rounded-lg text-sm font-semibold text-black whitespace-nowrap ${PRESS}`}
                     style={{ background: accentColor }}
                   >
                     Looks good, make the video
@@ -1992,88 +2105,194 @@ export default function Home() {
               </div>
             )}
 
-            {/* Video skeleton */}
-            {step === "video" && !videoUrl && (
+            {/* Video: progress, then the new video fading in over the skeleton, or over the dimmed old one on a redo */}
+            {(step === "video" || videoUrl) && (
               <div className="rounded-xl overflow-hidden border border-neutral-800">
-                {/* Status bar (announced via the page's status region, not here) */}
-                <div className="px-3 py-2 bg-neutral-900 border-b border-neutral-800 flex items-center gap-3">
-                  <progress
-                    aria-label="Video progress"
-                    max={100}
-                    value={pollStatus === "RUNNING" && pollProgress !== null ? pollProgress : undefined}
-                    className="flex-1 h-1.5"
-                    style={{ accentColor }}
-                  />
-                  {pollStatus && (
+                {step === "video" ? (
+                  // Status bar (announced via the page's status region, not here); same height as the header it replaces
+                  <div className="px-3 py-2 min-h-9 bg-neutral-900 border-b border-neutral-800 flex items-center gap-3">
+                    <ProgressBar label="Video progress" value={pollProgress} color={accentColor} className="flex-1" />
                     <span className="text-sm shrink-0 tabular-nums" style={{ color: pollStatus === "RUNNING" ? "#22C55E" : pollStatus === "THROTTLED" ? "#F59E0B" : "#a3a3a3" }}>
-                      {pollStatus === "STARTING"  && "Submitting task…"}
+                      {(pollStatus === null || pollStatus === "STARTING") && "Submitting task…"}
                       {pollStatus === "PENDING"   && "Queued, waiting to start"}
                       {pollStatus === "RUNNING"   && `Generating frames${pollProgress !== null ? ` ${pollProgress}%` : "…"}`}
                       {pollStatus === "THROTTLED" && "Throttled: concurrent task limit reached"}
+                      {pollStatus === "SUCCEEDED" && "Loading video…"}
                     </span>
-                  )}
+                  </div>
+                ) : (
+                  <div className="px-3 py-2 min-h-9 text-sm text-neutral-400 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2">
+                    <span>Scene 2: Intro video, {duration}s, 1280×720</span>
+                    {timings && <span className="tabular-nums">{(timings.video / 1000).toFixed(1)}s</span>}
+                  </div>
+                )}
+                <div className="relative aspect-video bg-neutral-900">
+                  {[outgoingVideoUrl, videoUrl, incomingVideoUrl].map((url) => url && (
+                    <video
+                      key={url}
+                      ref={url === videoUrl ? currentVideoRef : undefined}
+                      src={url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      controls={url === videoUrl && step !== "video"}
+                      onLoadedData={url === incomingVideoUrl ? showIncomingVideo : undefined}
+                      onError={url === incomingVideoUrl ? failIncomingVideo : undefined}
+                      className={`absolute inset-0 w-full h-full bg-black transition-opacity duration-400 ease-enter ${
+                        url === incomingVideoUrl ? "opacity-0" : url === videoUrl && step !== "video" ? "opacity-100" : "opacity-40"
+                      }`}
+                    />
+                  ))}
                 </div>
+                {pollStatus === "THROTTLED" && (
+                  <div className="flex flex-col items-center justify-center gap-4 py-10 px-6 bg-neutral-900 border-t border-neutral-800">
+                    <p className="text-sm text-neutral-300 text-center max-w-sm">
+                      Another task is still running on your Runway account (concurrency limit: 1).
+                      Copy a task ID from your{" "}
+                      <span className="text-white">Runway dev portal, Request History</span>
+                      {" "}and cancel it here, or cancel this queued task and try again later.
+                    </p>
 
-                {/* Placeholder area */}
-                <div className="w-full bg-neutral-900 animate-pulse" style={{ aspectRatio: "16/9" }}>
-                  {pollStatus === "THROTTLED" && (
-                    <div className="flex flex-col items-center justify-center h-full gap-4 py-10 px-6">
-                      <p className="text-sm text-neutral-300 text-center max-w-sm">
-                        Another task is still running on your Runway account (concurrency limit: 1).
-                        Copy a task ID from your{" "}
-                        <span className="text-white">Runway dev portal, Request History</span>
-                        {" "}and cancel it here, or cancel this queued task and try again later.
-                      </p>
-
-                      {/* Cancel-by-ID input */}
-                      <div className="flex gap-2 w-full max-w-sm">
-                        <input
-                          type="text"
-                          value={cancelTaskId}
-                          onChange={e => { setCancelTaskId(e.target.value); setCancelMsg(null); }}
-                          placeholder="Paste task ID to cancel…"
-                          aria-label="Runway task ID to cancel"
-                          className={`${INPUT_CLASS} flex-1 min-w-0`}
-                        />
-                        <button
-                          type="button"
-                          disabled={!cancelTaskId.trim()}
-                          onClick={async () => {
-                            const id = cancelTaskId.trim();
-                            setCancelMsg("Cancelling…");
-                            const h: Record<string, string> = {};
-                            if (apiKey) h["x-runway-key"] = apiKey;
-                            const res = await fetch(`/api/video/cancel?id=${encodeURIComponent(id)}`, { method: "DELETE", headers: h });
-                            const data = await res.json();
-                            if (res.ok) { setCancelMsg("Cancelled. Polling will resume shortly."); setCancelTaskId(""); }
-                            else setCancelMsg(`Error: ${data.error ?? "cancel failed"}`);
-                          }}
-                          className="min-h-11 text-sm px-3 rounded-lg border border-amber-700 text-amber-400 hover:bg-amber-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                        >
-                          Cancel task
-                        </button>
-                      </div>
-                      {cancelMsg && (
-                        <p role="status" className="text-sm" style={{ color: cancelMsg.startsWith("Error") ? "#EF4444" : "#22C55E" }}>
-                          {cancelMsg}
-                        </p>
-                      )}
-
+                    {/* Cancel-by-ID input */}
+                    <div className="flex gap-2 w-full max-w-sm">
+                      <input
+                        type="text"
+                        value={cancelTaskId}
+                        onChange={e => { setCancelTaskId(e.target.value); setCancelMsg(null); }}
+                        placeholder="Paste task ID to cancel…"
+                        aria-label="Runway task ID to cancel"
+                        className={`${INPUT_CLASS} flex-1 min-w-0`}
+                      />
                       <button
                         type="button"
-                        onClick={reset}
-                        className="min-h-11 text-sm text-neutral-300 hover:text-white transition-colors"
+                        disabled={!cancelTaskId.trim()}
+                        onClick={async () => {
+                          setCancelMsg("Cancelling…");
+                          try {
+                            await cancelRunwayTask(cancelTaskId.trim());
+                            setCancelMsg("Cancelled. Polling will resume shortly.");
+                            setCancelTaskId("");
+                          } catch (e) {
+                            setCancelMsg(`Error: ${e instanceof Error ? e.message : String(e)}`);
+                          }
+                        }}
+                        className="min-h-11 text-sm px-3 rounded-lg border border-amber-700 text-amber-400 hover:bg-amber-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                       >
-                        Cancel this queued task and start over
+                        Cancel task
                       </button>
                     </div>
-                  )}
-                </div>
+                    {cancelMsg && (
+                      <p role="status" className="text-sm" style={{ color: cancelMsg.startsWith("Error") ? "#EF4444" : "#22C55E" }}>
+                        {cancelMsg}
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={reset}
+                      className="min-h-11 text-sm text-neutral-300 hover:text-white transition-colors"
+                    >
+                      Cancel this queued task and start over
+                    </button>
+                  </div>
+                )}
+                {videoUrl && (
+                  // Kept in place, but unusable, while a redo runs, so nothing collapses under the pointer
+                  <div inert={step === "video"} className={`transition-opacity ${step === "video" ? "opacity-50" : ""}`}>
+                    {/* Timing + cost strip */}
+                    {timings && (
+                      <div className="px-3 py-1.5 bg-neutral-950 border-b border-neutral-800 flex gap-x-4 gap-y-1 text-sm text-neutral-400 tabular-nums flex-wrap">
+                        <span>Scene 1: {(timings.image / 1000).toFixed(1)}s</span>
+                        <span>Scene 2: {(timings.video / 1000).toFixed(1)}s</span>
+                        <span className="text-neutral-300 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
+                        <span className="ml-auto flex flex-wrap gap-x-3">
+                          {(credits ? credits.image : imageCrCost) > 0 && (
+                            <span>Poster: {credits ? `${credits.image} cr` : `~${imageCrCost} cr`}</span>
+                          )}
+                          {(credits?.video ?? 0) > 0 || !credits ? (
+                            <span>Video: {credits ? `${credits.video} cr` : `~${crPerSec * duration} cr`}</span>
+                          ) : null}
+                          <span className="text-neutral-300 font-medium">
+                            Total: {credits
+                              ? `${credits.image + credits.video} cr`
+                              : `~${imageCrCost + crPerSec * duration} cr`}
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                    <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800">
+                      <label htmlFor="redo-notes" className="block text-sm text-neutral-300 mb-1.5">Notes for a redo (optional)</label>
+                      <input
+                        id="redo-notes"
+                        type="text"
+                        value={videoRegenNotes}
+                        onChange={(e) => setVideoRegenNotes(e.target.value)}
+                        onKeyDown={(e) => { if (isEnterToSubmitNotes(e, videoRegenNotes)) proceedToVideo(); }}
+                        placeholder='e.g. "more energy", "darker background", "slower reveal"'
+                        className={INPUT_CLASS}
+                      />
+                    </div>
+                    <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex flex-wrap items-center gap-2">
+                      {confirmingReset ? (
+                        <>
+                          <span className="text-sm text-neutral-300 shrink-0">Video will be lost:</span>
+                          <button type="button" onClick={reset} className="min-h-11 text-sm text-red-400 border border-red-900 hover:border-red-700 px-4 rounded transition-colors shrink-0">
+                            Confirm
+                          </button>
+                          <button type="button" onClick={() => setConfirmingReset(false)} className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0">
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button type="button" onClick={safeReset} className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0">
+                          Start over
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => proceedToVideo()}
+                        className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0"
+                      >
+                        Redo video
+                      </button>
+                      <a
+                        href={redditShareUrl(name.trim())}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => track("Share Reddit", { style })}
+                        className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
+                      >
+                        Post to r/plexprerolls
+                      </a>
+                      <a
+                        href={tweetShareUrl(name.trim())}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => track("Share X", { style })}
+                        className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
+                      >
+                        Share on X
+                      </a>
+                      <button
+                        type="button"
+                        onClick={downloadVideo}
+                        className={`min-h-11 text-sm text-black font-medium px-4 rounded ${PRESS}`}
+                        style={{ background: accentColor }}
+                      >
+                        Download MP4
+                      </button>
+                    </div>
+                    {downloadError && (
+                      <p role="alert" className="px-3 py-2 text-sm text-red-300 bg-red-950 border-t border-red-900">{downloadError}</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Video generation error — show when video failed but we still have an image */}
-            {step === "error" && !videoUrl && error && (
+            {/* Video generation error, with the poster (and any earlier video) still on screen */}
+            {step === "error" && error && (
               <div role="alert" className="rounded-lg border border-red-800 bg-red-950 px-4 py-4 space-y-3">
                 <p className="text-sm text-red-300">{error}</p>
                 <div className="flex items-center gap-3">
@@ -2092,102 +2311,6 @@ export default function Home() {
                     Start over
                   </button>
                 </div>
-              </div>
-            )}
-
-            {videoUrl && (
-              <div className="rounded-xl overflow-hidden border border-neutral-800">
-                <div className="px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between gap-2">
-                  <span>Scene 2: Intro video, {duration}s, 1280×720</span>
-                  {timings && <span className="tabular-nums">{(timings.video / 1000).toFixed(1)}s</span>}
-                </div>
-                <video src={videoUrl} autoPlay loop muted playsInline controls className="w-full block bg-black" />
-                {/* Timing + cost strip */}
-                {timings && (
-                  <div className="px-3 py-1.5 bg-neutral-950 border-b border-neutral-800 flex gap-x-4 gap-y-1 text-sm text-neutral-400 tabular-nums flex-wrap">
-                    <span>Scene 1: {(timings.image / 1000).toFixed(1)}s</span>
-                    <span>Scene 2: {(timings.video / 1000).toFixed(1)}s</span>
-                    <span className="text-neutral-300 font-medium">Total: {((timings.image + timings.video) / 1000).toFixed(1)}s</span>
-                    <span className="ml-auto flex flex-wrap gap-x-3">
-                      {(credits ? credits.image : imageCrCost) > 0 && (
-                        <span>Poster: {credits ? `${credits.image} cr` : `~${imageCrCost} cr`}</span>
-                      )}
-                      {(credits?.video ?? 0) > 0 || !credits ? (
-                        <span>Video: {credits ? `${credits.video} cr` : `~${crPerSec * duration} cr`}</span>
-                      ) : null}
-                      <span className="text-neutral-300 font-medium">
-                        Total: {credits
-                          ? `${credits.image + credits.video} cr`
-                          : `~${imageCrCost + crPerSec * duration} cr`}
-                      </span>
-                    </span>
-                  </div>
-                )}
-                <div className="px-3 py-2 bg-neutral-950 border-t border-neutral-800">
-                  <label htmlFor="redo-notes" className="block text-sm text-neutral-300 mb-1.5">Notes for a redo (optional)</label>
-                  <input
-                    id="redo-notes"
-                    type="text"
-                    value={videoRegenNotes}
-                    onChange={(e) => setVideoRegenNotes(e.target.value)}
-                    onKeyDown={(e) => { if (isEnterToSubmitNotes(e, videoRegenNotes)) { setVideoUrl(null); proceedToVideo(); } }}
-                    placeholder='e.g. "more energy", "darker background", "slower reveal"'
-                    className={INPUT_CLASS}
-                  />
-                </div>
-                <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex flex-wrap items-center gap-2">
-                  {confirmingReset ? (
-                    <>
-                      <span className="text-sm text-neutral-300 shrink-0">Video will be lost:</span>
-                      <button type="button" onClick={reset} className="min-h-11 text-sm text-red-400 border border-red-900 hover:border-red-700 px-4 rounded transition-colors shrink-0">
-                        Confirm
-                      </button>
-                      <button type="button" onClick={() => setConfirmingReset(false)} className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0">
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button type="button" onClick={safeReset} className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0">
-                      Start over
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => { setVideoUrl(null); proceedToVideo(); }}
-                    className="min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors shrink-0"
-                  >
-                    Redo video
-                  </button>
-                  <a
-                    href={redditShareUrl(name.trim())}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("Share Reddit", { style })}
-                    className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
-                  >
-                    Post to r/plexprerolls
-                  </a>
-                  <a
-                    href={tweetShareUrl(name.trim())}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("Share X", { style })}
-                    className="inline-flex items-center min-h-11 text-sm text-neutral-300 border border-neutral-700 hover:border-neutral-500 px-4 rounded transition-colors"
-                  >
-                    Share on X
-                  </a>
-                  <button
-                    type="button"
-                    onClick={downloadVideo}
-                    className="min-h-11 text-sm text-black font-medium px-4 rounded transition-colors"
-                    style={{ background: accentColor }}
-                  >
-                    Download MP4
-                  </button>
-                </div>
-                {downloadError && (
-                  <p role="alert" className="px-3 py-2 text-sm text-red-300 bg-red-950 border-t border-red-900">{downloadError}</p>
-                )}
               </div>
             )}
 
@@ -2218,8 +2341,8 @@ export default function Home() {
                     <span aria-hidden="true" className={`inline-block text-neutral-400 transition-transform ${showInstall ? "rotate-90" : ""}`}>▸</span>
                   </button>
                 </h3>
-                {showInstall && (
-                  <div id="install-guide" className="divide-y divide-neutral-800">
+                <Collapsible id="install-guide" open={showInstall}>
+                  <div className="divide-y divide-neutral-800">
                     {PLATFORMS.map((p) => (
                       <div key={p.name} className="px-4 py-3 flex flex-wrap gap-3 items-start bg-neutral-950">
                         <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
@@ -2242,7 +2365,7 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-                )}
+                </Collapsible>
               </div>
             )}
           </div>
@@ -2261,7 +2384,12 @@ export default function Home() {
   );
 }
 
+// Primary buttons squash a little while pressed (not when disabled); the colors keep their hover change.
+const PRESS = "transition-[color,background-color,border-color,opacity,scale] duration-75 ease-out enabled:active:scale-[0.97]";
+
 const INPUT_CLASS = "w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-base sm:text-sm text-white placeholder:text-neutral-500 focus:border-neutral-500 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 disabled:opacity-50 transition-colors";
+
+const VIDEO_REVEAL_MS = 400;
 
 const HERO_POSTER = "/examples/hero-poster.webp";
 
@@ -2274,46 +2402,79 @@ const EXAMPLE_CLIPS = [
 
 function VideoMontage() {
   const [active, setActive] = useState(0);
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null, null]);
+  // The clip that just ended holds its last frame underneath while the next one fades in on top of it.
+  const [previous, setPrevious] = useState<number | null>(null);
+  // null until known; until then the montage stays on its first frame.
+  const [reducedMotion, setReducedMotion] = useState<boolean | null>(null);
+  // null until the visitor presses pause or play; reduced motion decides before that.
+  const [userPaused, setUserPaused] = useState<boolean | null>(null);
+  const [onScreen, setOnScreen] = useState(true);
+  const bandRef = useRef<HTMLDivElement>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const paused = userPaused ?? reducedMotion ?? true;
+  const playing = !paused && onScreen;
 
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    // design-ok: pauses the montage while it is scrolled out of view; nothing animates on scroll
+    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting));
+    if (bandRef.current) observer.observe(bandRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-    videoRefs.current.forEach((vid, i) => {
-      if (!vid) return;
-      if (i === active) {
-        vid.currentTime = 0;
-        vid.play().catch(() => {});
-      } else {
-        vid.pause();
-        vid.currentTime = 0;
-      }
-    });
-  }, [active]);
+  useEffect(() => {
+    const vid = videoRefs.current[active];
+    if (!vid) return;
+    if (!playing) { vid.pause(); return; }
+    // Normally reset when it faded out; with reduced motion there was no fade to end.
+    if (vid.ended) vid.currentTime = 0;
+    // Muted autoplay can't be refused; a rejection here only means the element went away mid-call.
+    vid.play().catch(() => {});
+    const nextVid = videoRefs.current[(active + 1) % EXAMPLE_CLIPS.length];
+    if (nextVid) nextVid.preload = "auto";
+  }, [active, playing]);
 
   return (
-    <div className="absolute inset-0 bg-black" aria-hidden="true">
-      {EXAMPLE_CLIPS.map((src, i) => (
-        <video
-          key={src}
-          ref={(el) => { videoRefs.current[i] = el; }}
-          src={src}
-          poster={i === 0 ? HERO_POSTER : undefined}
-          muted
-          playsInline
-          preload={i === 0 ? "metadata" : "none"}
-          onEnded={() => {
-            const next = (i + 1) % EXAMPLE_CLIPS.length;
-            const nextVid = videoRefs.current[next];
-            if (nextVid) nextVid.preload = "auto";
-            setActive(next);
-          }}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-          style={{ opacity: active === i ? 1 : 0 }}
-        />
-      ))}
-    </div>
+    <>
+      <div ref={bandRef} className="absolute inset-0 bg-black" aria-hidden="true">
+        {EXAMPLE_CLIPS.map((src, i) => (
+          <video
+            key={src}
+            ref={(el) => { videoRefs.current[i] = el; }}
+            src={src}
+            poster={i === 0 ? HERO_POSTER : undefined}
+            muted
+            playsInline
+            preload={i === 0 ? "metadata" : "none"}
+            onEnded={() => {
+              setPrevious(i);
+              setActive((i + 1) % EXAMPLE_CLIPS.length);
+            }}
+            onTransitionEnd={(e) => {
+              if (e.target !== e.currentTarget) return;
+              if (i === active) { setPrevious(null); return; }
+              if (i !== previous) { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }
+            }}
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+            style={{ opacity: i === active || i === previous ? 1 : 0, zIndex: i === active ? 2 : i === previous ? 1 : 0 }}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => setUserPaused(!paused)}
+        aria-label={paused ? "Play background video" : "Pause background video"}
+        className="absolute top-3 right-3 z-20 grid place-items-center w-11 h-11 rounded-lg border border-neutral-700 bg-neutral-950 text-neutral-300 hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+      >
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" className={`[grid-area:1/1] transition-opacity duration-150 ${paused ? "opacity-0" : ""}`}>
+          <rect x="3" y="2" width="3.5" height="12" /><rect x="9.5" y="2" width="3.5" height="12" />
+        </svg>
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" className={`[grid-area:1/1] transition-opacity duration-150 ${paused ? "" : "opacity-0"}`}>
+          <path d="M4 2l10 6-10 6z" />
+        </svg>
+      </button>
+    </>
   );
 }
 
@@ -2359,7 +2520,7 @@ function ThemeTile({ label, desc, image, active, color, disabled, eager = false,
           decoding="async"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200 px-2.5 bg-black/80">
+        <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-100 delay-0 group-hover:opacity-100 group-hover:duration-200 group-hover:delay-150 group-focus-visible:opacity-100 group-focus-visible:delay-0 px-2.5 bg-black/80">
           <span className="text-sm text-center leading-snug text-neutral-100">{desc}</span>
         </span>
       </span>
@@ -2398,14 +2559,22 @@ function ModelOption({ label, cost, desc, note, active, accentColor, disabled, o
 }
 
 function StepIndicator({ label, status, color }: { label: string; status: "pending" | "active" | "done" | "error"; color: string }) {
+  const circleRef = useRef<HTMLDivElement>(null);
+  const previousStatusRef = useRef(status);
+  // Pulse once when a step finishes while you watch; a step that was already done when it appeared stays still.
+  useEffect(() => {
+    if (status === "done" && previousStatusRef.current !== "done") pulseOnce(circleRef.current);
+    previousStatusRef.current = status;
+  }, [status]);
   return (
     <div className="flex items-center gap-2 shrink-0">
       <div
+        ref={circleRef}
         aria-hidden="true"
         className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
         style={
           status === "done"   ? { background: color, color: "#000" } :
-          status === "active" ? { background: "#fff", color: "#000", animation: "pulse 1.5s cubic-bezier(0.4,0,0.6,1) infinite" } :
+          status === "active" ? { background: "#fff", color: "#000" } :
           status === "error"  ? { background: "#7f1d1d", color: "#fca5a5" } :
                                 { background: "#262626", color: "#a3a3a3" }
         }
@@ -2478,8 +2647,8 @@ function EditablePromptBlock({
             </button>
           )}
           <button type="button" onClick={copy} className="grid min-h-11 px-2 text-sm text-neutral-400 hover:text-white transition-colors">
-            <span className={`[grid-area:1/1] ${copyState === "copied" ? "invisible" : ""}`}>Copy</span>
-            <span className={`[grid-area:1/1] ${copyState === "copied" ? "" : "invisible"}`}>Copied</span>
+            <span className={`[grid-area:1/1] transition-opacity duration-150 ${copyState === "copied" ? "opacity-0" : ""}`}>Copy</span>
+            <span aria-hidden="true" className={`[grid-area:1/1] transition-opacity duration-150 ${copyState === "copied" ? "" : "opacity-0"}`}>Copied</span>
           </button>
           <span role="status" className={copyState === "failed" ? "text-sm text-red-400" : "sr-only"}>
             {copyState === "copied" ? "Prompt copied" : copyState === "failed" ? "Couldn’t copy; select the text and copy it by hand" : ""}
