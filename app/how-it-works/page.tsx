@@ -168,7 +168,7 @@ export default function HowItWorksPage() {
         <p className={`${BODY_CLASS} mt-12`}>
           Built by{" "}
           <a href={BUILDER.website} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>{BUILDER.name}</a>,
-          a developer advocate building tools that make APIs click. Find him on{" "}
+          a developer advocate building tools that make APIs click. Find Joe on{" "}
           <a href={BUILDER.twitter} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS} aria-label="Joe on X">X</a>,{" "}
           <a href={BUILDER.github} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>GitHub</a> and{" "}
           <a href={BUILDER.linkedin} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>LinkedIn</a>.
