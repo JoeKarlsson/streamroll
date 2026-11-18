@@ -7,6 +7,7 @@ const STORAGE_KEY = "runway_api_key";
 describe("useApiKey", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     vi.clearAllMocks();
   });
 
@@ -69,5 +70,40 @@ describe("useApiKey", () => {
     act(() => { result.current.clearKey(); });
     expect(result.current.key).toBe("");
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("saveKey with remember: false keeps the key in sessionStorage only", async () => {
+    localStorage.setItem(STORAGE_KEY, "old-remembered-key");
+    const { result } = renderHook(() => useApiKey());
+    await act(async () => {});
+    act(() => { result.current.saveKey("tab-only-key", { remember: false }); });
+    expect(result.current.key).toBe("tab-only-key");
+    expect(sessionStorage.getItem(STORAGE_KEY)).toBe("tab-only-key");
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("saveKey with remember: true moves a session-only key into localStorage", async () => {
+    sessionStorage.setItem(STORAGE_KEY, "session-key");
+    const { result } = renderHook(() => useApiKey());
+    await act(async () => {});
+    act(() => { result.current.saveKey("session-key", { remember: true }); });
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("session-key");
+    expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("loads a session-only key on mount", async () => {
+    sessionStorage.setItem(STORAGE_KEY, "session-key");
+    const { result } = renderHook(() => useApiKey());
+    await act(async () => {});
+    expect(result.current.key).toBe("session-key");
+  });
+
+  it("clearKey removes the key from both storages", async () => {
+    sessionStorage.setItem(STORAGE_KEY, "session-key");
+    const { result } = renderHook(() => useApiKey());
+    await act(async () => {});
+    act(() => { result.current.clearKey(); });
+    expect(result.current.key).toBe("");
+    expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 });
