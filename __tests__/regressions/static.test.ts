@@ -42,7 +42,7 @@ describe("readiness review regressions", () => {
   it("R47 CI is read-only and pins every action to a full commit SHA", () => {
     const ci = read(".github/workflows/ci.yml");
     expect(ci).toMatch(/^permissions:\s*\n\s+contents:\s*read/m);
-    const uses = [...ci.matchAll(/uses:\s*(\S+)/g)].map((m) => m[1]);
+    const uses = [...ci.matchAll(/uses:\s*(\S+)/g)].map((m) => m[1]!);
     expect(uses.length).toBeGreaterThan(0);
     expect(uses.filter((u) => !/@[0-9a-f]{40}$/.test(u))).toEqual([]);
   });

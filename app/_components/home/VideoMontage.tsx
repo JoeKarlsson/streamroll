@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { preload } from "react-dom";
+
+const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+const prefersReducedMotion = () => window.matchMedia(REDUCED_MOTION).matches;
+function subscribeToReducedMotion(onChange: () => void) {
+  const query = window.matchMedia(REDUCED_MOTION);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
 
 const HERO_POSTER = "/examples/hero-poster.webp";
 
@@ -18,8 +26,8 @@ export function VideoMontage() {
   const [active, setActive] = useState(0);
   // The clip that just ended holds its last frame underneath while the next one fades in on top of it.
   const [previous, setPrevious] = useState<number | null>(null);
-  // null until known; until then the montage stays on its first frame.
-  const [reducedMotion, setReducedMotion] = useState<boolean | null>(null);
+  // null until known (on the server and while hydrating); until then the montage stays on its first frame.
+  const reducedMotion = useSyncExternalStore<boolean | null>(subscribeToReducedMotion, prefersReducedMotion, () => null);
   // null until the visitor presses pause or play; reduced motion decides before that.
   const [userPaused, setUserPaused] = useState<boolean | null>(null);
   const [onScreen, setOnScreen] = useState(true);
@@ -29,10 +37,8 @@ export function VideoMontage() {
   const playing = !paused && onScreen;
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     // design-ok: pauses the montage while it is scrolled out of view; nothing animates on scroll
-    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting));
+    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => setOnScreen(entry.isIntersecting)));
     if (bandRef.current) observer.observe(bandRef.current);
     return () => observer.disconnect();
   }, []);

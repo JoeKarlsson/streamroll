@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import RunwayML from "@runwayml/sdk";
+import type { ImageToVideoCreateParams } from "@runwayml/sdk/resources";
 import { buildPrompts, type GenerationParams } from "@/lib/runway";
 
 export const maxDuration = 90;
@@ -36,20 +37,19 @@ export async function POST(req: NextRequest) {
   const model = params.videoModel ?? "gen4_turbo";
   const isVeoModel = model === "veo3" || model === "veo3.1" || model === "veo3.1_fast";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const createParams: Record<string, any> = {
+  // A cast, not a typed literal: SDK 4 dropped gen3a_turbo and veo3 from its types, but this app still offers them.
+  const createParams = {
     model,
     promptImage: body.imageUrl,
     promptText: videoPrompt,
     ratio: "1280:720",
     duration: params.duration,
-  };
-  if (isVeoModel && params.audio) createParams.audio = true;
+    ...(isVeoModel && params.audio ? { audio: true } : {}),
+  } as ImageToVideoCreateParams;
 
   try {
     const client = new RunwayML({ apiKey, timeout: 25_000 });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const task = await client.imageToVideo.create(createParams as any);
+    const task = await client.imageToVideo.create(createParams);
     // Balance snapshot is best-effort — don't let it block or fail the generation
     const creditsBefore = await client.organization.retrieve().then(r => r.creditBalance).catch(() => null);
     return NextResponse.json({ taskId: task.id, creditsBefore });

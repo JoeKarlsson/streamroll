@@ -12,7 +12,7 @@ interface Props {
   style: string;
   accentColor: string;
   duration: number;
-  initialFile?: File;
+  initialFile?: File | undefined;
 }
 
 type MixState = "idle" | "working" | "done" | "error";
@@ -187,7 +187,7 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
   const prevOutputRef                       = useRef<string | null>(null);
   const prevPreviewRef                      = useRef<string | null>(null);
   const activeStepRef                       = useRef<string | null>(null);
-  const initialFileApplied                  = useRef(false);
+  const [initialFileApplied, setInitialFileApplied] = useState(false);
   const successRef                          = useRef<HTMLDivElement>(null);
 
   // Confirm a finished mix with one pulse on the success banner.
@@ -195,14 +195,12 @@ export function AudioMixer({ videoUrl, name, style, accentColor, duration, initi
     if (mixState === "done") pulseOnce(successRef.current);
   }, [mixState]);
 
-  useEffect(() => {
-    if (initialFile && !initialFileApplied.current) {
-      initialFileApplied.current = true;
-      setFile(initialFile);
-      setOpen(true);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFile]);
+  // An audio file queued before generating opens the mixer with it, once.
+  if (initialFile && !initialFileApplied) {
+    setInitialFileApplied(true);
+    setFile(initialFile);
+    setOpen(true);
+  }
 
   // Browser compat — SharedArrayBuffer is required by FFmpeg WASM
   const supportsWasm = typeof SharedArrayBuffer !== "undefined";

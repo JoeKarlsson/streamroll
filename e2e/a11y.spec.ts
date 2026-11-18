@@ -136,9 +136,9 @@ test("R25 focused text inputs show a visible outline on keyboard focus", async (
       await page.keyboard.press("Shift+Tab");
       await page.keyboard.press("Tab");
       await expect(input).toBeFocused();
-      const outline = await input.evaluate((el) => [getComputedStyle(el).outlineStyle, getComputedStyle(el).outlineWidth]);
-      expect(outline[0], `${path} ${await input.getAttribute("id")}`).not.toBe("none");
-      expect(parseFloat(outline[1])).toBeGreaterThan(0);
+      const outline = await input.evaluate((el) => ({ style: getComputedStyle(el).outlineStyle, width: getComputedStyle(el).outlineWidth }));
+      expect(outline.style, `${path} ${await input.getAttribute("id")}`).not.toBe("none");
+      expect(parseFloat(outline.width)).toBeGreaterThan(0);
     }
   }
 });

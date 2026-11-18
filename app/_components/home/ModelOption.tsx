@@ -1,5 +1,5 @@
 export function ModelOption({ label, cost, desc, note, active, accentColor, disabled, onClick }: {
-  label: string; cost: string; desc: string; note?: string; active: boolean; accentColor: string; disabled: boolean; onClick: () => void;
+  label: string; cost: string; desc: string; note?: string | undefined; active: boolean; accentColor: string; disabled: boolean; onClick: () => void;
 }) {
   return (
     <button

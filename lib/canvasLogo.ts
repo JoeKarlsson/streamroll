@@ -167,7 +167,7 @@ export async function renderCanvasLogo(style: Style, name: string, tagline: stri
     ctx.drawImage(bg, 0, 0, W, H);
 
     // Per-studio text styling
-    const studioConfigs: Record<string, { font: (sz: number) => string; color: string; shadowColor: string; textY: number; clearY: number; clearH: number }> = {
+    const studioConfigs: Record<"dreamworks" | "tristar" | "hannabarbera" | "columbia", { font: (sz: number) => string; color: string; shadowColor: string; textY: number; clearY: number; clearH: number }> = {
       dreamworks: {
         font: sz => `300 italic ${sz}px Georgia,"Times New Roman",serif`,
         color: "#ffffff",

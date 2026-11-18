@@ -93,7 +93,8 @@ for (const job of JOBS) {
       .create({ model: "gen4_image", promptText: imagePrompt, ratio: "1920:1080" })
       .waitForTaskOutput();
 
-    const url = task.output[0];
+    const [url] = task.output;
+    if (!url) throw new Error("Runway returned no image");
     const res = await fetch(url);
     if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
     const buf = await res.arrayBuffer();

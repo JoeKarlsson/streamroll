@@ -87,7 +87,7 @@ describe("POST /api/video/start", () => {
       { imageUrl: "https://cdn.example.com/image.png", videoModel: "gen4_turbo", audio: true },
       { "x-runway-key": "key123" }
     ));
-    const callArgs = mockImageToVideoCreate.mock.calls[0][0];
+    const callArgs = mockImageToVideoCreate.mock.calls[0]![0];
     expect(callArgs.audio).toBeUndefined();
   });
 

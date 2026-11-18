@@ -20,7 +20,7 @@ export function StylePicker({ settings, isGenerating, onPreset }: {
         </h2>
         <button
           type="button"
-          onClick={() => onPreset(INSPO[Math.floor(Math.random() * INSPO.length)])}
+          onClick={() => onPreset(INSPO[Math.floor(Math.random() * INSPO.length)]!)}
           disabled={isGenerating}
           className="min-h-11 px-3 text-sm text-neutral-300 hover:text-white border border-neutral-700 hover:border-neutral-500 rounded-lg transition-colors disabled:opacity-40"
         >

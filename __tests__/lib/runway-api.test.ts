@@ -49,7 +49,7 @@ describe("generateLogoImage", () => {
 
   it("generates prompt from params when no override is given", async () => {
     await generateLogoImage(baseParams, "api-key-123");
-    const call = mockTextToImageCreate.mock.calls[0][0];
+    const call = mockTextToImageCreate.mock.calls[0]![0];
     expect(call.promptText).toContain("NETFLIX");
   });
 
@@ -76,7 +76,7 @@ describe("generateLogoImage", () => {
 
   it("does not set background for non-gpt models", async () => {
     await generateLogoImage(baseParams, "api-key-123");
-    const call = mockTextToImageCreate.mock.calls[0][0];
+    const call = mockTextToImageCreate.mock.calls[0]![0];
     expect(call.background).toBeUndefined();
   });
 

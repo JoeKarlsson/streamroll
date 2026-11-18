@@ -1,4 +1,5 @@
 import RunwayML from "@runwayml/sdk";
+import type { TextToImageCreateParams } from "@runwayml/sdk/resources";
 
 function getClient(apiKey: string) {
   return new RunwayML({ apiKey, timeout: 120_000 });
@@ -262,8 +263,8 @@ export interface GenerationParams {
   imageModel?: ImageModel;
   videoModel?: VideoModel;
   treatment?: Treatment;
-  primaryColor?: string;
-  customNotes?: string;
+  primaryColor?: string | undefined;
+  customNotes?: string | undefined;
   audio?: boolean;
 }
 
@@ -310,14 +311,13 @@ export async function generateLogoImage(params: GenerationParams, apiKey: string
   const imageModel = params.imageModel ?? "gen4_image";
 
   const ratio = imageRatio(imageModel);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const createParams: Record<string, any> = imageModel === "gpt_image_2"
+  // A cast: TypeScript can't tie each model to its own ratios when both are unions.
+  const createParams = (imageModel === "gpt_image_2"
     ? { model: "gpt_image_2", promptText: imagePrompt, ratio, background: "opaque" }
-    : { model: imageModel,    promptText: imagePrompt, ratio };
+    : { model: imageModel,    promptText: imagePrompt, ratio }) as TextToImageCreateParams;
 
   const task = await getClient(apiKey).textToImage
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .create(createParams as any)
+    .create(createParams)
     .waitForTaskOutput({ timeout: 270_000 });
 
   if (!task.output?.[0]) throw new Error("Image generation produced no output");

@@ -37,6 +37,7 @@ const securityHeaders = [
 const immutable = [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }];
 
 const nextConfig: NextConfig = {
+  reactCompiler: true,
   // Plausible served from this origin, so ad blockers and the CSP treat it as first-party.
   async rewrites() {
     return [

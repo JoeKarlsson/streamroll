@@ -6,7 +6,7 @@ const checkExternal = !!process.env.CHECK_EXTERNAL_LINKS;
 
 async function linksOn(page: Page) {
   const hrefs = await page.locator("a[href]").evaluateAll((as) => as.map((a) => (a as HTMLAnchorElement).href));
-  return [...new Set(hrefs.map((h) => h.split("#")[0]).filter((h) => /^https?:/.test(h)))];
+  return [...new Set(hrefs.map((h) => h.replace(/#.*$/, "")).filter((h) => /^https?:/.test(h)))];
 }
 
 test("internal links on every route return 200", async ({ page, request, baseURL }) => {

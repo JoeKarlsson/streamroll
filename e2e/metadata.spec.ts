@@ -81,7 +81,7 @@ test("R20 body background stays #080808 under a light colour-scheme preference",
 
 test("sitemap lists exactly the indexable routes; R70 with lastmod and no changefreq/priority", async ({ request }) => {
   const xml = await (await request.get("/sitemap.xml")).text();
-  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname.replace(/^\/$/, "/"));
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname.replace(/^\/$/, "/"));
   expect(locs.sort()).toEqual([...INDEXABLE_ROUTES].sort());
   expect(xml).not.toContain("/setup");
   expect(xml.match(/<lastmod>/g)?.length).toBe(INDEXABLE_ROUTES.length);
@@ -142,6 +142,7 @@ test("R43 preview, studio and example assets are served immutable", async ({ req
 
 test("R46 CSP: no bare https: in connect-src, no Plausible host in script-src, Plausible loads from /js/", async ({ page, request }) => {
   const csp = (await request.get("/")).headers()["content-security-policy"];
+  if (!csp) throw new Error("no Content-Security-Policy header on /");
   const directive = (name: string) => csp.split(";").map((d) => d.trim()).find((d) => d.startsWith(name + " ")) ?? "";
   expect(directive("connect-src").split(/\s+/)).not.toContain("https:");
   expect(directive("script-src")).not.toMatch(/plausible/);

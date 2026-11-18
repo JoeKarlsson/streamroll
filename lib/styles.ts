@@ -197,5 +197,5 @@ export const THEME_GROUPS = [
 /** A suggested tagline for the style other than the current one, or the current one when there is no other. */
 export function nextTagline(style: Style, current: string, random = Math.random): string {
   const available = STYLE_TAGLINES[style].filter((t) => t !== current);
-  return available.length ? available[Math.floor(random() * available.length)] : current;
+  return available[Math.floor(random() * available.length)] ?? current;
 }

@@ -23,7 +23,8 @@ const eslintConfig = defineConfig([
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "error",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+      "react-hooks/exhaustive-deps": "error",
     },
   },
 ]);
