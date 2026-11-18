@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     "Add your Runway API key to start generating custom animated pre-roll intros for your Plex, Jellyfin, or Emby media server.",
   alternates: {
-    canonical: "https://streamroll.vercel.app/setup",
+    canonical: "https://streamroll.joekarlsson.com/setup",
   },
   robots: { index: false, follow: true },
   openGraph: {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: "Get started — StreamRoll",
     description:
       "Add your Runway API key to start generating custom animated pre-roll intros for your media server.",
-    url: "https://streamroll.vercel.app/setup",
+    url: "https://streamroll.joekarlsson.com/setup",
   },
   twitter: {
     ...baseTwitter,
@@ -26,8 +26,8 @@ const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "StreamRoll", item: "https://streamroll.vercel.app" },
-    { "@type": "ListItem", position: 2, name: "Get started", item: "https://streamroll.vercel.app/setup" },
+    { "@type": "ListItem", position: 1, name: "StreamRoll", item: "https://streamroll.joekarlsson.com" },
+    { "@type": "ListItem", position: 2, name: "Get started", item: "https://streamroll.joekarlsson.com/setup" },
   ],
 };
 

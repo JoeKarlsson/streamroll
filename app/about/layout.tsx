@@ -6,13 +6,13 @@ export const metadata: Metadata = {
   description:
     "Artist statement for StreamRoll, which makes a Netflix-style intro for your own Plex, Jellyfin or Emby server from its name.",
   alternates: {
-    canonical: "https://streamroll.vercel.app/about",
+    canonical: "https://streamroll.joekarlsson.com/about",
   },
   openGraph: {
     ...baseOpenGraph,
     title: "About — StreamRoll",
     description: "Artist statement for StreamRoll, Netflix-style intros for your own media server.",
-    url: "https://streamroll.vercel.app/about",
+    url: "https://streamroll.joekarlsson.com/about",
     type: "article",
   },
   twitter: {
@@ -26,8 +26,8 @@ const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "StreamRoll", item: "https://streamroll.vercel.app" },
-    { "@type": "ListItem", position: 2, name: "About", item: "https://streamroll.vercel.app/about" },
+    { "@type": "ListItem", position: 1, name: "StreamRoll", item: "https://streamroll.joekarlsson.com" },
+    { "@type": "ListItem", position: 2, name: "About", item: "https://streamroll.joekarlsson.com/about" },
   ],
 };
 

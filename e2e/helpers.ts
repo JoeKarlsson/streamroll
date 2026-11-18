@@ -4,7 +4,7 @@ import { GEN_SESSION_KEY } from "../lib/genSession";
 
 export const ROUTES = ["/", "/about", "/how-it-works", "/setup"] as const;
 export const INDEXABLE_ROUTES = ["/", "/about", "/how-it-works"] as const;
-export const SITE = "https://streamroll.vercel.app";
+export const SITE = "https://streamroll.joekarlsson.com";
 
 // Plausible is proxied through /js/* and /api/event; tests must never send it pageviews.
 const ANALYTICS = /^\/(js\/[^/]+\.js|api\/event)$/;

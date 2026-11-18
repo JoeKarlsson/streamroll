@@ -43,7 +43,7 @@ describe("tweetShareUrl", () => {
 
   it("includes default app URL when not provided", () => {
     const url = tweetShareUrl("Emby");
-    expect(decodeURIComponent(url)).toContain("streamroll.vercel.app");
+    expect(decodeURIComponent(url)).toContain("streamroll.joekarlsson.com");
   });
 
   it("uses a custom app URL when provided", () => {

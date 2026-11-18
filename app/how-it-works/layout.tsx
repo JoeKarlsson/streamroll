@@ -6,14 +6,14 @@ export const metadata: Metadata = {
   description:
     "A walkthrough of the Runway API pattern behind StreamRoll: textToImage chained into imageToVideo to produce custom animated pre-roll intros.",
   alternates: {
-    canonical: "https://streamroll.vercel.app/how-it-works",
+    canonical: "https://streamroll.joekarlsson.com/how-it-works",
   },
   openGraph: {
     ...baseOpenGraph,
     title: "How it's built — StreamRoll",
     description:
       "A walkthrough of the Runway API pattern behind StreamRoll: textToImage chained into imageToVideo.",
-    url: "https://streamroll.vercel.app/how-it-works",
+    url: "https://streamroll.joekarlsson.com/how-it-works",
     type: "article",
   },
   twitter: {
@@ -82,8 +82,8 @@ const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "StreamRoll", item: "https://streamroll.vercel.app" },
-    { "@type": "ListItem", position: 2, name: "How it's built", item: "https://streamroll.vercel.app/how-it-works" },
+    { "@type": "ListItem", position: 1, name: "StreamRoll", item: "https://streamroll.joekarlsson.com" },
+    { "@type": "ListItem", position: 2, name: "How it's built", item: "https://streamroll.joekarlsson.com/how-it-works" },
   ],
 };
 

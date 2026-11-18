@@ -26,16 +26,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "StreamRoll — AI Streaming Intros",
   description,
-  metadataBase: new URL("https://streamroll.vercel.app"),
+  metadataBase: new URL("https://streamroll.joekarlsson.com"),
   alternates: {
-    canonical: "https://streamroll.vercel.app",
+    canonical: "https://streamroll.joekarlsson.com",
   },
   authors: [{ name: "Joe Karlsson", url: "https://joekarlsson.com" }],
   openGraph: {
     ...baseOpenGraph,
     title: "StreamRoll — AI Streaming Intros",
     description,
-    url: "https://streamroll.vercel.app",
+    url: "https://streamroll.joekarlsson.com",
   },
   twitter: {
     ...baseTwitter,
@@ -70,7 +70,7 @@ export default function RootLayout({
         {/* Served from this origin through the /js and /api/event rewrites in next.config.ts */}
         <script
           defer
-          data-domain="streamroll.vercel.app"
+          data-domain="streamroll.joekarlsson.com"
           data-api="/api/event"
           src="/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
         />

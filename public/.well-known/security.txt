@@ -1,4 +1,4 @@
 Contact: https://github.com/JoeKarlsson/streamroll/security/advisories/new
 Expires: 2027-11-18T00:00:00.000Z
 Preferred-Languages: en
-Canonical: https://streamroll.vercel.app/.well-known/security.txt
+Canonical: https://streamroll.joekarlsson.com/.well-known/security.txt

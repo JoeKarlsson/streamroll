@@ -10,7 +10,7 @@ export function WebAppJsonLd() {
           "@context": "https://schema.org",
           "@type": "WebApplication",
           name: "StreamRoll",
-          url: "https://streamroll.vercel.app",
+          url: "https://streamroll.joekarlsson.com",
           description: siteDescription,
           applicationCategory: "UtilityApplication",
           operatingSystem: "Web",

@@ -24,7 +24,7 @@ export const BUILDER = {
   linkedin: "https://www.linkedin.com/in/joekarlsson",
 } as const;
 
-export function tweetShareUrl(serviceName: string, appUrl = "https://streamroll.vercel.app") {
+export function tweetShareUrl(serviceName: string, appUrl = "https://streamroll.joekarlsson.com") {
   const text = `Just made my ${serviceName} streaming intro with @runwayml in 30 seconds ✨\n\nTry it yourself →`;
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(appUrl)}&hashtags=RunwayML,AI,Plex`;
 }

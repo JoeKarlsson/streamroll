@@ -1,6 +1,6 @@
 # StreamRoll
 
-[![Website](https://img.shields.io/badge/website-streamroll.vercel.app-ff4fd8)](https://streamroll.vercel.app)
+[![Website](https://img.shields.io/badge/website-streamroll.joekarlsson.com-ff4fd8)](https://streamroll.joekarlsson.com)
 [![CI](https://github.com/JoeKarlsson/streamroll/actions/workflows/ci.yml/badge.svg)](https://github.com/JoeKarlsson/streamroll/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -11,7 +11,7 @@ a short video before every movie too. StreamRoll makes yours from your server's
 name. There's no account and nothing to pay me, and it hands you the code that
 made your clip, so you can make the next one without my site.
 
-[Try it at streamroll.vercel.app](https://streamroll.vercel.app) ·
+[Try it at streamroll.joekarlsson.com](https://streamroll.joekarlsson.com) ·
 [Read the full statement](https://www.joekarlsson.com/work/streamroll/)
 
 ## Quick start

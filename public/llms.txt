@@ -32,11 +32,11 @@ Netflix/Prestige, Cinematic, Retro (80s neon), Futuristic, Minimal, Horror, Anim
 
 ## Pages
 
-- [Home](https://streamroll.vercel.app): The main generator — enter a name, pick a style, generate and download.
-- [How it's built](https://streamroll.vercel.app/how-it-works): Technical walkthrough of the Runway API chaining pattern.
-- [About](https://streamroll.vercel.app/about): Artist statement — why StreamRoll exists and what it makes.
-- [How it's built, as Markdown](https://streamroll.vercel.app/how-it-works.md): The same walkthrough as plain Markdown (also served at /how-it-works with Accept: text/markdown).
-- [Setup](https://streamroll.vercel.app/setup): Add your Runway API key to get started.
+- [Home](https://streamroll.joekarlsson.com): The main generator — enter a name, pick a style, generate and download.
+- [How it's built](https://streamroll.joekarlsson.com/how-it-works): Technical walkthrough of the Runway API chaining pattern.
+- [About](https://streamroll.joekarlsson.com/about): Artist statement — why StreamRoll exists and what it makes.
+- [How it's built, as Markdown](https://streamroll.joekarlsson.com/how-it-works.md): The same walkthrough as plain Markdown (also served at /how-it-works with Accept: text/markdown).
+- [Setup](https://streamroll.joekarlsson.com/setup): Add your Runway API key to get started.
 
 ## Tech stack
 
