@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS } from "@/lib/links";
@@ -9,179 +9,202 @@ const STEPS = [
   {
     n: 1,
     title: "Create a Runway account",
-    body: "Head to the Runway developer portal and sign up. Note: Runway no longer offers free trial credits — you will need to purchase credits or add a payment method before generating.",
-    cta: { label: "Sign up at dev.runwayml.com →", href: LINKS.runwaySignup },
+    body: "Sign up on the Runway developer portal. The account and API key are free, but generating uses paid Runway credits (Runway no longer gives free trial credits), so buy credits or add a payment method first.",
+    cta: { label: "Sign up at dev.runwayml.com", href: LINKS.runwaySignup },
   },
   {
     n: 2,
     title: "Generate an API key",
-    body: 'Once logged in, go to Settings, then API Keys, and click "Create new key". Give it any name like "StreamRoll".',
-    cta: { label: "Open API Keys →", href: LINKS.runwayApiKeys },
+    body: "Once logged in, go to Settings, then API Keys, and click “Create new key”. Give it any name, like “StreamRoll”.",
+    cta: { label: "Open API keys", href: LINKS.runwayApiKeys },
   },
   {
     n: 3,
     title: "Paste your key below",
-    body: "Your key stays in your browser only. It is never stored on a server. Each video you generate uses credits from your own account.",
+    body: "No StreamRoll account needed. Each intro you generate uses credits from your own Runway account.",
     cta: null,
   },
+];
+
+// Every style drawn on a canvas skips Runway image generation (CANVAS_STYLES in app/page.tsx).
+const CANVAS_STYLE_NAMES = "Netflix, Minimal, Adult Swim, DreamWorks, TriStar, Hanna-Barbera, Columbia, MST3K, Emergency Broadcast";
+
+// Mirrors IMAGE_MODELS and VIDEO_MODELS in app/page.tsx.
+const CREDIT_COSTS = [
+  { item: "Title card, Gen4 Image", cost: "~30 cr" },
+  { item: "Title card, Gen4 Turbo", cost: "~15 cr" },
+  { item: "Title card, GPT Image 2", cost: "~40 cr" },
+  { item: "Title card, Gemini Image 3 Pro", cost: "~20 cr" },
+  { item: "Title card, Gemini 2.5 Flash", cost: "~10 cr" },
+  { item: `Title card, canvas styles (${CANVAS_STYLE_NAMES})`, cost: "0 cr" },
+  { item: "2s video, Gen4 Turbo", cost: "10 cr" },
+  { item: "5s video, Gen4 Turbo", cost: "25 cr" },
+  { item: "5s video, Gen4.5", cost: "60 cr" },
+  { item: "10s video, Gen4 Turbo", cost: "50 cr" },
 ];
 
 export default function SetupPage() {
   const { key, saveKey, clearKey, loaded } = useApiKey();
   const [input, setInput] = useState("");
   const [saved, setSaved] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const keyInputRef = useRef<HTMLInputElement>(null);
+  const savedKeyRef = useRef<HTMLDivElement>(null);
+  // Set by Save and Remove so focus lands on the element that replaces the one just used.
+  const focusAfterChange = useRef<"saved" | "input" | null>(null);
 
-  function handleSave() {
+  const hasKey = loaded && !!key;
+
+  useEffect(() => {
+    if (focusAfterChange.current === "saved") savedKeyRef.current?.focus();
+    if (focusAfterChange.current === "input") keyInputRef.current?.focus();
+    focusAfterChange.current = null;
+  }, [hasKey]);
+
+  function handleSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (!input.trim()) return;
-    saveKey(input.trim());
+    focusAfterChange.current = "saved";
+    saveKey(input.trim(), { remember });
     setSaved(true);
     setInput("");
   }
 
   function handleClear() {
+    focusAfterChange.current = "input";
     clearKey();
     setSaved(false);
   }
 
-  const hasKey = loaded && !!key;
-
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center px-4 py-16">
-      <div className="w-full max-w-xl">
+    <main id="main-content" className="flex-1 bg-background text-white flex flex-col items-center pt-10 pb-16">
+      <div className="w-full max-w-2xl px-4">
+        <h1 className="text-3xl font-bold mb-3">Get started with Runway</h1>
+        <p className="max-w-[65ch] text-neutral-400 leading-relaxed mb-12">
+          StreamRoll uses the{" "}
+          <a
+            href={LINKS.runwayDocs}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white underline underline-offset-2 hover:text-neutral-300"
+          >
+            Runway API
+          </a>{" "}
+          to generate your intros. You’ll need your own API key; each generation uses credits from your account.
+        </p>
 
-        {/* Back */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-white transition-colors mb-10"
-        >
-          ← Back to StreamRoll
-        </Link>
-
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Get started with Runway</h1>
-          <p className="text-neutral-400">
-            StreamRoll uses the{" "}
-            <a
-              href="https://docs.dev.runwayml.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white underline underline-offset-2 hover:text-neutral-300"
-            >
-              Runway API
-            </a>{" "}
-            to generate your intros. You&apos;ll need your own API key; each generation uses
-            credits from your account.
-          </p>
-        </div>
-
-        {/* Steps */}
-        <div className="space-y-6 mb-10">
+        <ol className="list-decimal pl-6 space-y-10 mb-12 marker:text-neutral-500 marker:font-semibold">
           {STEPS.map((step) => (
-            <div key={step.n} className="flex gap-4">
-              <div className="shrink-0 w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-400">
-                {step.n}
-              </div>
-              <div className="flex-1 pt-0.5">
-                <div className="font-medium mb-1">{step.title}</div>
-                <p className="text-sm text-neutral-400 leading-relaxed mb-3">{step.body}</p>
-                {step.cta && (
-                  <a
-                    href={step.cta.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-white bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-lg transition-colors"
-                  >
-                    {step.cta.label}
-                  </a>
-                )}
+            <li key={step.n} className="min-w-0">
+              <h2 className="font-semibold mb-1">{step.title}</h2>
+              <p className="max-w-[65ch] text-neutral-400 leading-relaxed mb-3">{step.body}</p>
+              {step.cta && (
+                <a
+                  href={step.cta.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center min-h-11 text-sm text-white bg-neutral-800 hover:bg-neutral-700 px-4 rounded-lg transition-colors"
+                >
+                  {step.cta.label}
+                </a>
+              )}
 
-                {/* Key input on step 3 */}
-                {step.n === 3 && loaded && (
-                  <div className="space-y-3">
-                    {hasKey ? (
-                      <div className="flex items-center gap-3 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3">
-                        <span className="text-green-400 text-sm">✓ API key saved</span>
-                        <span className="flex-1 text-neutral-600 text-sm font-mono truncate">
-                          {key.slice(0, 12)}••••••••••••••••
-                        </span>
-                        <button
-                          onClick={handleClear}
-                          className="text-xs text-neutral-500 hover:text-red-400 transition-colors shrink-0"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
+              {step.n === 3 && loaded && (
+                <div className="space-y-3">
+                  {hasKey ? (
+                    <div
+                      ref={savedKeyRef}
+                      tabIndex={-1}
+                      className="flex items-center gap-3 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+                    >
+                      <span className="text-green-400 text-sm whitespace-nowrap">✓ API key saved</span>
+                      <span className="flex-1 min-w-0 text-neutral-500 text-sm truncate">
+                        {key.slice(0, 12)}••••••••••••••••
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleClear}
+                        className="-my-3 -mr-3 min-h-11 px-3 text-sm text-neutral-400 hover:text-red-400 transition-colors shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSave} className="space-y-2">
                       <div className="flex gap-2">
                         <input
+                          ref={keyInputRef}
                           type="password"
                           value={input}
                           onChange={(e) => { setInput(e.target.value); setSaved(false); }}
-                          placeholder="key_••••••••••••••••••••••"
+                          placeholder="key_…"
                           aria-label="Runway API key"
                           aria-describedby="api-key-privacy"
                           autoComplete="off"
-                          className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder:text-neutral-700 focus:outline-none focus:border-neutral-400"
-                          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+                          className="flex-1 min-w-0 min-h-11 bg-neutral-900 border border-neutral-700 rounded-lg px-4 text-white text-base sm:text-sm placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
                         />
                         <button
-                          onClick={handleSave}
+                          type="submit"
                           disabled={!input.trim()}
-                          className="bg-white text-black font-semibold px-5 py-2.5 rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm shrink-0"
+                          className="min-h-11 bg-white text-black font-semibold px-5 rounded-lg hover:bg-neutral-200 transition-[color,background-color,opacity,scale] duration-75 ease-out enabled:active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed text-sm shrink-0"
                         >
                           Save
                         </button>
                       </div>
-                    )}
+                      <label className="flex items-center gap-2 min-h-11 w-fit cursor-pointer text-sm text-neutral-300">
+                        <input
+                          type="checkbox"
+                          checked={remember}
+                          onChange={(e) => setRemember(e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        Remember this key on this device
+                      </label>
+                    </form>
+                  )}
 
-                    {saved && (
-                      <p className="text-sm text-green-400">
-                        Key saved! Your browser is ready to generate.
-                      </p>
-                    )}
+                  <p role="status" className="text-sm text-green-400 empty:hidden">
+                    {saved ? "Key saved. Your browser is ready to generate." : ""}
+                  </p>
 
-                    <p id="api-key-privacy" className="text-xs text-neutral-600">
-                      Your key is stored only in your browser&apos;s localStorage and sent directly
-                      to Runway&apos;s API. It is never logged or stored on any server.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+                  <p id="api-key-privacy" className="max-w-[65ch] text-sm text-neutral-500">
+                    Your key stays in your browser. Each request passes it through this site’s server to Runway, which
+                    never saves or logs it. Unchecked, the key is forgotten when you close this tab.
+                  </p>
+                </div>
+              )}
+            </li>
           ))}
-        </div>
+        </ol>
 
-        {/* CTA */}
         {hasKey && (
           <Link
             href="/"
-            className="w-full flex items-center justify-center bg-white text-black font-semibold py-3 rounded-lg hover:bg-neutral-200 transition-colors text-base"
+            className="w-full flex items-center justify-center min-h-11 bg-white text-black font-semibold py-3 rounded-lg hover:bg-neutral-200 transition-colors text-base"
           >
-            Start generating →
+            Start generating
           </Link>
         )}
 
-        {/* Pricing note */}
-        <div className="mt-10 p-4 rounded-lg border border-neutral-800 bg-neutral-900/50 text-sm text-neutral-400 space-y-1">
-          <div className="font-medium text-neutral-300">Estimated credit costs</div>
-          <div className="flex justify-between"><span>Title card (Gen4 Image)</span><span className="text-neutral-500">~30 cr</span></div>
-          <div className="flex justify-between"><span>Title card (Gen4 Image Turbo)</span><span className="text-neutral-500">~15 cr</span></div>
-          <div className="flex justify-between"><span>Title card (Gemini 2.5 Flash)</span><span className="text-neutral-500">~10 cr</span></div>
-          <div className="flex justify-between text-neutral-600"><span>canvas styles (Adult Swim, Minimal, Prestige)</span><span>0 cr</span></div>
-          <div className="mt-2 flex justify-between"><span>2s video (Gen4 Turbo)</span><span className="text-neutral-500">10 cr</span></div>
-          <div className="flex justify-between"><span>5s video (Gen4 Turbo)</span><span className="text-neutral-500">25 cr</span></div>
-          <div className="flex justify-between"><span>5s video (Gen4.5)</span><span className="text-neutral-500">60 cr</span></div>
-          <div className="flex justify-between"><span>10s video (Gen4 Turbo)</span><span className="text-neutral-500">50 cr</span></div>
+        <section aria-labelledby="credit-costs-heading" className="mt-12">
+          <h2 id="credit-costs-heading" className="font-semibold mb-3">Estimated credit costs</h2>
+          <dl className="grid grid-cols-[1fr_auto] gap-x-6 gap-y-2 text-sm text-neutral-400">
+            {CREDIT_COSTS.map((row) => (
+              <div key={row.item} className="contents">
+                <dt>{row.item}</dt>
+                <dd className="text-right whitespace-nowrap tabular-nums text-neutral-300">{row.cost}</dd>
+              </div>
+            ))}
+          </dl>
           <a
             href={LINKS.runwayPricing}
             target="_blank"
             rel="noopener noreferrer"
-            className="block pt-1 text-neutral-500 hover:text-neutral-300 underline underline-offset-2 transition-colors"
+            className="inline-flex items-center min-h-11 mt-2 text-sm text-neutral-400 hover:text-white underline underline-offset-2 transition-colors"
           >
-            Full pricing guide →
+            Runway’s full pricing guide
           </a>
-        </div>
+        </section>
       </div>
     </main>
   );

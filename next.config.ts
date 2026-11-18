@@ -16,14 +16,16 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
+      // 'unsafe-inline': Next streams page data in inline scripts, and nonces would force every page to render dynamically.
       // blob: needed for FFmpeg WASM module URLs; wasm-unsafe-eval needed to compile WASM
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} 'wasm-unsafe-eval' blob: https://plausible.joekarlsson.io`,
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} 'wasm-unsafe-eval' blob:`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",
       "media-src 'self' blob: https:",
-      // https: needed so fetchFile() can pull the generated video from Runway's CDN
-      "connect-src 'self' blob: https://plausible.joekarlsson.io https:",
+      // Runway serves generated images and videos from CloudFront; the browser fetches them to
+      // download and to mix audio. data: covers posters drawn on canvas or uploaded by the visitor.
+      "connect-src 'self' blob: data: https://*.cloudfront.net",
       "worker-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
@@ -32,33 +34,29 @@ const securityHeaders = [
   },
 ];
 
+const immutable = [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }];
+
 const nextConfig: NextConfig = {
+  // Plausible served from this origin, so ad blockers and the CSP treat it as first-party.
+  async rewrites() {
+    return [
+      { source: "/js/:file", destination: "https://plausible.joekarlsson.io/js/:file" },
+      { source: "/api/event", destination: "https://plausible.joekarlsson.io/api/event" },
+    ];
+  },
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: securityHeaders,
       },
-      {
-        source: "/ffmpeg/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-      {
-        source: "/examples/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-      {
-        source: "/logos/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-      {
-        source: "/opengraph-image.png",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-      {
-        source: "/icons/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
+      { source: "/ffmpeg/:path*", headers: immutable },
+      { source: "/examples/:path*", headers: immutable },
+      { source: "/previews/:path*", headers: immutable },
+      { source: "/studios/:path*", headers: immutable },
+      { source: "/logos/:path*", headers: immutable },
+      { source: "/og-image.jpg", headers: immutable },
+      { source: "/icons/:path*", headers: immutable },
     ];
   },
 };

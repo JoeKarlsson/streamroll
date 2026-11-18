@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { LINKS, BUILDER } from "@/lib/links";
 import { CodeBlock } from "./CodeBlock";
 
@@ -38,231 +37,143 @@ const videoUrl = videoTask.output[0];
 
 const INSTALL_CODE = `npm install @runwayml/sdk`;
 
+const PLATFORM_GUIDES = [
+  {
+    name: "Plex", slug: "plex", color: "#EBAF00",
+    steps: "Settings → Extras → Cinema Trailers → enable “Cinema Trailers” pre-roll, then place the .mp4 in your designated Extras folder.",
+    docs: "https://support.plex.tv/articles/202934883-cinema-trailers-extras/",
+    docsLabel: "Plex guide to Cinema Trailers and Extras",
+  },
+  {
+    name: "Jellyfin", slug: "jellyfin", color: "#00A4DC",
+    steps: "Jellyfin has no built-in pre-roll setting. Install an intros plugin from Dashboard → Plugins → Catalog, then point it at your .mp4 in the plugin’s settings. It plays before every movie.",
+    docs: "https://jellyfin.org/docs/general/server/plugins/",
+    docsLabel: "Jellyfin plugin docs",
+  },
+  {
+    name: "Emby", slug: "emby", color: "#52B54B",
+    steps: "Server Settings → Cinema Mode → Pre-Roll Videos → add the .mp4 file path. Toggle Cinema Mode on for playback sessions.",
+    docs: "https://emby.media/community/index.php?/topic/86649-pre-roll-videos/",
+    docsLabel: "Emby pre-roll community thread",
+  },
+];
+
+const H2_CLASS = "text-lg font-semibold text-white mb-2";
+const BODY_CLASS = "max-w-[65ch] text-neutral-400 leading-relaxed";
+const INLINE_LINK_CLASS = "text-neutral-300 hover:text-white underline underline-offset-2 transition-colors";
+
 export default function HowItWorksPage() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center px-4 py-16">
-      <div className="w-full max-w-2xl">
+    <main id="main-content" className="flex-1 bg-background text-white flex flex-col items-center pt-10 pb-16">
+      <div className="w-full max-w-2xl px-4">
+        <h1 className="text-3xl font-bold mb-3">How it’s built</h1>
+        <p className={`${BODY_CLASS} mb-12`}>
+          StreamRoll chains two Runway API calls: one to generate a title card, one to animate it into video. The whole
+          thing is <span className="text-white font-medium">about 20 lines of TypeScript</span>. Here’s exactly how it
+          works so you can build something similar.
+        </p>
 
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-white transition-colors mb-10"
-        >
-          ← Back to StreamRoll
-        </Link>
+        <ol className="list-decimal pl-6 space-y-14 marker:text-neutral-500 marker:font-semibold marker:text-lg">
+          <li className="min-w-0">
+            <h2 className={H2_CLASS}>Install the SDK</h2>
+            <p className={`${BODY_CLASS} mb-4`}>
+              Official SDKs for Node.js, Python and more. Read the{" "}
+              <a href={LINKS.runwaySDK} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>SDK docs</a>
+              {" "}or the{" "}
+              <a href={LINKS.runwayGitHub} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>SDK on GitHub</a>.
+            </p>
+            <CodeBlock code={INSTALL_CODE} lang="bash" />
+          </li>
 
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold tracking-tight mb-3">How it&apos;s built</h1>
-          <p className="text-neutral-400 leading-relaxed">
-            StreamRoll chains two Runway API calls: one to generate a title card,
-            one to animate it into video. The whole thing is{" "}
-            <span className="text-white font-medium">about 20 lines of TypeScript</span>.
-            Here&apos;s exactly how it works so you can build something similar.
-          </p>
-        </div>
+          <li className="min-w-0">
+            <h2 className={H2_CLASS}>Generate the title card</h2>
+            <p className={`${BODY_CLASS} mb-4`}>
+              <code className="text-neutral-300">gen4_image</code> turns a text prompt into a sharp 1920×1080 title
+              card. Cost: about 30 credits.
+            </p>
+            <CodeBlock code={IMAGE_CODE} lang="typescript" />
+          </li>
 
-        {/* Install */}
-        <section className="mb-10">
-          <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4">
-            1 · Install the SDK
-          </h2>
-          <CodeBlock code={INSTALL_CODE} lang="bash" />
-          <p className="mt-3 text-sm text-neutral-500">
-            Official SDKs for Node.js, Python, and more.{" "}
-            <a
-              href={LINKS.runwaySDK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-neutral-400 hover:text-white underline underline-offset-2 transition-colors"
-            >
-              SDK docs →
-            </a>
-            {" · "}
-            <a
-              href={LINKS.runwayGitHub}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-neutral-400 hover:text-white underline underline-offset-2 transition-colors"
-            >
-              SDK on GitHub →
-            </a>
-          </p>
-        </section>
+          <li className="min-w-0">
+            <h2 className={H2_CLASS}>Animate it into video</h2>
+            <p className={`${BODY_CLASS} mb-4`}>
+              Feed the image URL straight into <code className="text-neutral-300">gen4_turbo</code> image-to-video. The
+              two calls chain together: the output of step 1 is the input to step 2. Cost: 25 credits for 5 seconds.
+            </p>
+            <CodeBlock code={VIDEO_CODE} lang="typescript" />
+            <h3 className="font-semibold text-white mt-8 mb-2">The video is silent, so add music</h3>
+            <p className={`${BODY_CLASS} mb-4`}>
+              Runway generates video only. For a full cinematic intro, generate royalty-free music with{" "}
+              <a href="https://www.udio.com" target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>Udio</a>
+              {" "}or{" "}
+              <a href="https://suno.com" target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>Suno</a>,
+              then merge it in with ffmpeg:
+            </p>
+            <CodeBlock code={`ffmpeg -i intro.mp4 -i music.mp3 -shortest -c:v copy -map 0:v -map 1:a output.mp4`} lang="bash" />
+          </li>
 
-        {/* Image generation */}
-        <section className="mb-10">
-          <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-1">
-            2 · Generate the title card
-          </h2>
-          <p className="text-sm text-neutral-500 mb-4">
-            <code className="text-neutral-400">gen4_image</code> turns a text prompt into a sharp 1920×1080 title card.
-            Cost: ~8 credits.
-          </p>
-          <CodeBlock code={IMAGE_CODE} lang="typescript" />
-        </section>
-
-        {/* Video generation */}
-        <section className="mb-10">
-          <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-1">
-            3 · Animate it into video
-          </h2>
-          <p className="text-sm text-neutral-500 mb-4">
-            Feed the image URL directly into{" "}
-            <code className="text-neutral-400">gen4_turbo</code> image-to-video.
-            The two calls chain together: output of step 1 is input to step 2.
-            Cost: 25 credits for 5 seconds.
-          </p>
-          <CodeBlock code={VIDEO_CODE} lang="typescript" />
-        </section>
-
-        {/* Audio tip */}
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-5 mb-10">
-          <div className="font-semibold mb-1 text-sm">The video is silent: add music</div>
-          <p className="text-sm text-neutral-400 leading-relaxed mb-3">
-            Runway generates video only. For a full cinematic intro, generate royalty-free music with{" "}
-            <a href="https://www.udio.com" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-2 hover:text-neutral-300">Udio</a>
-            {" "}or{" "}
-            <a href="https://suno.com" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-2 hover:text-neutral-300">Suno</a>
-            , then merge with ffmpeg:
-          </p>
-          <CodeBlock code={`ffmpeg -i intro.mp4 -i music.mp3 -shortest -c:v copy -map 0:v -map 1:a output.mp4`} lang="bash" />
-        </div>
-
-        {/* That's it callout */}
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-5 mb-10">
-          <div className="font-semibold mb-1">That&apos;s it.</div>
-          <p className="text-sm text-neutral-400 leading-relaxed">
-            No ML infrastructure, no model hosting, no GPU management.
-            Two API calls and you have a broadcast-quality animated intro.
-            The same pattern works for product demo videos, social content,
-            e-commerce clips, social content, anything where you need to turn a static image into motion.
-          </p>
-        </div>
-
-        {/* Add to media server */}
-        <section className="mb-10">
-          <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-1">
-            4 · Add to your media server
-          </h2>
-          <p className="text-sm text-neutral-500 mb-3">
-            Download the .mp4 and drop it into Plex, Jellyfin, or Emby. Each platform has a pre-roll setting. Here&apos;s where to find it.
-          </p>
-          <div className="text-xs text-neutral-600 bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 mb-5">
-            <span className="text-neutral-400 font-medium">Pro tip:</span> Generate 3–5 variants with different styles and point your server at the whole folder. Plex, Jellyfin, and Emby all support random rotation, so you get a different intro every session.
-          </div>
-          <div className="space-y-3">
-            {[
-              {
-                name: "Plex", slug: "plex", color: "#EBAF00",
-                steps: "Settings → Extras → Cinema Trailers → enable \"Cinema Trailers\" pre-roll, then place the .mp4 in your designated Extras folder.",
-                docs: "https://support.plex.tv/articles/202934883-cinema-trailers-extras/",
-                docsLabel: "Cinema Trailers & Extras →",
-              },
-              {
-                name: "Jellyfin", slug: "jellyfin", color: "#00A4DC",
-                steps: "Dashboard → Administration → Pre-Roll Video → browse and upload your .mp4. It will play before every movie.",
-                docs: "https://jellyfin.org/docs/general/server/plugins/",
-                docsLabel: "Jellyfin Plugins docs →",
-              },
-              {
-                name: "Emby", slug: "emby", color: "#52B54B",
-                steps: "Server Settings → Cinema Mode → Pre-Roll Videos → add the .mp4 file path. Toggle Cinema Mode on for playback sessions.",
-                docs: "https://emby.media/community/index.php?/topic/86649-pre-roll-videos/",
-                docsLabel: "Pre-roll community thread →",
-              },
-            ].map((p) => (
-              <div key={p.name} className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/logos/${p.slug}.svg`} alt={p.name} width={16} height={16} loading="lazy" />
-                  <span className="text-sm font-semibold" style={{ color: p.color }}>{p.name}</span>
+          <li className="min-w-0">
+            <h2 className={H2_CLASS}>Add it to your media server</h2>
+            <p className={`${BODY_CLASS} mb-6`}>
+              Download the .mp4 and add it to Plex, Jellyfin or Emby as a pre-roll. Here’s where to find the setting.
+            </p>
+            <div className="space-y-8">
+              {PLATFORM_GUIDES.map((p) => (
+                <div key={p.name}>
+                  <h3 className="flex items-center gap-2 mb-2 font-semibold" style={{ color: p.color }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/logos/${p.slug}.svg`} alt="" width={16} height={16} loading="lazy" />
+                    {p.name}
+                  </h3>
+                  <p className={BODY_CLASS}>{p.steps}</p>
+                  <a
+                    href={p.docs}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-h-11 inline-flex items-center text-sm underline underline-offset-2 transition-opacity opacity-80 hover:opacity-100"
+                    style={{ color: p.color }}
+                  >
+                    {p.docsLabel}
+                  </a>
                 </div>
-                <p className="text-sm text-neutral-400 leading-relaxed mb-2">{p.steps}</p>
-                <a
-                  href={p.docs}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs transition-colors hover:opacity-100 opacity-70"
-                  style={{ color: p.color }}
-                >
-                  {p.docsLabel}
-                </a>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+            <p className={`${BODY_CLASS} mt-6`}>
+              <span className="text-neutral-300 font-medium">Pro tip:</span> generate 3–5 variants in different styles
+              and point your server at the whole folder. Plex, Emby and the Jellyfin intro plugins can rotate them at
+              random, so you get a different intro every session.
+            </p>
+          </li>
+        </ol>
 
-        {/* CTA */}
-        <section className="mb-12 space-y-3">
+        <section aria-label="Next steps" className="mt-14 space-y-3">
           <a
             href={LINKS.runwaySignup}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between w-full bg-white text-black font-semibold px-5 py-3.5 rounded-lg hover:bg-neutral-200 transition-colors"
+            className="flex items-center justify-center w-full min-h-11 bg-white text-black font-semibold px-5 py-3 rounded-lg hover:bg-neutral-200 transition-colors"
           >
-            <span>Get your free API key at dev.runwayml.com</span>
-            <span>→</span>
+            Get a Runway API key
           </a>
-          <a
-            href={LINKS.runwayDocs}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between w-full border border-neutral-700 text-neutral-300 px-5 py-3.5 rounded-lg hover:border-neutral-500 hover:text-white transition-colors"
-          >
-            <span>Browse the full API reference</span>
-            <span>→</span>
-          </a>
-          <a
-            href={LINKS.runwayCommunity}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between w-full border border-neutral-700 text-neutral-300 px-5 py-3.5 rounded-lg hover:border-neutral-500 hover:text-white transition-colors"
-          >
-            <span>Join the Runway developer community on Discord</span>
-            <span>→</span>
-          </a>
+          <p className="flex flex-wrap gap-x-6">
+            <a href={LINKS.runwayDocs} target="_blank" rel="noopener noreferrer" className={`min-h-11 inline-flex items-center ${INLINE_LINK_CLASS}`}>
+              Browse the full API reference
+            </a>
+            <a href={LINKS.runwayCommunity} target="_blank" rel="noopener noreferrer" className={`min-h-11 inline-flex items-center ${INLINE_LINK_CLASS}`}>
+              Join Runway’s developer Discord
+            </a>
+          </p>
         </section>
 
-        {/* Builder card */}
-        <div className="border-t border-neutral-800 pt-8">
-          <div className="text-xs text-neutral-600 mb-3 uppercase tracking-wider">Built by</div>
-          <div className="flex items-center justify-between">
-            <div>
-              <a href={BUILDER.website} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:text-neutral-300 transition-colors">{BUILDER.name}</a>
-              <div className="text-sm text-neutral-500 mt-0.5">
-                Developer Advocate · building tools that make APIs click
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <a
-                href={BUILDER.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-neutral-500 hover:text-white transition-colors"
-              >
-                𝕏
-              </a>
-              <a
-                href={BUILDER.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-neutral-500 hover:text-white transition-colors"
-              >
-                GitHub
-              </a>
-              <a
-                href={BUILDER.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-neutral-500 hover:text-white transition-colors"
-              >
-                LinkedIn
-              </a>
-            </div>
-          </div>
-        </div>
+        <p className={`${BODY_CLASS} mt-12`}>
+          Built by{" "}
+          <a href={BUILDER.website} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>{BUILDER.name}</a>,
+          a developer advocate building tools that make APIs click. Find Joe on{" "}
+          <a href={BUILDER.twitter} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS} aria-label="Joe on X">X</a>,{" "}
+          <a href={BUILDER.github} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>GitHub</a> and{" "}
+          <a href={BUILDER.linkedin} target="_blank" rel="noopener noreferrer" className={INLINE_LINK_CLASS}>LinkedIn</a>.
+        </p>
       </div>
     </main>
   );
 }
-
