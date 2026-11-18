@@ -11,7 +11,7 @@ import { track } from "@/lib/plausible";
 import { sleepUnlessAborted } from "@/lib/sleepUnlessAborted";
 import type { IntroSettings } from "./useIntroSettings";
 
-export const VIDEO_REVEAL_MS = 400;
+const VIDEO_REVEAL_MS = 400;
 
 /**
  * The generation run: poster (Runway, canvas or upload), the review step, the video task and its polling,

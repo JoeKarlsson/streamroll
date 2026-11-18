@@ -1,14 +1,14 @@
 import type { Duration, ImageModel, Style, Treatment, VideoModel } from "./runway";
 import { CANVAS_STYLES } from "./styles";
 
-export const DURATIONS: { value: Duration; label: string; est: string }[] = [
+const DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 2,  label: "2s",  est: "~20 sec" },
   { value: 4,  label: "4s",  est: "~30 sec" },
   { value: 5,  label: "5s",  est: "~35 sec" },
   { value: 10, label: "10s", est: "~60 sec" },
 ];
 
-export const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
+const VEO_DURATIONS: { value: Duration; label: string; est: string }[] = [
   { value: 4, label: "4s", est: "~45 sec" },
   { value: 6, label: "6s", est: "~60 sec" },
   { value: 8, label: "8s", est: "~75 sec" },

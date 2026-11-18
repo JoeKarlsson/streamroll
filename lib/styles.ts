@@ -126,14 +126,14 @@ export const INSPO: Preset[] = [
   { name: "VideoVault", style: "blockbuster", tagline: "Make it a Blockbuster night",      desc: "Video store nostalgia",    vibe: "Gold on navy blue, bold block lettering, late 80s" },
 ];
 
-export const SEASONAL: Preset[] = [
+const SEASONAL: Preset[] = [
   { name: "Fall", style: "cinematic",  tagline: "The season of great stories",  desc: "Fall",   vibe: "Warm amber tones, golden autumn light, falling leaves",  image: "/previews/fall.jpg",   customNotes: "autumn leaves drifting down, warm amber and orange hues, golden light through turning foliage, crisp air" },
   { name: "Winter", style: "minimal",    tagline: "Crisp nights, great stories",  desc: "Winter", vibe: "Icy blue-white palette, clean snowfall, minimalist",      image: "/previews/winter.jpg", customNotes: "winter frost and fresh snowfall, cool blue-white palette, clean icy crisp quiet atmosphere" },
   { name: "Spring", style: "anime",      tagline: "Where great stories bloom",    desc: "Spring", vibe: "Cherry blossoms, anime pastel colors, nature awakening",  image: "/previews/spring.jpg", customNotes: "blooming cherry blossoms, fresh spring morning light, pastel colors, nature awakening and renewal" },
   { name: "Summer", style: "epic",       tagline: "Blockbuster season is here",   desc: "Summer", vibe: "Bold bright energy, blazing golden sun, epic scale",       image: "/previews/summer.jpg", customNotes: "blazing summer sun high overhead, golden warm light, bold bright saturated energy, heat shimmer" },
 ];
 
-export const HOLIDAYS: Preset[] = [
+const HOLIDAYS: Preset[] = [
   { name: "Easter", style: "lofi",       tagline: "Where stories bloom",           desc: "Easter",           vibe: "Soft spring pastels, wildflowers, robin egg blue",         image: "/previews/easter.jpg",       customNotes: "sunrise spring morning, soft pastel wildflowers blooming, pale blue robin eggs, gentle birdsong warmth" },
   { name: "Mother's Day", style: "lofi",       tagline: "With love, always",              desc: "Mother's Day",     vibe: "Garden roses, warm golden morning light",                  image: "/previews/mothers-day.jpg",  customNotes: "fresh garden roses and soft lavender blooms, warm golden morning sunlight, heartfelt and tender" },
   { name: "Father's Day", style: "epic",       tagline: "Dad approved content",           desc: "Father's Day",     vibe: "Golden americana, amber summer afternoon",                  image: "/previews/fathers-day.jpg",  customNotes: "golden summer afternoon, classic americana warmth, amber light, the films he always wanted to share" },
@@ -149,7 +149,7 @@ export const HOLIDAYS: Preset[] = [
   { name: "Hanukkah", style: "minimal",    tagline: "Eight nights of great picks",    desc: "Hanukkah",         vibe: "Blue & silver, glowing menorah, Festival of Lights",        image: "/previews/hanukkah.jpg",     customNotes: "menorah with glowing candles, blue and silver palette, Festival of Lights warmth" },
 ];
 
-export const STUDIOS: Preset[] = [
+const STUDIOS: Preset[] = [
   {
     name: "DreamWorks", style: "dreamworks", tagline: "Where dreams take flight",
     desc: "DreamWorks", vibe: "Boy fishing on a crescent moon above the clouds", image: "/studios/thumbs/dreamworks.webp",

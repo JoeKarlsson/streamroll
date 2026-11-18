@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { GEN_SESSION_KEY } from "../lib/genSession";
 
 export const ROUTES = ["/", "/about", "/how-it-works", "/setup"] as const;
 export const INDEXABLE_ROUTES = ["/", "/about", "/how-it-works"] as const;
@@ -9,7 +10,7 @@ export const SITE = "https://streamroll.vercel.app";
 const ANALYTICS = /^\/(js\/[^/]+\.js|api\/event)$/;
 const isAnalytics = (url: string) => ANALYTICS.test(new URL(url).pathname);
 
-export async function blockAnalytics(page: Page) {
+async function blockAnalytics(page: Page) {
   await page.route((url) => isAnalytics(url.href), (route) => route.abort());
 }
 
@@ -84,8 +85,7 @@ export async function fileInputsReachedByTab(page: Page) {
   return { reached: reached.size, total };
 }
 
-// Same key and shape app/page.tsx persists; fixture media come from public/examples.
-const GEN_STATE_KEY = "streamroll_gen_state";
+// The shape hooks/useGeneration persists; fixture media come from public/examples.
 export const doneState = {
   step: "done",
   imageUrl: "/examples/hero-poster.webp",
@@ -104,7 +104,7 @@ export const doneState = {
 export async function seed(page: Page, state: object) {
   await page.addInitScript(
     ([key, value]) => sessionStorage.setItem(key, value),
-    [GEN_STATE_KEY, JSON.stringify(state)] as const,
+    [GEN_SESSION_KEY, JSON.stringify(state)] as const,
   );
 }
 

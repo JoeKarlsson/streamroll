@@ -26,10 +26,10 @@ const STEPS = [
   },
 ];
 
-// Every style drawn on a canvas skips Runway image generation (CANVAS_STYLES in app/page.tsx).
+// Every style drawn on a canvas skips Runway image generation (CANVAS_STYLES in lib/styles.ts).
 const CANVAS_STYLE_NAMES = "Netflix, Minimal, Adult Swim, DreamWorks, TriStar, Hanna-Barbera, Columbia, MST3K, Emergency Broadcast";
 
-// Mirrors IMAGE_MODELS and VIDEO_MODELS in app/page.tsx.
+// Mirrors IMAGE_MODELS and VIDEO_MODELS in lib/models.ts.
 const CREDIT_COSTS = [
   { item: "Title card, Gen4 Image", cost: "~30 cr" },
   { item: "Title card, Gen4 Turbo", cost: "~15 cr" },

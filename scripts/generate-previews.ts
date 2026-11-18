@@ -4,7 +4,7 @@
 // Re-run safely — skips files that already exist unless you pass --force.
 
 import RunwayML from "@runwayml/sdk";
-import { buildPrompts } from "../lib/runway";
+import { buildPrompts, type Style } from "../lib/runway";
 import { writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 
@@ -17,7 +17,7 @@ if (!API_KEY) {
 const force = process.argv.includes("--force");
 const client = new RunwayML({ apiKey: API_KEY, timeout: 120_000 });
 
-type Job = { key: string; name: string; style: string; tagline: string; customNotes?: string; rawPrompt?: string };
+type Job = { key: string; name: string; style: Style; tagline: string; customNotes?: string; rawPrompt?: string };
 
 const JOBS: Job[] = [
   // Seasonal
@@ -44,9 +44,6 @@ const JOBS: Job[] = [
     rawPrompt: "Classic SMPTE television color bars test pattern filling the upper two-thirds of the frame: seven precise vertical bands in exact left-to-right order — white, yellow, cyan, green, magenta, red, blue — with sharp clean edges and vivid saturated color. Black section in the bottom third containing bold white monospace uppercase text. Faint CRT phosphor scan lines across the entire frame. Vintage broadcast television emergency test card aesthetic. Wide 16:9 composition. No people." },
   // Custom
   { key: "blank-slate",     name: "My Service",  style: "cinematic",  tagline: "" },
-  { key: "sci-fi",          name: "Sci-Fi",       style: "futuristic", tagline: "The future of entertainment" },
-  { key: "lo-fi",           name: "Lo-Fi",        style: "lofi",       tagline: "Slow down and stream" },
-  { key: "nature",          name: "Nature",       style: "nature",     tagline: "Stories from the wild" },
   // Styles
   { key: "style-prestige",   name: "Joeflix",     style: "prestige",   tagline: "Where stories come alive" },
   { key: "style-cinematic",  name: "Joeflix",     style: "cinematic",  tagline: "Where stories come alive" },
@@ -85,8 +82,7 @@ for (const job of JOBS) {
 
   console.log(`  gen   ${job.key}...`);
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { imagePrompt: builtPrompt } = buildPrompts({ name: job.name, style: job.style as any, tagline: job.tagline, duration: 5, treatment: "full-bleed", customNotes: job.customNotes, videoModel: "gen4_turbo" });
+    const { imagePrompt: builtPrompt } = buildPrompts({ name: job.name, style: job.style, tagline: job.tagline, duration: 5, treatment: "full-bleed", customNotes: job.customNotes, videoModel: "gen4_turbo" });
     const imagePrompt = job.rawPrompt ?? builtPrompt;
 
     const task = await client.textToImage

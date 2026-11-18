@@ -30,6 +30,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unused files, exports and dependencies
+        run: npm run knip
+
       - name: Test
         run: npm test -- --run
 

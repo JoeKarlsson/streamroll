@@ -34,18 +34,41 @@ stores it. `RUNWAYML_API_SECRET` (see `.env.example`) is only for the scripts in
 
 ## Development
 
+Use Node 22 or later (CI runs 22).
+
 ```bash
-npm test              # Vitest
+npm test -- --run     # Vitest unit tests (watch mode without --run)
 npm run test:coverage
-npm run lint
+npm run lint          # ESLint, no warnings allowed
+npx tsc --noEmit      # type check
+npm run knip          # unused files, exports and dependencies
 npm run build
+npm run test:e2e      # Playwright: builds, serves on port 4517, runs e2e/
+npm run test:links    # also checks every external link (slow, needs network)
 ```
 
-Tests live in `__tests__/` and cover the API routes, `lib/` and `hooks/`. The
-page and `app/AudioMixer.tsx` need browser APIs and aren't unit tested. Audio
-mixing runs client-side with FFmpeg.wasm, served from the gitignored
+The first `test:e2e` run needs a browser: `npx playwright install chromium`.
+Visual baselines in `e2e/visual.spec.ts-snapshots/` exist for macOS and Linux;
+CI renders the Linux ones in the Playwright container named in
+`.github/workflows/ci.yml`, whose tag must match the `@playwright/test`
+version.
+
+Unit tests live in `__tests__/` and cover the API routes, `lib/`, `hooks/` and
+the home page's restored-result screen; the e2e suite covers every route in a
+real browser, including each readiness-review fix by its R-number. The home
+page is a server component (`app/page.tsx`) around one client component,
+`app/_components/home/Studio.tsx`; shared components sit in
+`app/_components/`, hooks in `hooks/`, and style catalogs, model costs and the
+canvas title-card renderer in `lib/`.
+
+Audio mixing runs client-side with FFmpeg.wasm, served from the gitignored
 `public/ffmpeg/`. `npm run build` fills it; under `npm run dev`, run
 `node scripts/copy-ffmpeg.js` once first or the mixer has nothing to load.
+
+`scripts/manage-tasks.mjs` checks, cancels or downloads Runway tasks by ID, and
+`scripts/generate-previews.ts` (run with `npx tsx`) draws the preset preview
+images with Runway. It writes 1920×1080 PNGs, while the site serves 640×360
+JPEGs, so convert what it makes before committing; it spends credits.
 
 It deploys to Vercel with `vercel`. No environment variables are needed there,
 since every visitor brings their own key.

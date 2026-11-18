@@ -82,7 +82,6 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        {/* Home-page-only schema: belongs in app/page.tsx (Agent C's file); move it there at merge. */}
         <JsErrorTracker />
         <SiteHeader />
         {children}
