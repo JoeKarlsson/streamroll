@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render } from "@testing-library/react";
-import { JsErrorTracker, jsErrorMessage } from "@/app/JsErrorTracker";
+import { JsErrorTracker, jsErrorMessage } from "@/app/_components/JsErrorTracker";
 
 describe("JsErrorTracker", () => {
   afterEach(() => {

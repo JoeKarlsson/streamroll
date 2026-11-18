@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { baseOpenGraph, baseTwitter } from "@/lib/metadata";
-import { JsErrorTracker } from "./JsErrorTracker";
+import { JsErrorTracker } from "./_components/JsErrorTracker";
 import "./globals.css";
 import { siteDescription as description } from "@/lib/metadata";
-import { SiteHeader } from "./SiteHeader";
-import { SiteFooter } from "./SiteFooter";
+import { SiteHeader } from "./_components/SiteHeader";
+import { SiteFooter } from "./_components/SiteFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

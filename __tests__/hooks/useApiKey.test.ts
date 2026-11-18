@@ -107,3 +107,19 @@ describe("useApiKey", () => {
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 });
+
+describe("useApiKey shared across components", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it("a key saved in one component shows up in another", () => {
+    const form = renderHook(() => useApiKey());
+    const status = renderHook(() => useApiKey());
+    act(() => { form.result.current.saveKey("shared-key"); });
+    expect(status.result.current.key).toBe("shared-key");
+    act(() => { status.result.current.clearKey(); });
+    expect(form.result.current.key).toBe("");
+  });
+});

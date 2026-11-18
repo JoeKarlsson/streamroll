@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { NotFoundTracker } from "./NotFoundTracker";
+import { NotFoundTracker } from "./_components/NotFoundTracker";
 
 export const metadata: Metadata = {
   title: "Page not found — StreamRoll",

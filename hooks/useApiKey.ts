@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "runway_api_key";
 
@@ -10,33 +10,38 @@ type SaveKeyOptions = {
   remember?: boolean;
 };
 
-export function useApiKey() {
-  const [key, setKeyState] = useState<string>("");
-  const [loaded, setLoaded] = useState(false);
+// Every component using the hook shares one key: saving it in the form updates the status line in the hero too.
+const listeners = new Set<() => void>();
 
-  // Reading from storage on mount is the standard SSR-safe pattern.
-  useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect */
-    setKeyState(localStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(STORAGE_KEY) ?? "");
-    setLoaded(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+function readStoredKey() {
+  return localStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(STORAGE_KEY) ?? "";
+}
+
+// The server has no storage: null renders the "not loaded yet" state until the browser takes over.
+const readServerKey = () => null;
+
+function writeStoredKey(key: string, remember: boolean) {
+  localStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY);
+  if (key) (remember ? localStorage : sessionStorage).setItem(STORAGE_KEY, key);
+  listeners.forEach((listener) => listener());
+}
+
+export function useApiKey() {
+  const stored = useSyncExternalStore<string | null>(subscribe, readStoredKey, readServerKey);
 
   function saveKey(k: string, { remember = true }: SaveKeyOptions = {}) {
-    const trimmed = k.trim();
-    localStorage.removeItem(STORAGE_KEY);
-    sessionStorage.removeItem(STORAGE_KEY);
-    if (trimmed) {
-      (remember ? localStorage : sessionStorage).setItem(STORAGE_KEY, trimmed);
-    }
-    setKeyState(trimmed);
+    writeStoredKey(k.trim(), remember);
   }
 
   function clearKey() {
-    localStorage.removeItem(STORAGE_KEY);
-    sessionStorage.removeItem(STORAGE_KEY);
-    setKeyState("");
+    writeStoredKey("", true);
   }
 
-  return { key, saveKey, clearKey, loaded };
+  return { key: stored ?? "", saveKey, clearKey, loaded: stored !== null };
 }
