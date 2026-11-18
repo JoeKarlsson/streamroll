@@ -6,14 +6,14 @@ export const INDEXABLE_ROUTES = ["/", "/about", "/how-it-works"] as const;
 export const SITE = "https://streamroll.vercel.app";
 
 // Plausible is proxied through /js/* and /api/event; tests must never send it pageviews.
-const ANALYTICS = /\/(js\/[^/]+\.js|api\/event)(\?|$)/;
-export const isAnalytics = (url: string) => ANALYTICS.test(new URL(url).pathname);
+const ANALYTICS = /^\/(js\/[^/]+\.js|api\/event)$/;
+const isAnalytics = (url: string) => ANALYTICS.test(new URL(url).pathname);
 
 export async function blockAnalytics(page: Page) {
   await page.route((url) => isAnalytics(url.href), (route) => route.abort());
 }
 
-// Nothing may reach Runway: every /api route except the blocked analytics one is answered here or fails the test.
+// Nothing may reach Runway: the Runway-backed /api routes get a 500 here, and each call is recorded in `posted`.
 export async function blockApi(page: Page, posted: string[] = []) {
   await page.route(/\/api\/(image|upload|video)(\/|\?|$)/, (route) => {
     posted.push(`${route.request().method()} ${new URL(route.request().url()).pathname}`);
