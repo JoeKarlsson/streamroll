@@ -27,4 +27,16 @@ describe("SetupPage key form", () => {
     expect(localStorage.getItem("runway_api_key")).toBeNull();
     expect(document.activeElement).toBe(screen.getByLabelText("Runway API key"));
   });
+
+  it("keeps the key for this tab only when Remember is unchecked", async () => {
+    sessionStorage.clear();
+    const user = userEvent.setup();
+    render(<SetupPage />);
+
+    await user.click(await screen.findByLabelText("Remember this key on this device"));
+    await user.type(screen.getByLabelText("Runway API key"), "key_abc123{Enter}");
+
+    expect(localStorage.getItem("runway_api_key")).toBeNull();
+    expect(sessionStorage.getItem("runway_api_key")).toBe("key_abc123");
+  });
 });

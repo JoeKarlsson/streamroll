@@ -47,6 +47,7 @@ export default function SetupPage() {
   const { key, saveKey, clearKey, loaded } = useApiKey();
   const [input, setInput] = useState("");
   const [saved, setSaved] = useState(false);
+  const [remember, setRemember] = useState(true);
   const keyInputRef = useRef<HTMLInputElement>(null);
   const savedKeyRef = useRef<HTMLDivElement>(null);
   // Set by Save and Remove so focus lands on the element that replaces the one just used.
@@ -64,7 +65,7 @@ export default function SetupPage() {
     e.preventDefault();
     if (!input.trim()) return;
     focusAfterChange.current = "saved";
-    saveKey(input.trim());
+    saveKey(input.trim(), { remember });
     setSaved(true);
     setInput("");
   }
@@ -129,25 +130,36 @@ export default function SetupPage() {
                       </button>
                     </div>
                   ) : (
-                    <form onSubmit={handleSave} className="flex gap-2">
-                      <input
-                        ref={keyInputRef}
-                        type="password"
-                        value={input}
-                        onChange={(e) => { setInput(e.target.value); setSaved(false); }}
-                        placeholder="key_…"
-                        aria-label="Runway API key"
-                        aria-describedby="api-key-privacy"
-                        autoComplete="off"
-                        className="flex-1 min-w-0 min-h-11 bg-neutral-900 border border-neutral-700 rounded-lg px-4 text-white text-base sm:text-sm placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!input.trim()}
-                        className="min-h-11 bg-white text-black font-semibold px-5 rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm shrink-0"
-                      >
-                        Save
-                      </button>
+                    <form onSubmit={handleSave} className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          ref={keyInputRef}
+                          type="password"
+                          value={input}
+                          onChange={(e) => { setInput(e.target.value); setSaved(false); }}
+                          placeholder="key_…"
+                          aria-label="Runway API key"
+                          aria-describedby="api-key-privacy"
+                          autoComplete="off"
+                          className="flex-1 min-w-0 min-h-11 bg-neutral-900 border border-neutral-700 rounded-lg px-4 text-white text-base sm:text-sm placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!input.trim()}
+                          className="min-h-11 bg-white text-black font-semibold px-5 rounded-lg hover:bg-neutral-200 transition-[color,background-color,opacity,scale] duration-75 ease-out enabled:active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed text-sm shrink-0"
+                        >
+                          Save
+                        </button>
+                      </div>
+                      <label className="flex items-center gap-2 min-h-11 w-fit cursor-pointer text-sm text-neutral-300">
+                        <input
+                          type="checkbox"
+                          checked={remember}
+                          onChange={(e) => setRemember(e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        Remember this key on this device
+                      </label>
                     </form>
                   )}
 
@@ -157,7 +169,7 @@ export default function SetupPage() {
 
                   <p id="api-key-privacy" className="max-w-[65ch] text-sm text-neutral-500">
                     Your key stays in your browser. Each request passes it through this site’s server to Runway, which
-                    never saves or logs it.
+                    never saves or logs it. Unchecked, the key is forgotten when you close this tab.
                   </p>
                 </div>
               )}
