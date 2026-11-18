@@ -2031,7 +2031,7 @@ export default function Home() {
                           onChange={e => { setCancelTaskId(e.target.value); setCancelMsg(null); }}
                           placeholder="Paste task ID to cancel…"
                           aria-label="Runway task ID to cancel"
-                          className={`${INPUT_CLASS} flex-1 min-w-0 bg-neutral-800`}
+                          className={`${INPUT_CLASS} flex-1 min-w-0`}
                         />
                         <button
                           type="button"
