@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   APIConnectionError, APIConnectionTimeoutError, APIError, TaskFailedError, TaskTimedOutError,
 } from "@runwayml/sdk";
-import { classifyRunwayError } from "@/lib/runwayError";
+import { classifyRunwayError, OUT_OF_CREDITS_MESSAGE } from "@/lib/runwayError";
 
 const apiError = (status: number, message: string) => APIError.generate(status, { error: message }, message, new Headers());
 const failedTask = (failureCode?: string) =>
@@ -32,5 +32,19 @@ describe("classifyRunwayError", () => {
     expect(classifyRunwayError(failedTask("ASSET.INVALID"), "fallback")).toEqual({
       status: 502, kind: "runway_failed", code: "ASSET.INVALID", error: "Task failed (ASSET.INVALID)",
     });
+  });
+
+  // Runway's real body, as the SDK builds it from the HTTP response (message param undefined).
+  const runwayBody = (status: number, error: string) =>
+    APIError.generate(status, { error, docUrl: "https://docs.dev.runwayml.com/api" }, undefined, new Headers());
+
+  it("tells the visitor plainly that their Runway account is out of credits", () => {
+    expect(classifyRunwayError(runwayBody(400, "You do not have enough credits to run this task."), "fallback")).toEqual({
+      status: 400, kind: "credits", error: OUT_OF_CREDITS_MESSAGE,
+    });
+  });
+
+  it("shows Runway's own error text, not the status and raw JSON", () => {
+    expect(classifyRunwayError(runwayBody(400, "promptText is too long"), "fallback").error).toBe("promptText is too long");
   });
 });

@@ -6,6 +6,15 @@ interface ClassifiedError extends ApiErrorBody {
   status: number;
 }
 
+// Each visitor brings their own Runway key, so an empty balance is theirs to top up.
+export const OUT_OF_CREDITS_MESSAGE =
+  "Your Runway account is out of credits. Add credits in the Runway developer portal (dev.runwayml.com), then try again.";
+
+function runwayErrorText(body: unknown): string | undefined {
+  const text = (body as { error?: unknown } | null | undefined)?.error;
+  return typeof text === "string" && text.trim() ? text : undefined;
+}
+
 /**
  * Maps a Runway SDK error to the HTTP status and kind our API returns: Runway's own 4xx passes through,
  * an upstream outage is 502, a timeout is 504, and a moderation rejection is 422.
@@ -23,10 +32,18 @@ export function classifyRunwayError(e: unknown, fallbackMessage: string): Classi
   }
   if (e instanceof APIConnectionError) return { status: 502, kind: "network", error };
   if (e instanceof APIError && e.status !== undefined) {
-    // Runway reports an empty balance as a 400 whose message talks about credits.
-    const kind: ErrorKind = /credit/i.test(error) && e.status < 500 ? "credits" : kindForHttpStatus(e.status);
+    // Runway's error body is {"error": "...", "docUrl": "..."} (https://docs.dev.runwayml.com/errors/errors/).
+    // The SDK only looks for a `message` field, so e.message is the status plus the raw JSON; use Runway's own text.
+    const runwayMessage = runwayErrorText(e.error) ?? error;
+    // Runway reports an empty balance as a 400: "You do not have enough credits to run this task."
+    const credits = /credit/i.test(runwayMessage) && e.status < 500;
+    const kind: ErrorKind = credits ? "credits" : kindForHttpStatus(e.status);
     // Runway's 502/503 mean it is shedding load; we pass that on as a bad gateway, keeping 504 as a timeout.
-    return { status: e.status === 504 ? 504 : e.status >= 500 ? 502 : e.status, kind, error };
+    return {
+      status: e.status === 504 ? 504 : e.status >= 500 ? 502 : e.status,
+      kind,
+      error: credits ? OUT_OF_CREDITS_MESSAGE : runwayMessage,
+    };
   }
   return { status: 500, kind: "other", error };
 }
