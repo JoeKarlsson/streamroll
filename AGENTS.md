@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This project is deployed on Vercel under the account `joekarlsson1@gmail.com` (scope: `joekarlsson1gmailcoms-projects`), project name `streamroll`.
 
-- Live URL: https://streamroll.vercel.app
+- Live URL: https://streamroll.joekarlsson.com
 - No environment variables are required — the app is BYOK (users supply their own Runway API key in the browser via `/setup`)
 - To deploy: `vercel` (preview) or `vercel --prod` (production)
 - To link on a new machine: `vercel login` with `joekarlsson1@gmail.com`, then `vercel link --scope joekarlsson1gmailcoms-projects`
