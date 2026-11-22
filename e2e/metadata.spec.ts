@@ -81,7 +81,7 @@ test("R20 body background stays #080808 under a light colour-scheme preference",
 
 test("sitemap lists exactly the indexable routes; R70 with lastmod and no changefreq/priority", async ({ request }) => {
   const xml = await (await request.get("/sitemap.xml")).text();
-  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname.replace(/^\/$/, "/"));
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname);
   expect(locs.sort()).toEqual([...INDEXABLE_ROUTES].sort());
   expect(xml).not.toContain("/setup");
   expect(xml.match(/<lastmod>/g)?.length).toBe(INDEXABLE_ROUTES.length);
