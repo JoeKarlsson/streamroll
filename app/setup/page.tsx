@@ -7,6 +7,7 @@ import { LINKS } from "@/lib/links";
 import { IMAGE_MODELS, VIDEO_MODELS, isVeoModel, videoCreditsPerSecond } from "@/lib/models";
 import type { VideoModel } from "@/lib/runway";
 import { track } from "@/lib/plausible";
+import { NoCreditsNotice } from "@/app/_components/NoCreditsNotice";
 
 const STEPS = [
   {
@@ -171,6 +172,8 @@ export default function SetupPage() {
                       </label>
                     </form>
                   )}
+
+                  {hasKey && <NoCreditsNotice apiKey={key} />}
 
                   <p role="status" className="text-sm text-green-400 empty:hidden">
                     {saved ? "Key saved. Your browser is ready to generate." : ""}

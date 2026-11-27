@@ -21,7 +21,8 @@ describe("Home with a restored session", () => {
     sessionStorage.clear();
     localStorage.clear();
     scrollIntoView.mockClear();
-    fetchMock.mockClear();
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => new Response("{}"));
     Element.prototype.scrollIntoView = scrollIntoView;
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal("matchMedia", (q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }));
@@ -50,7 +51,8 @@ describe("Home with a restored session", () => {
     render(<Home />);
     const notes = await screen.findByLabelText("Notes for a redo (optional)");
     fireEvent.keyDown(notes, { key: "Enter", keyCode: 13 });
-    expect(fetchMock).not.toHaveBeenCalled();
+    // The saved key's credit check is free; only generation calls cost credits.
+    expect(fetchMock.mock.calls.filter(([url]) => url !== "/api/credits")).toEqual([]);
   });
 
   it("Cancel video stops waiting at once, cancels the Runway task and goes back to the poster", async () => {
@@ -59,6 +61,7 @@ describe("Home with a restored session", () => {
     fetchMock.mockImplementation(async (url: string) => {
       if (url === "/api/video/start") return new Response(JSON.stringify({ taskId: "task_1", creditsBefore: 100 }));
       if (url.startsWith("/api/video/cancel")) return new Response(JSON.stringify({ ok: true }));
+      if (url === "/api/credits") return new Response(JSON.stringify({ creditBalance: 100 }));
       throw new Error(`unexpected fetch ${url}`);
     });
     render(<Home />);

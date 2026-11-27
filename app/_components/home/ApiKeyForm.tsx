@@ -3,6 +3,7 @@ import { useApiKey } from "@/hooks/useApiKey";
 import { LINKS } from "@/lib/links";
 import { track } from "@/lib/plausible";
 import { INPUT_CLASS, PRESS } from "./classes";
+import { NoCreditsNotice } from "../NoCreditsNotice";
 
 /** Inline API key entry, or the saved key's status with a way to remove it. */
 export function ApiKeyForm({ apiKeyInputRef }: { apiKeyInputRef: RefObject<HTMLInputElement | null> }) {
@@ -36,8 +37,9 @@ export function ApiKeyForm({ apiKeyInputRef }: { apiKeyInputRef: RefObject<HTMLI
   }
 
   return (
-    <section>
+    <section className="space-y-2">
       {apiKey ? (
+        <>
         <div
           ref={apiKeyStatusRef}
           tabIndex={-1}
@@ -51,6 +53,8 @@ export function ApiKeyForm({ apiKeyInputRef }: { apiKeyInputRef: RefObject<HTMLI
             Remove key
           </button>
         </div>
+        <NoCreditsNotice apiKey={apiKey} />
+        </>
       ) : (
         <form
           className="space-y-2"
@@ -70,6 +74,7 @@ export function ApiKeyForm({ apiKeyInputRef }: { apiKeyInputRef: RefObject<HTMLI
               autoComplete="off"
               data-lpignore="true"
               data-1p-ignore="true"
+              // design-ok: an API key is a code-like token, monospace keeps its characters distinct
               className={`${INPUT_CLASS} flex-1 min-w-0 font-mono`}
             />
             <button
@@ -89,6 +94,9 @@ export function ApiKeyForm({ apiKeyInputRef }: { apiKeyInputRef: RefObject<HTMLI
             />
             Remember this key on this device
           </label>
+          <p className="text-sm text-neutral-300 max-w-[65ch]">
+            Generating uses paid Runway credits, so add some to your Runway account first.
+          </p>
           <p className="text-sm text-neutral-400 max-w-[65ch]">
             Your key stays in your browser. Each request passes it through this site’s server to Runway; the server never saves or logs it. Unchecked, the key is forgotten when you close this tab.{" "}
             <a href={LINKS.runwayApiKeys} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white transition-colors">Get a Runway API key</a>
