@@ -11,3 +11,7 @@ Verdicts Joe has given on this project. Read before changing what they cover.
 ## 2026-11-18 (domain)
 
 - **The site lives at streamroll.joekarlsson.com, hosted on Vercel.** GitHub Pages was considered and rejected: Runway's API refuses browser CORS calls, so the /api routes need a server, and Pages can't send the COOP/COEP headers ffmpeg.wasm needs. streamroll.vercel.app redirects to the custom domain.
+
+## 2026-11-27 (credits)
+
+- **The home page warns when the saved Runway key has 0 credits, before Generate** (.mockups/credits-warning). An amber line above Generate links to the Runway developer portal; a key whose balance can't be read shows nothing. Joe kept it: "they look good".
