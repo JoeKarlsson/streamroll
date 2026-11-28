@@ -8,7 +8,7 @@ interface ClassifiedError extends ApiErrorBody {
 
 // Each visitor brings their own Runway key, so an empty balance is theirs to top up.
 export const OUT_OF_CREDITS_MESSAGE =
-  "Your Runway account is out of credits. Add credits in the Runway developer portal (dev.runwayml.com), then try again.";
+  "Runway refused this because your Runway account has no credits left. Add credits on the Billing tab at dev.runway.com (the minimum is $10), then try again.";
 
 function runwayErrorText(body: unknown): string | undefined {
   const text = (body as { error?: unknown } | null | undefined)?.error;
