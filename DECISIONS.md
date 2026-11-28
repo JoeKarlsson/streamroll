@@ -15,3 +15,4 @@ Verdicts Joe has given on this project. Read before changing what they cover.
 ## 2026-11-27 (credits)
 
 - **The home page warns when the saved Runway key has 0 credits, before Generate** (.mockups/credits-warning). An amber line above Generate links to the Runway developer portal; a key whose balance can't be read shows nothing. Joe kept it: "they look good".
+- **A credits error offers an "Add credits at Runway" button** in the red error box, as the main action, with Try again and Start over beside it (2026-11-27). Joe picked it over a link inside the sentence and over leaving the message as plain text. It shows only when the error is Runway's out-of-credits one, opens the developer portal in a new tab and counts as "Add Credits Click".

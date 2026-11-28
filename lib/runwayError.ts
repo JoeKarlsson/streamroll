@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
 import { APIConnectionError, APIConnectionTimeoutError, APIError, TaskFailedError, TaskTimedOutError } from "@runwayml/sdk";
-import { kindForFailureCode, kindForHttpStatus, type ApiErrorBody, type ErrorKind } from "./generationError";
+import { kindForFailureCode, kindForHttpStatus, OUT_OF_CREDITS_MESSAGE, type ApiErrorBody, type ErrorKind } from "./generationError";
 
 interface ClassifiedError extends ApiErrorBody {
   status: number;
 }
-
-// Each visitor brings their own Runway key, so an empty balance is theirs to top up.
-export const OUT_OF_CREDITS_MESSAGE =
-  "Runway refused this because your Runway account has no credits left. Add credits on the Billing tab at dev.runway.com (the minimum is $10), then try again.";
 
 function runwayErrorText(body: unknown): string | undefined {
   const text = (body as { error?: unknown } | null | undefined)?.error;

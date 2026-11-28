@@ -2,7 +2,8 @@ import Image from "next/image";
 import type { IntroSettings } from "@/hooks/useIntroSettings";
 import type { Generation } from "@/hooks/useGeneration";
 import { imageRatio } from "@/lib/runway";
-import { redditShareUrl, tweetShareUrl } from "@/lib/links";
+import { LINKS, redditShareUrl, tweetShareUrl } from "@/lib/links";
+import { OUT_OF_CREDITS_MESSAGE } from "@/lib/generationError";
 import { isEnterToSubmitNotes } from "@/lib/enterToSubmit";
 import { track } from "@/lib/plausible";
 import { AudioMixer } from "../AudioMixer";
@@ -332,11 +333,24 @@ export function ResultPanel({ settings, gen, accentColor, crPerSec, imageCrCost,
         {step === "error" && error && (
           <div role="alert" className="rounded-lg border border-red-800 bg-red-950 px-4 py-4 space-y-3">
             <p className="text-sm text-red-300">{error}</p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {error === OUT_OF_CREDITS_MESSAGE && (
+                <a
+                  href={LINKS.runwaySignup}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => track("Add Credits Click")}
+                  className="min-h-11 px-4 inline-flex items-center rounded-lg text-sm font-semibold text-black bg-white hover:bg-neutral-200 transition-colors"
+                >
+                  Add credits at Runway
+                </a>
+              )}
               <button
                 type="button"
                 onClick={() => proceedToVideo()}
-                className="min-h-11 px-4 rounded-lg text-sm font-semibold text-black bg-white hover:bg-neutral-200 transition-colors"
+                className={error === OUT_OF_CREDITS_MESSAGE
+                  ? "min-h-11 px-2 text-sm text-red-300 hover:text-red-200 transition-colors"
+                  : "min-h-11 px-4 rounded-lg text-sm font-semibold text-black bg-white hover:bg-neutral-200 transition-colors"}
               >
                 Try again
               </button>

@@ -9,6 +9,11 @@ export type ErrorKind =
   | "network"
   | "other";
 
+// Each visitor brings their own Runway key, so an empty balance is theirs to top up.
+// The result panel matches on it to offer an "Add credits" link.
+export const OUT_OF_CREDITS_MESSAGE =
+  "Runway refused this because your Runway account has no credits left. Add credits on the Billing tab at dev.runway.com (the minimum is $10), then try again.";
+
 /** Where in the run it failed. */
 export type GenerationStage = "image" | "regenerate" | "video" | "poster" | "canvas";
 

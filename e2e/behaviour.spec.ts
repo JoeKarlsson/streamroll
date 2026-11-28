@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { gotoQuiet, blockApi, seed, doneState, firstUnpressed } from "./helpers";
+import { OUT_OF_CREDITS_MESSAGE } from "../lib/generationError";
 
 const KEY_STORAGE = "runway_api_key";
 const FAKE_KEY = "key_e2e_not_a_real_key";
@@ -292,4 +293,28 @@ test("a redo keeps the old video on screen at 40% opacity while the new one gene
   const oldVideo = page.locator(`section[aria-labelledby="result-heading"] video[src="${doneState.videoUrl}"]`);
   await expect(oldVideo).toHaveCSS("opacity", "0.4");
   await expect(oldVideo).not.toHaveAttribute("controls");
+});
+
+test.describe("a failed video start", () => {
+  const startFailing = async (page: Page, status: number, body: object) => {
+    await withSavedKey(page);
+    await blockApi(page);
+    await page.route("**/api/video/start", (r) => r.fulfill({ status, json: body }));
+    await seed(page, { ...doneState, step: "review", videoUrl: null });
+    await gotoQuiet(page, "/");
+    await page.getByRole("button", { name: "Looks good, make the video" }).click();
+    await expect(page.getByText((body as { error: string }).error).first()).toBeVisible();
+  };
+
+  test("out of credits links to Runway to add them", async ({ page }) => {
+    await startFailing(page, 400, { error: OUT_OF_CREDITS_MESSAGE, kind: "credits" });
+    const add = page.getByRole("link", { name: "Add credits at Runway" });
+    await expect(add).toHaveAttribute("href", /^https:\/\/dev\.runway\.com/);
+    await expect(add).toHaveAttribute("target", "_blank");
+  });
+
+  test("any other failure has no Add credits link", async ({ page }) => {
+    await startFailing(page, 502, { error: "Runway is down", kind: "other" });
+    await expect(page.getByRole("link", { name: "Add credits at Runway" })).toHaveCount(0);
+  });
 });

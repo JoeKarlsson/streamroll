@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   APIConnectionError, APIConnectionTimeoutError, APIError, TaskFailedError, TaskTimedOutError,
 } from "@runwayml/sdk";
-import { classifyRunwayError, OUT_OF_CREDITS_MESSAGE } from "@/lib/runwayError";
+import { classifyRunwayError } from "@/lib/runwayError";
+import { OUT_OF_CREDITS_MESSAGE } from "@/lib/generationError";
 
 const apiError = (status: number, message: string) => APIError.generate(status, { error: message }, message, new Headers());
 const failedTask = (failureCode?: string) =>
