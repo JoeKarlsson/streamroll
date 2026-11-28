@@ -9,7 +9,7 @@
  * Downloaded videos are saved to ./downloads/
  *
  * How to get task IDs:
- *   1. Go to dev.runwayml.com → Request History
+ *   1. Go to dev.runway.com → Request History
  *   2. Filter: POST | /v1/image_to_video
  *   3. Click each row → "Generation result" tab → copy the ID
  */
@@ -45,7 +45,7 @@ if (!apiKey) {
 const taskIds = process.argv.slice(2).filter(a => a.trim());
 if (taskIds.length === 0) {
   console.error("Usage: node scripts/manage-tasks.mjs <task-id> [<task-id> ...]");
-  console.error("\nGet IDs from: dev.runwayml.com → Request History → click a row → Generation result tab");
+  console.error("\nGet IDs from: dev.runway.com → Request History → click a row → Generation result tab");
   process.exit(1);
 }
 

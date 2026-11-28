@@ -1,8 +1,8 @@
 const UTM = "utm_source=streamroll&utm_medium=app&utm_campaign=devrel";
 
 export const LINKS = {
-  runwaySignup:    `https://dev.runwayml.com?${UTM}`,
-  runwayApiKeys:   `https://dev.runwayml.com/settings/api-keys?${UTM}`,
+  runwaySignup:    `https://dev.runway.com?${UTM}`,
+  runwayApiKeys:   `https://dev.runway.com/settings/api-keys?${UTM}`,
   runwayDocs:      `https://docs.dev.runwayml.com?${UTM}`,
   runwayPricing:   `https://docs.dev.runwayml.com/guides/pricing/?${UTM}`,
   runwaySDK:       `https://docs.dev.runwayml.com/api-details/sdks/?${UTM}`,

@@ -14,7 +14,7 @@ const STEPS = [
     n: 1,
     title: "Create a Runway account",
     body: "Sign up on the Runway developer portal. The account and API key are free, but generating uses paid Runway credits (Runway no longer gives free trial credits), so buy credits or add a payment method first.",
-    cta: { label: "Sign up at dev.runwayml.com", href: LINKS.runwaySignup },
+    cta: { label: "Sign up at dev.runway.com", href: LINKS.runwaySignup },
   },
   {
     n: 2,

@@ -76,7 +76,7 @@ Pro tip: generate 3–5 variants in different styles and point your server at th
 
 ## Links
 
-- [Get a Runway API key at dev.runwayml.com](https://dev.runwayml.com/)
+- [Get a Runway API key at dev.runway.com](https://dev.runway.com/)
 - [Browse the full API reference](https://docs.dev.runwayml.com/)
 - [Join the Runway developer community on Discord](https://discord.gg/runwayml)
 

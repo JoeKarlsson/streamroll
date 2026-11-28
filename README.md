@@ -16,7 +16,7 @@ made your clip, so you can make the next one without my site.
 
 ## Quick start
 
-You need a Runway API key from [dev.runwayml.com](https://dev.runwayml.com).
+You need a Runway API key from [dev.runway.com](https://dev.runway.com).
 Runway no longer gives free trial credits, so add credits or a payment method
 first.
 
